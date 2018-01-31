@@ -1,0 +1,1577 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<configuration version="1.0.8.7">
+  <General>
+    <HarmonyPath path="../vendor/harmony"/>
+    <Processor name=""/>
+    <ForceOptimization flag="true"/>
+    <MergeStrategy flag="USER_ALL"/>
+  </General>
+  <Manifest>
+    <Files>
+      <File>
+        <Name>sys_random.c</Name>
+        <Path>Source Files/framework/system/random/src</Path>
+      </File>
+      <File>
+        <Name>camellia.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>semphr.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_iwpriv.c</Name>
+        <Path>Source Files/framework/driver/wifi/mrf24wn/wireless_driver</Path>
+      </File>
+      <File>
+        <Name>ecc.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>diskio.h</Name>
+        <Path>Header Files/framework/system/fs</Path>
+      </File>
+      <File>
+        <Name>zero_conf_helper.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>asn_public.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>tcpip_heap_alloc.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>udp_private.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>tcpip_mac.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>sys_reset_mapping.h</Name>
+        <Path>Header Files/framework/system/reset/src</Path>
+      </File>
+      <File>
+        <Name>portmacro.h</Name>
+        <Path>Header Files/FreeRTOS/portable/MPLAB/PIC32MZ</Path>
+      </File>
+      <File>
+        <Name>random.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_spi.h</Name>
+        <Path>Header Files/framework/driver/spi</Path>
+      </File>
+      <File>
+        <Name>list.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>zlib.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_connmgr.c</Name>
+        <Path>Source Files/framework/driver/wifi/mrf24wn/wireless_driver</Path>
+      </File>
+      <File>
+        <Name>dns_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>sys_command.c</Name>
+        <Path>Source Files/framework/system/command/src</Path>
+      </File>
+      <File>
+        <Name>dh.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>ffconf.h</Name>
+        <Path>Header Files/framework/system/fs</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_scan_helper.c</Name>
+        <Path>Source Files/framework/driver/wifi/mrf24wn/wireless_driver</Path>
+      </File>
+      <File>
+        <Name>sha512.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>tls.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>system.h</Name>
+        <Path>Header Files/framework/system</Path>
+      </File>
+      <File>
+        <Name>drv_sst25vf064c.c</Name>
+        <Path>Source Files/framework/driver/spi_flash/sst25vf064c/src/dynamic</Path>
+      </File>
+      <File>
+        <Name>tcpip_manager.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>tcpip_common_ports.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>http_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>sys_fs_media_manager.h</Name>
+        <Path>Header Files/framework/system/fs</Path>
+      </File>
+      <File>
+        <Name>timers.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>task.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>dhcp.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>ipv4.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>inflate.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>drv_nvm_variant_mapping.h</Name>
+        <Path>Header Files/framework/driver/nvm/src</Path>
+      </File>
+      <File>
+        <Name>sys_fs_wrapper.h</Name>
+        <Path>Header Files/framework/tcpip/common</Path>
+      </File>
+      <File>
+        <Name>osal_impl_basic.h</Name>
+        <Path>Header Files/framework/osal/src</Path>
+      </File>
+      <File>
+        <Name>peripheral_common_32bit.h</Name>
+        <Path>Header Files/framework/peripheral</Path>
+      </File>
+      <File>
+        <Name>drv_sdcard.c</Name>
+        <Path>Source Files/framework/driver/sdcard/src/dynamic</Path>
+      </File>
+      <File>
+        <Name>sys_reset.h</Name>
+        <Path>Header Files/framework/system/reset</Path>
+      </File>
+      <File>
+        <Name>ipv4_private.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>list.c</Name>
+        <Path>Source Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>trees.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>drv_tmr.h</Name>
+        <Path>Header Files/framework/driver/tmr</Path>
+      </File>
+      <File>
+        <Name>tcp_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>osal.h</Name>
+        <Path>Header Files/framework/osal</Path>
+      </File>
+      <File>
+        <Name>net_pres_certstore.h</Name>
+        <Path>Header Files/framework/net/pres</Path>
+      </File>
+      <File>
+        <Name>sys_dma_local.h</Name>
+        <Path>Header Files/framework/system/dma/src</Path>
+      </File>
+      <File>
+        <Name>internal.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>zero_conf_multicast_dns.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>tcpip_manager.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>tcpip_notify.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>ISR_Support.h</Name>
+        <Path>Header Files/FreeRTOS/portable/MPLAB/PIC32MZ</Path>
+      </File>
+      <File>
+        <Name>drv_ethphy_local.h</Name>
+        <Path>Header Files/framework/driver/ethphy</Path>
+      </File>
+      <File>
+        <Name>portable.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>zconf.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>dns.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>sys_command.h</Name>
+        <Path>Header Files/framework/system/command</Path>
+      </File>
+      <File>
+        <Name>tcpip_module_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>zero_conf_link_local_private.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>error.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_ethmac_local.h</Name>
+        <Path>Header Files/framework/driver/ethmac</Path>
+      </File>
+      <File>
+        <Name>hash.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>hc128.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>arp_private.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>sys_console_uart.h</Name>
+        <Path>Header Files/framework/system/console/src</Path>
+      </File>
+      <File>
+        <Name>logging.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>tcpip_manager_control.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>sys_int_mapping.h</Name>
+        <Path>Header Files/framework/system/int</Path>
+      </File>
+      <File>
+        <Name>ff.c</Name>
+        <Path>Source Files/framework/system/fs</Path>
+      </File>
+      <File>
+        <Name>logging.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_spi_sys_queue_local_fifo.h</Name>
+        <Path>Header Files/framework/driver/spi/private</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_spi.c</Name>
+        <Path>Source Files/framework/driver/wifi/mrf24wn/dev/spi</Path>
+      </File>
+      <File>
+        <Name>tcpip_reboot.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>drv_extphy_ksz8061_rnd.c</Name>
+        <Path>Source Files/framework/driver/ethphy</Path>
+      </File>
+      <File>
+        <Name>md4.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sys_devcon.h</Name>
+        <Path>Header Files/framework/system/devcon</Path>
+      </File>
+      <File>
+        <Name>nbns.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>sys_debug.h</Name>
+        <Path>Header Files/framework/system/debug</Path>
+      </File>
+      <File>
+        <Name>drv_usart_variant_mapping.h</Name>
+        <Path>Header Files/framework/driver/usart/src</Path>
+      </File>
+      <File>
+        <Name>ipv4_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>misc.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>icmp_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>timers.c</Name>
+        <Path>Source Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>net_pres_local.h</Name>
+        <Path>Header Files/framework/net/pres/priv</Path>
+      </File>
+      <File>
+        <Name>heap_2.c</Name>
+        <Path>Source Files/FreeRTOS/portable/MemMang</Path>
+      </File>
+      <File>
+        <Name>mpu_wrappers.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>inffast.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>peripheral.h</Name>
+        <Path>Header Files/framework/peripheral</Path>
+      </File>
+      <File>
+        <Name>queue.c</Name>
+        <Path>Source Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>helpers.c</Name>
+        <Path>Source Files/framework/tcpip/common</Path>
+      </File>
+      <File>
+        <Name>tcpip_announce.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>zero_conf_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>drv_tmr_mapping.h</Name>
+        <Path>Header Files/framework/driver/tmr</Path>
+      </File>
+      <File>
+        <Name>crypto.h</Name>
+        <Path>Header Files/framework/crypto</Path>
+      </File>
+      <File>
+        <Name>sys_reset_local.h</Name>
+        <Path>Header Files/framework/system/reset/src</Path>
+      </File>
+      <File>
+        <Name>queue.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>settings.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>mpi_superclass.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sys_fs_media_manager.c</Name>
+        <Path>Source Files/framework/system/fs/src/dynamic</Path>
+      </File>
+      <File>
+        <Name>tcp.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>net_pres_socketapiconversion.h</Name>
+        <Path>Header Files/framework/net/pres</Path>
+      </File>
+      <File>
+        <Name>visibility.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>tfm.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>arp.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>driver.h</Name>
+        <Path>Header Files/framework/driver</Path>
+      </File>
+      <File>
+        <Name>peripheral_common.h</Name>
+        <Path>Header Files/framework/peripheral</Path>
+      </File>
+      <File>
+        <Name>sys_int_pic32.c</Name>
+        <Path>Source Files/framework/system/int/src</Path>
+      </File>
+      <File>
+        <Name>coding.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_api.h</Name>
+        <Path>Header Files/framework/driver/wifi/mrf24wn/include</Path>
+      </File>
+      <File>
+        <Name>net_pres.h</Name>
+        <Path>Header Files/framework/net/pres</Path>
+      </File>
+      <File>
+        <Name>rsa.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>arc4.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>aes.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>types.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_tmr_compatibility.h</Name>
+        <Path>Header Files/framework/driver/tmr</Path>
+      </File>
+      <File>
+        <Name>sys_tmr_local.h</Name>
+        <Path>Header Files/framework/system/tmr/src</Path>
+      </File>
+      <File>
+        <Name>tcpip_mac_object.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>inftrees.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>lldp_private.h</Name>
+        <Path>Header Files/framework/tcpip/src</Path>
+      </File>
+      <File>
+        <Name>udp_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>sys_fs.c</Name>
+        <Path>Source Files/framework/system/fs/src/dynamic</Path>
+      </File>
+      <File>
+        <Name>drv_sst25vf064c_local.h</Name>
+        <Path>Header Files/framework/driver/spi_flash/sst25vf064c/src</Path>
+      </File>
+      <File>
+        <Name>zero_conf_multicast_dns.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>zutil.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>mpfs.h</Name>
+        <Path>Header Files/framework/system/fs</Path>
+      </File>
+      <File>
+        <Name>drv_nvm_local.h</Name>
+        <Path>Header Files/framework/driver/nvm/src</Path>
+      </File>
+      <File>
+        <Name>gzlog.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7/examples</Path>
+      </File>
+      <File>
+        <Name>port.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sys_int.h</Name>
+        <Path>Header Files/framework/system/int</Path>
+      </File>
+      <File>
+        <Name>osal_freertos.h</Name>
+        <Path>Header Files/framework/osal/src</Path>
+      </File>
+      <File>
+        <Name>dns_private.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>http_private.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>drv_sdcard_variant_mapping.h</Name>
+        <Path>Header Files/framework/driver/sdcard/src</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_misc.c</Name>
+        <Path>Source Files/framework/driver/wifi/mrf24wn/wireless_driver</Path>
+      </File>
+      <File>
+        <Name>lldp_tlv.h</Name>
+        <Path>Header Files/framework/tcpip/src</Path>
+      </File>
+      <File>
+        <Name>tcpip_notify.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>drv_usart_local.h</Name>
+        <Path>Header Files/framework/driver/usart/src</Path>
+      </File>
+      <File>
+        <Name>osal_freertos.c</Name>
+        <Path>Source Files/framework/osal/src</Path>
+      </File>
+      <File>
+        <Name>tasks.c</Name>
+        <Path>Source Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>link_list.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>asn.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>hmac.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_spi_internal.h</Name>
+        <Path>Header Files/framework/driver/spi/private/dynamic</Path>
+      </File>
+      <File>
+        <Name>tcp_private.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>drv_usart_read_write.c</Name>
+        <Path>Source Files/framework/driver/usart/src/dynamic</Path>
+      </File>
+      <File>
+        <Name>des3.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>rabbit.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_spi_sys_queue.h</Name>
+        <Path>Header Files/framework/driver/spi/private</Path>
+      </File>
+      <File>
+        <Name>sys_buffer.c</Name>
+        <Path>Source Files/framework/system/common/src</Path>
+      </File>
+      <File>
+        <Name>hash.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sys_debug_local.h</Name>
+        <Path>Header Files/framework/system/debug/src</Path>
+      </File>
+      <File>
+        <Name>sys_common.h</Name>
+        <Path>Header Files/framework/system/common</Path>
+      </File>
+      <File>
+        <Name>sys_buffer.h</Name>
+        <Path>Header Files/framework/system/common</Path>
+      </File>
+      <File>
+        <Name>udp.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>oahash.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>tcpip_commands_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>oahash.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>osal_impl_none.h</Name>
+        <Path>Header Files/framework/osal/src</Path>
+      </File>
+      <File>
+        <Name>tcpip_helpers.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>dhcpv6.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>misc.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sys_clk_mapping.h</Name>
+        <Path>Header Files/framework/system/clk</Path>
+      </File>
+      <File>
+        <Name>sys_devcon_cache_pic32mz.S</Name>
+        <Path>Source Files/framework/system/devcon/src</Path>
+      </File>
+      <File>
+        <Name>icmp.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>drv_sst25vf064c.h</Name>
+        <Path>Header Files/framework/driver/spi_flash/sst25vf064c</Path>
+      </File>
+      <File>
+        <Name>crc32.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>md2.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_events.c</Name>
+        <Path>Source Files/framework/driver/wifi/mrf24wn/wireless_driver</Path>
+      </File>
+      <File>
+        <Name>tcpip_private.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>drv_sdcard_mapping.h</Name>
+        <Path>Header Files/framework/driver/sdcard</Path>
+      </File>
+      <File>
+        <Name>pwdbased.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>inffixed.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>md5.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>ripemd.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_nvm.h</Name>
+        <Path>Header Files/framework/driver/nvm</Path>
+      </File>
+      <File>
+        <Name>sys_module.h</Name>
+        <Path>Header Files/framework/system/common</Path>
+      </File>
+      <File>
+        <Name>diskio.c</Name>
+        <Path>Source Files/framework/system/fs</Path>
+      </File>
+      <File>
+        <Name>sys_devcon_pic32mz.c</Name>
+        <Path>Source Files/framework/system/devcon/src</Path>
+      </File>
+      <File>
+        <Name>sys_fs_media_manager_local.h</Name>
+        <Path>Header Files/framework/system/fs/src</Path>
+      </File>
+      <File>
+        <Name>dsa.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_iwpriv.h</Name>
+        <Path>Header Files/framework/driver/wifi/mrf24wn/wireless_driver/include</Path>
+      </File>
+      <File>
+        <Name>sntp_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>tcpip.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>sha.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>coding.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sys_fs_wrapper.c</Name>
+        <Path>Source Files/framework/tcpip/common</Path>
+      </File>
+      <File>
+        <Name>sys_queue.h</Name>
+        <Path>Header Files/framework/system/common</Path>
+      </File>
+      <File>
+        <Name>sys_console_local.h</Name>
+        <Path>Header Files/framework/system/console/src</Path>
+      </File>
+      <File>
+        <Name>compress.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>sha.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_tmr_local.h</Name>
+        <Path>Header Files/framework/driver/tmr/src</Path>
+      </File>
+      <File>
+        <Name>tcpip_helper_c32.S</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>infback.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>arp.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>aes.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sys_fs_local.h</Name>
+        <Path>Header Files/framework/system/fs/src</Path>
+      </File>
+      <File>
+        <Name>net_pres_socketapi.h</Name>
+        <Path>Header Files/framework/net/pres</Path>
+      </File>
+      <File>
+        <Name>sys_console_uart.c</Name>
+        <Path>Source Files/framework/system/console/src</Path>
+      </File>
+      <File>
+        <Name>mpfs.c</Name>
+        <Path>Source Files/framework/system/fs</Path>
+      </File>
+      <File>
+        <Name>tcpip_packet.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>inftrees.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_cli.c</Name>
+        <Path>Source Files/framework/driver/wifi/mrf24wn/wireless_driver</Path>
+      </File>
+      <File>
+        <Name>sys_fs.h</Name>
+        <Path>Header Files/framework/system/fs</Path>
+      </File>
+      <File>
+        <Name>tcpip_heap_alloc.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>arp_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>zero_conf_helper.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>tcpip_commands.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>zero_conf_link_local.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>certs_test.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sys_devcon_cache.h</Name>
+        <Path>Source Files/framework/system/devcon/src</Path>
+      </File>
+      <File>
+        <Name>tcpip_packet.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>gzguts.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>tcpip_helpers_private.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>sys_queue.c</Name>
+        <Path>Source Files/framework/system/common/src</Path>
+      </File>
+      <File>
+        <Name>berkeley_manager.h</Name>
+        <Path>Header Files/framework/tcpip/src</Path>
+      </File>
+      <File>
+        <Name>dns.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>icmp.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>_eth_dcpt_lists.h</Name>
+        <Path>Header Files/framework/driver/ethmac</Path>
+      </File>
+      <File>
+        <Name>nbns.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>sys_console.h</Name>
+        <Path>Header Files/framework/system/console</Path>
+      </File>
+      <File>
+        <Name>drv_spi_variant_mapping.h</Name>
+        <Path>Header Files/framework/driver/spi/src</Path>
+      </File>
+      <File>
+        <Name>sys_dma.c</Name>
+        <Path>Source Files/framework/system/dma</Path>
+      </File>
+      <File>
+        <Name>net_pres.c</Name>
+        <Path>Source Files/framework/net/pres</Path>
+      </File>
+      <File>
+        <Name>tcp.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_main.h</Name>
+        <Path>Header Files/framework/driver/wifi/mrf24wn/wireless_driver/include</Path>
+      </File>
+      <File>
+        <Name>port.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_ethphy.c</Name>
+        <Path>Source Files/framework/driver/ethphy</Path>
+      </File>
+      <File>
+        <Name>dhcp_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>tcpip_helpers.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>pic32mz-hash.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>net_pres_transportapi.h</Name>
+        <Path>Header Files/framework/net/pres</Path>
+      </File>
+      <File>
+        <Name>sys_devcon.c</Name>
+        <Path>Source Files/framework/system/devcon/src</Path>
+      </File>
+      <File>
+        <Name>sys_random_local.h</Name>
+        <Path>Header Files/framework/system/random/src</Path>
+      </File>
+      <File>
+        <Name>sys_dma.h</Name>
+        <Path>Header Files/framework/system/dma</Path>
+      </File>
+      <File>
+        <Name>sys_reset.c</Name>
+        <Path>Source Files/framework/system/reset/src</Path>
+      </File>
+      <File>
+        <Name>sys_tmr.h</Name>
+        <Path>Header Files/framework/system/tmr</Path>
+      </File>
+      <File>
+        <Name>udp.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>tcpip_types.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>drv_extphy_regs.h</Name>
+        <Path>Header Files/framework/driver/ethphy</Path>
+      </File>
+      <File>
+        <Name>rsa.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>dhcps.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>compress.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>deflate.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>ipv4.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>dhcp_private.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>projdefs.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>sha256.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>event_groups.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>lldp_manager.h</Name>
+        <Path>Header Files/framework/tcpip/src</Path>
+      </File>
+      <File>
+        <Name>sys_random.h</Name>
+        <Path>Header Files/framework/system/random</Path>
+      </File>
+      <File>
+        <Name>http.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>hash_fnv.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>uncompr.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>osal_definitions.h</Name>
+        <Path>Header Files/framework/osal</Path>
+      </File>
+      <File>
+        <Name>dhcp.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>tcpip_heap.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>drv_nvm.c</Name>
+        <Path>Source Files/framework/driver/nvm/src/dynamic</Path>
+      </File>
+      <File>
+        <Name>port_asm.S</Name>
+        <Path>Source Files/FreeRTOS/portable/MPLAB/PIC32MZ</Path>
+      </File>
+      <File>
+        <Name>inflate.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>ff.h</Name>
+        <Path>Header Files/framework/system/fs</Path>
+      </File>
+      <File>
+        <Name>random.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sys_devcon_local.h</Name>
+        <Path>Header Files/framework/system/devcon/src</Path>
+      </File>
+      <File>
+        <Name>adler32.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>drv_ethmac.h</Name>
+        <Path>Header Files/framework/driver/ethmac</Path>
+      </File>
+      <File>
+        <Name>crypto.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>lldp.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>driver_common.h</Name>
+        <Path>Header Files/framework/driver</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_scan_helper.h</Name>
+        <Path>Header Files/framework/driver/wifi/mrf24wn/wireless_driver/include</Path>
+      </File>
+      <File>
+        <Name>sys_tmr.c</Name>
+        <Path>Source Files/framework/system/tmr/src</Path>
+      </File>
+      <File>
+        <Name>croutine.c</Name>
+        <Path>Source Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>drv_ethmac_lib.h</Name>
+        <Path>Header Files/framework/driver/ethmac</Path>
+      </File>
+      <File>
+        <Name>ec.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_ethmac.c</Name>
+        <Path>Source Files/framework/driver/ethmac</Path>
+      </File>
+      <File>
+        <Name>memory.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>asn.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_ethmac_lib.c</Name>
+        <Path>Source Files/framework/driver/ethmac</Path>
+      </File>
+      <File>
+        <Name>des3.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>deflate.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>sntp.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>drv_usart_buffer_queue.c</Name>
+        <Path>Source Files/framework/driver/usart/src/dynamic</Path>
+      </File>
+      <File>
+        <Name>sys_clk.h</Name>
+        <Path>Header Files/framework/system/clk</Path>
+      </File>
+      <File>
+        <Name>dhcps.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>inffast.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>ecc.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_spi_sys_queue_fifo.c</Name>
+        <Path>Source Files/framework/driver/spi</Path>
+      </File>
+      <File>
+        <Name>hmac.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>ssl.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_tmr.c</Name>
+        <Path>Source Files/framework/driver/tmr/src/dynamic</Path>
+      </File>
+      <File>
+        <Name>md5.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sys_int_private.h</Name>
+        <Path>Header Files/framework/system/int/src</Path>
+      </File>
+      <File>
+        <Name>deprecated_definitions.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>drv_usart.h</Name>
+        <Path>Header Files/framework/driver/usart</Path>
+      </File>
+      <File>
+        <Name>helpers.h</Name>
+        <Path>Header Files/framework/tcpip/common</Path>
+      </File>
+      <File>
+        <Name>http.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>drv_extphy_ksz8061_rnd.h</Name>
+        <Path>Header Files/framework/driver/ethphy</Path>
+      </File>
+      <File>
+        <Name>mpfs_local.h</Name>
+        <Path>Header Files/framework/system/fs/mpfs/src</Path>
+      </File>
+      <File>
+        <Name>tcpip_ethernet.h</Name>
+        <Path>Header Files/framework/tcpip</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_config_data.c</Name>
+        <Path>Source Files/framework/driver/wifi/mrf24wn/wireless_driver</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_priv.h</Name>
+        <Path>Header Files/framework/driver/wifi/mrf24wn/wireless_driver/include</Path>
+      </File>
+      <File>
+        <Name>net_pres_encryptionproviderapi.h</Name>
+        <Path>Header Files/framework/net/pres</Path>
+      </File>
+      <File>
+        <Name>port.c</Name>
+        <Path>Source Files/FreeRTOS/portable/MPLAB/PIC32MZ</Path>
+      </File>
+      <File>
+        <Name>trees.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_osal.c</Name>
+        <Path>Source Files/framework/driver/wifi/mrf24wn/wireless_driver</Path>
+      </File>
+      <File>
+        <Name>pic32mz-crypt.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_gpio.c</Name>
+        <Path>Source Files/framework/driver/wifi/mrf24wn/dev/gpio</Path>
+      </File>
+      <File>
+        <Name>drv_sdcard_local.h</Name>
+        <Path>Header Files/framework/driver/sdcard/src</Path>
+      </File>
+      <File>
+        <Name>compress.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_tmr_variant_mapping.h</Name>
+        <Path>Header Files/framework/driver/tmr/src</Path>
+      </File>
+      <File>
+        <Name>dhcps_private.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>tcpip_heap_external.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>memory.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>arc4.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sys_console.c</Name>
+        <Path>Source Files/framework/system/console/src</Path>
+      </File>
+      <File>
+        <Name>drv_ethphy.h</Name>
+        <Path>Header Files/framework/driver/ethphy</Path>
+      </File>
+      <File>
+        <Name>hash_fnv.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>StackMacros.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>integer.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>tfm.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sha512.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>dhcps_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>sys_ports.h</Name>
+        <Path>Header Files/framework/system/ports</Path>
+      </File>
+      <File>
+        <Name>integer.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>drv_usart.c</Name>
+        <Path>Source Files/framework/driver/usart/src/dynamic</Path>
+      </File>
+      <File>
+        <Name>croutine.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>crc32.c</Name>
+        <Path>Source Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>drv_sdcard.h</Name>
+        <Path>Header Files/framework/driver/sdcard</Path>
+      </File>
+      <File>
+        <Name>error-crypt.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>version.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>nbns_manager.h</Name>
+        <Path>Header Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>dhcpv6_manager.h</Name>
+        <Path>Header Files/framework/tcpip/src</Path>
+      </File>
+      <File>
+        <Name>drv_sst25vf064c_variant_mapping.h</Name>
+        <Path>Header Files/framework/driver/spi_flash/sst25vf064c/src</Path>
+      </File>
+      <File>
+        <Name>tcpip_commands.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>FreeRTOS.h</Name>
+        <Path>Header Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>drv_nvm_erasewrite.c</Name>
+        <Path>Source Files/framework/driver/nvm/src/dynamic</Path>
+      </File>
+      <File>
+        <Name>drv_spi.c</Name>
+        <Path>Source Files/framework/driver/spi/dynamic</Path>
+      </File>
+      <File>
+        <Name>gfx_palette.h</Name>
+        <Path>Header Files/framework/gfx</Path>
+      </File>
+      <File>
+        <Name>event_groups.c</Name>
+        <Path>Source Files/FreeRTOS</Path>
+      </File>
+      <File>
+        <Name>pwdbased.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>dhcpv6_private.h</Name>
+        <Path>Header Files/framework/tcpip/src</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_common.h</Name>
+        <Path>Header Files/framework/driver/wifi/mrf24wn/include</Path>
+      </File>
+      <File>
+        <Name>mpi_class.h</Name>
+        <Path>Header Files/framework/crypto/src</Path>
+      </File>
+      <File>
+        <Name>sys_debug.c</Name>
+        <Path>Source Files/framework/system/debug/src</Path>
+      </File>
+      <File>
+        <Name>sntp.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>zutil.h</Name>
+        <Path>Header Files/framework/crypto/src/zlib-1.2.7</Path>
+      </File>
+      <File>
+        <Name>zero_conf_link_local.c</Name>
+        <Path>Source Files/framework/tcpip/stack</Path>
+      </File>
+      <File>
+        <Name>wdrv_mrf24wn_main.c</Name>
+        <Path>Source Files/framework/driver/wifi/mrf24wn/wireless_driver</Path>
+      </File>
+      <File>
+        <Name>sha256.c</Name>
+        <Path>Source Files/framework/crypto/src</Path>
+      </File>
+    </Files>
+    <Templates>
+      <Template>
+        <Name>lora.h</Name>
+        <Path>Header Files/app</Path>
+      </Template>
+      <Template>
+        <Name>net_pres_enc_glue.h</Name>
+        <Path>Header Files/app/system_config/TTN_Gateway_v1/framework/net/pres</Path>
+        <Checksum>00EB3E5CDEA6F53C5AF289FCE43B4ED2</Checksum>
+      </Template>
+      <Template>
+        <Name>net_pres_enc_glue.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1/framework/net/pres</Path>
+        <Checksum>8F13D10CFF8835AB70B06EC48EF088D1</Checksum>
+        <ProjectFileChecksum>5B61C2857873B10C26C7BAA85793B91B</ProjectFileChecksum>
+      </Template>
+      <Template>
+        <Name>drv_spi_tasks.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1/framework/driver/spi/dynamic</Path>
+        <Checksum>EF2E377FE4B8403982C199B7ED1EE6E6</Checksum>
+      </Template>
+      <Template>
+        <Name>custom_http_app.c</Name>
+        <Path>Source Files/app</Path>
+        <Checksum>283533DA50899A5E229916A235B747D0</Checksum>
+        <ProjectFileChecksum>3A1FBEB0F6FD60535D1C267E1E07A4DC</ProjectFileChecksum>
+      </Template>
+      <Template>
+        <Name>sys_clk_static.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1/framework/system/clk/src</Path>
+        <Checksum>4681B98AC85858FD3FFA130908EDA5D0</Checksum>
+      </Template>
+      <Template>
+        <Name>system_config.h</Name>
+        <Path>Header Files/app/system_config/TTN_Gateway_v1</Path>
+        <Checksum>7CF9F09AD1910A2DDF726E1E4EFAAB97</Checksum>
+        <ProjectFileChecksum>4888403734BF220C7558173D2DEB52DE</ProjectFileChecksum>
+      </Template>
+      <Template>
+        <Name>FreeRTOSConfig.h</Name>
+        <Path>Header Files/app/system_config/TTN_Gateway_v1</Path>
+        <Checksum>53008A5B2372D635DACCFABEE7453A8D</Checksum>
+        <ProjectFileChecksum>051094EECFC1C40F1D28F47EE5AC935B</ProjectFileChecksum>
+      </Template>
+      <Template>
+        <Name>system_init.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1</Path>
+        <Checksum>05D7D50B1C288230705ECE3A69AF0683</Checksum>
+        <ProjectFileChecksum>AA40015884352CC4D7791C61ECC1F399</ProjectFileChecksum>
+      </Template>
+      <Template>
+        <Name>mpfs_img2.c</Name>
+        <Path>Source Files/app</Path>
+        <Checksum>FC44C4C72205F892A244F763F0E7B4B8</Checksum>
+        <ProjectFileChecksum>FB51D4530E44ECEA3BE99A63360E01C4</ProjectFileChecksum>
+      </Template>
+      <Template>
+        <Name>drv_spi_master_ebm_tasks.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1/framework/driver/spi/dynamic</Path>
+        <Checksum>4C2C868738FD74E2D6A3C8A8FD6B1381</Checksum>
+      </Template>
+      <Template>
+        <Name>lora.c</Name>
+        <Path>Source Files/app</Path>
+      </Template>
+      <Template>
+        <Name>http_print.c</Name>
+        <Path>Source Files/app</Path>
+        <Checksum>36A16C64F0D37124A6311EF2414217A6</Checksum>
+        <ProjectFileChecksum>ED5744671DF883C3AEE3918633FC8B12</ProjectFileChecksum>
+      </Template>
+      <Template>
+        <Name>system_definitions.h</Name>
+        <Path>Header Files/app/system_config/TTN_Gateway_v1</Path>
+        <Checksum>26820CE90945BC819C628D4972A127E6</Checksum>
+        <ProjectFileChecksum>867C98C973204994295C188ED4C4A58A</ProjectFileChecksum>
+      </Template>
+      <Template>
+        <Name>system_tasks.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1</Path>
+        <Checksum>D6F790EF28E037B495D8838D1CBE1FB2</Checksum>
+        <ProjectFileChecksum>DEAF84B3571D37BB2B606CF3ECD2F600</ProjectFileChecksum>
+      </Template>
+      <Template>
+        <Name>main.c</Name>
+        <Path>Source Files/app</Path>
+      </Template>
+      <Template>
+        <Name>system_interrupt_a.S</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1</Path>
+        <Checksum>49F6750BDCE25D97D2D980566F87A254</Checksum>
+      </Template>
+      <Template>
+        <Name>sys_clk_static.h</Name>
+        <Path>Header Files/app/system_config/TTN_Gateway_v1/framework/system/clk</Path>
+        <Checksum>B4BD59D8D7C4DA95DC5E3B57755FD352</Checksum>
+      </Template>
+      <Template>
+        <Name>system_exceptions.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1</Path>
+        <Checksum>C111969CA43D6CEA1E9E33A6164E7AE0</Checksum>
+        <ProjectFileChecksum>99905EDEB47370DA47EB9C1BAC8F4543</ProjectFileChecksum>
+      </Template>
+      <Template>
+        <Name>app.c</Name>
+        <Path>Source Files/app</Path>
+      </Template>
+      <Template>
+        <Name>drv_spi_master_dma_tasks.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1/framework/driver/spi/dynamic</Path>
+        <Checksum>4626EB40B153D853AF96C626BA1FDEB0</Checksum>
+      </Template>
+      <Template>
+        <Name>app.h</Name>
+        <Path>Header Files/app</Path>
+      </Template>
+      <Template>
+        <Name>sys_ports_static.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1/framework/system/ports/src</Path>
+        <Checksum>EBD4FE4FBA430E29283EF2C04EC2417B</Checksum>
+      </Template>
+      <Template>
+        <Name>drv_spi_api.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1/framework/driver/spi/dynamic</Path>
+        <Checksum>4BD2C5DF3E07264E0E6DCB54A0677911</Checksum>
+      </Template>
+      <Template>
+        <Name>system_interrupt.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1</Path>
+        <Checksum>BE3A62B951276DBEE1F3B8BC56E7EE7A</Checksum>
+        <ProjectFileChecksum>4ED332B7E95B9D194D7D6BA4A0DFD8ED</ProjectFileChecksum>
+      </Template>
+      <Template>
+        <Name>drv_spi_master_rm_tasks.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1/framework/driver/spi/dynamic</Path>
+        <Checksum>F65FEAB721E68F2679A60E816B77D31E</Checksum>
+      </Template>
+      <Template>
+        <Name>rtos_hooks.c</Name>
+        <Path>Source Files/app/system_config/TTN_Gateway_v1</Path>
+        <Checksum>FA52743264536E5207D2ADBE57B48D05</Checksum>
+        <ProjectFileChecksum>75C888233DAE6612BF5C2EC124CCA0B1</ProjectFileChecksum>
+      </Template>
+    </Templates>
+    <CompilerItems>
+      <C32-AS>
+        <Include value="../harmony/third_party/rtos/FreeRTOS/Source/portable/MPLAB/PIC32MZ"/>
+        <Include value="../harmony/third_party/rtos/FreeRTOS/Source/include"/>
+        <Include value="../src/system_config/TTN_Gateway_v1"/>
+      </C32-AS>
+      <C32>
+        <Include value="../harmony/framework/driver/wifi/mrf24wn/include"/>
+        <Include value="../harmony/framework/driver/wifi/mrf24wn/wireless_driver/include"/>
+        <Include value="../harmony/framework/driver/wifi/mrf24wn/wireless_driver_extension"/>
+        <Include value="../harmony/third_party/rtos/FreeRTOS/Source/portable/MPLAB/PIC32MZ"/>
+        <Include value="../harmony/third_party/rtos/FreeRTOS/Source/include"/>
+        <Include value="../src/system_config/TTN_Gateway_v1"/>
+      </C32>
+    </CompilerItems>
+    <Libraries>
+      <Library value="../harmony/bin/framework/peripheral/PIC32MZ2048EFM144_peripherals.a"/>
+      <Library value="../harmony/framework/driver/wifi/mrf24wn/wireless_driver_extension/wdrvext_mz_ef.a"/>
+      <Library value="../harmony/framework/tcpip/src/crypto/aes_pic32mx.a"/>
+    </Libraries>
+  </Manifest>
+</configuration>

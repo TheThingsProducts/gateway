@@ -1,0 +1,80 @@
+menu "Device Control"
+
+config USE_SYS_DEVCON
+    bool "Use Device Control System Service?"
+    default y
+    persistent
+    ---help---
+    IDH_HTML_Device_Control_System_Service_Library
+    ---endhelp---
+
+menu "RTOS Configuration"
+    depends on USE_SYS_DEVCON
+    depends on USE_3RDPARTY_RTOS
+
+config SYS_DEVCON_RTOS
+    string "Run Library Tasks As"
+    range 3RDPARTY_RTOS_SYS_TASKS_OPTIONS
+    default "Combined with System Tasks"
+
+config SYS_DEVCON_RTOS_TASK_SIZE
+    int "Task Size"
+    depends on SYS_DEVCON_RTOS = "Standalone"
+    default 1024
+
+config SYS_DEVCON_RTOS_TASK_PRIORITY
+    int "Task Priority"
+    depends on SYS_DEVCON_RTOS = "Standalone"
+    default 1
+
+config SYS_DEVCON_RTOS_USE_DELAY
+    bool "Use Task Delay?"
+    depends on SYS_DEVCON_RTOS = "Standalone"
+    default y
+
+config SYS_DEVCON_RTOS_DELAY
+    int "Task Delay"
+    depends on SYS_DEVCON_RTOS = "Standalone"
+    depends on SYS_DEVCON_RTOS_USE_DELAY
+    default 1000
+
+endmenu
+
+enum SYS_DEVCON_JTAGEN_OPT
+	 "ON"
+	 || "OFF"
+
+config SYS_DEVCON_USE_JTAG_NEEDED
+    string
+    range SYS_DEVCON_JTAGEN_OPT
+    default "OFF"
+
+config SYS_DEVCON_USE_JTAG
+    bool "Enable JTAG?"
+    depends on USE_SYS_DEVCON
+    depends on HAVE_JTAG
+    default y if BSP_JTAG
+    default y if SYS_DEVCON_USE_JTAG_NEEDED = "ON"
+    default n
+
+config SYS_DEVCON_USE_TRACE
+    bool "Enable Trace?"
+    depends on USE_SYS_DEVCON
+    depends on HAVE_TRACE
+    default n
+
+endmenu
+
+ifblock USE_SYS_DEVCON
+
+add "<#include \"/framework/system/devcon/config/sys_devcon.c.ftl\">"  to list SYSTEM_INIT_C_MODULE_INITIALIZATION_DATA
+add "<#assign SYS_DEVCON_TASKS = \"TASK_CALL_NO_RTOS\"><#include \"/framework/system/devcon/config/sys_devcon_tasks.c.ftl\">"  to list SYSTEM_TASKS_C_CALL_SYSTEM_TASKS
+
+file SYS_DEVCON_H "$HARMONY_VERSION_PATH/framework/system/devcon/sys_devcon.h" to "$PROJECT_HEADER_FILES/framework/system/devcon/sys_devcon.h"
+file SYS_DEVCON_C "$HARMONY_VERSION_PATH/framework/system/devcon/src/sys_devcon.c"  to "$PROJECT_SOURCE_FILES/framework/system/devcon/src/sys_devcon.c"
+file SYS_DEVCON_LOCAL_H "$HARMONY_VERSION_PATH/framework/system/devcon/src/sys_devcon_local.h" to "$PROJECT_HEADER_FILES/framework/system/devcon/src/sys_devcon_local.h"
+file SYS_DEVCON_PIC32MX_C "$HARMONY_VERSION_PATH/framework/system/devcon/src/sys_devcon_pic32mx.c" to "$PROJECT_SOURCE_FILES/framework/system/devcon/src/sys_devcon_pic32mx.c" if PIC32MX
+file SYS_DEVCON_PIC32MZ_C "$HARMONY_VERSION_PATH/framework/system/devcon/src/sys_devcon_pic32mz.c" to "$PROJECT_SOURCE_FILES/framework/system/devcon/src/sys_devcon_pic32mz.c" if PIC32MZ
+file SYS_DEVCON_PIC32MZ_S "$HARMONY_VERSION_PATH/framework/system/devcon/src/sys_devcon_cache_pic32mz.S" to "$PROJECT_SOURCE_FILES/framework/system/devcon/src/sys_devcon_cache_pic32mz.S" if PIC32MZ
+file SYS_DEVCON_PIC32MZ_H "$HARMONY_VERSION_PATH/framework/system/devcon/src/sys_devcon_cache.h" to "$PROJECT_SOURCE_FILES/framework/system/devcon/src/sys_devcon_cache.h" if PIC32MZ
+endif

@@ -8,7 +8,7 @@ Hardware designs will be open-sourced at a later stage.
 
 ## Firmware
 
-Firmware source code will be open-sourced at a later stage.
+Firmware source code is located in the [firmware](./firmware) directory. Firmware source code is released under a [MIT License](https://opensource.org/licenses/MIT).
 
 ## Feature Requests, Bug Reports and Support
 

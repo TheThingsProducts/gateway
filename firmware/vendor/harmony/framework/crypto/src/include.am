@@ -1,0 +1,43 @@
+# vim:ft=automake
+# All paths should be given relative to the root
+
+EXTRA_DIST += misc.c
+EXTRA_DIST += asm.c 
+EXTRA_DIST += aes_asm.asm
+
+EXTRA_DIST += \
+              ecc_fp.c \
+              fp_mont_small.i \
+              fp_mul_comba_12.i \
+              fp_mul_comba_17.i \
+              fp_mul_comba_20.i \
+              fp_mul_comba_24.i \
+              fp_mul_comba_28.i \
+              fp_mul_comba_32.i \
+              fp_mul_comba_3.i \
+              fp_mul_comba_48.i \
+              fp_mul_comba_4.i \
+              fp_mul_comba_64.i \
+              fp_mul_comba_6.i \
+              fp_mul_comba_7.i \
+              fp_mul_comba_8.i \
+              fp_mul_comba_9.i \
+              fp_mul_comba_small_set.i \
+              fp_sqr_comba_12.i \
+              fp_sqr_comba_17.i \
+              fp_sqr_comba_20.i \
+              fp_sqr_comba_24.i \
+              fp_sqr_comba_28.i \
+              fp_sqr_comba_32.i \
+              fp_sqr_comba_3.i \
+              fp_sqr_comba_48.i \
+              fp_sqr_comba_4.i \
+              fp_sqr_comba_64.i \
+              fp_sqr_comba_6.i \
+              fp_sqr_comba_7.i \
+              fp_sqr_comba_8.i \
+              fp_sqr_comba_9.i \
+              fp_sqr_comba_small_set.i
+
+EXTRA_DIST += wolfcrypt/src/port/pic32/pic32mz-hash.c
+

@@ -1,0 +1,84 @@
+# The Things Gateway Firmware
+
+## Installation
+
+Installing the firmware is usually done using over-the-air updates from our official releases. Here are the steps to install custom firmware:
+
+- Prepare a FAT32-formatted SD card with a folder called `update`.
+- Copy the `firmware.hex` and `checksums` files to the `update` folder.
+- Place the SD card in the gateway and power cycle the gateway.
+
+## Development Setup
+
+You probably already have the following "essential" development tools, but just to be sure:
+
+- `build-essential` or XCode (includes `git` and `make`)
+- `sha256sum` (from GNU coreutils)
+
+Get the source code and initialize the submodules to get the dependencies.
+
+```sh
+git clone https://github.com/TheThingsProducts/gateway.git
+git submodule update --init
+```
+
+Download the following tools from the Microchip download pages:
+
+- [MPLAB IDE X v3.45](http://www.microchip.com/development-tools/downloads-archive)
+- [MPLAB XC32 v1.42](http://www.microchip.com/development-tools/downloads-archive)
+- [Harmony v1.08.01](http://www.microchip.com/mplab/mplab-harmony/mplab-harmony-1-0) (under Archived Downloads)
+
+## Fix MPLab script
+
+After building the project using the MPLabX GUI, the paths in the `configurations.xml` are made platform dependent. In order to fix this, run the `./fix_mplab.sh` script.
+
+## Local Build
+
+- Make sure you have downloaded and installed the IDE and compilers stated at **Development Setup** above.
+- Run `./compile.sh`.
+- After successful build, create the `firmware.hex` and `checksums` files with `./generate_hex_with_checksum.sh`.
+- Use those two files in the **Installation** procedure above.
+
+## Build server
+
+- Make sure you have downloaded and installed the IDE and compilers stated at **Development Setup** above.
+- Install **Jenkins Server**
+- Create Multi branch Pipline project
+- Link this repository
+- Hit *Scan Multibranch Pipeline Now*
+
+## TASKS
+
+| Task        | Priority | Size |
+|-------------|----------|------|
+| LORA_READ   | 7        | 4096 |
+| TCPIP_TASKS | 6        | 4096 |
+| WIFI_DRV    | 5        | 2048 |
+| SYS_TASKS   | 4        | 4096 |
+| LORA_TASKS  | 3        | 4096 |
+| APP_TASKS   | 2        | 4096 |
+| MQTTTASK    | 1        | 4096 |
+
+## SERIALFLASH LAYOUT
+
+| Sector | Address | Content                   | Length (Bytes)  |
+|--------|---------|---------------------------|-----------------|
+| 0      | 0       | SHA256 Hash of current FW | 32              |
+|        |         |                           |                 |
+| 1      | 4096    | Magic Bytes               | 4               |
+|        | 4100    | Network Type              | 1               |
+|        | 4101    | Security Mode             | 1               |
+|        | 4102    | WiFi SSID                 | 32 + 1          |
+|        | 4135    | WiFi Security Key         | 64 + 1          |
+|        |         |                           |                 |
+| 2      | 8192    | Magic Bytes               | 4               |
+|        | 8196    | Gateway ID                | 100             |
+|        | 8296    | Gateway Key               | 200             |
+|        | 8496    | Account Server URL        | 255             |
+|        | 8751    | Locked flag               | 1               |
+|        |         |                           |                 |
+| 3      | 12288   | Magic Bytes               | 4               |
+|        | 12292   | FW Image Length           | 4               |
+|        | 12296   | SHA256 Hash of new FW     | 32              |
+|        |         |                           |                 |
+| 4      | 16384   | FW Image                  | FW Image Length |

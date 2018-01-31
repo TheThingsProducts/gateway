@@ -1,0 +1,9 @@
++inc:header.inc
++nextSSID
++prevSSID
++prevWLAN
++nextWLAN
++scanresult
++scan
++gwsettings
++gwstatus

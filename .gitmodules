@@ -1,0 +1,12 @@
+[submodule "firmware/vendor/paho.mqtt.embedded-c"]
+	path = firmware/vendor/paho.mqtt.embedded-c
+	url = https://github.com/TheThingsProducts/paho.mqtt.embedded-c.git
+[submodule "firmware/vendor/protobuf-c"]
+	path = firmware/vendor/protobuf-c
+	url = https://github.com/TheThingsProducts/protobuf-c.git
+[submodule "firmware/vendor/ttn-gateway-connector"]
+	path = firmware/vendor/ttn-gateway-connector
+	url = https://github.com/TheThingsNetwork/ttn-gateway-connector.git
+[submodule "firmware/vendor/mbedtls"]
+	path = firmware/vendor/mbedtls
+	url = https://github.com/TheThingsProducts/mbedtls.git

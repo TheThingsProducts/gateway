@@ -1,0 +1,49 @@
+We use oscilloscope to measure real SPI clock, this is a reference SPI baud rate table:
+
+1. PIC32MX at 80 MHz:
+                                configured              real
+1.01 #define DRV_SPI_BAUDRATE    1000000    -------     1.00 MHz
+1.02 #define DRV_SPI_BAUDRATE    2000000    -------     2.00 MHz
+1.03 #define DRV_SPI_BAUDRATE    3000000    -------     3.00 MHz
+1.04 #define DRV_SPI_BAUDRATE    4000000    -------     4.00 MHz
+1.05 #define DRV_SPI_BAUDRATE    5000000    -------     5.00 MHz
+1.06 #define DRV_SPI_BAUDRATE    6000000    -------     5.71 MHz
+1.07 #define DRV_SPI_BAUDRATE    7000000    -------     6.66 MHz
+1.08 #define DRV_SPI_BAUDRATE    8000000    -------     8.00 MHz
+1.09 #define DRV_SPI_BAUDRATE    9000000    -------     10.00 MHz
+1.10 #define DRV_SPI_BAUDRATE   10000000    -------     10.00 MHz
+1.11 #define DRV_SPI_BAUDRATE   11000000    -------     10.00 MHz
+1.12 #define DRV_SPI_BAUDRATE   12000000    -------     13.33 MHz
+1.13 #define DRV_SPI_BAUDRATE   13000000    -------     13.33 MHz
+1.14 #define DRV_SPI_BAUDRATE   14000000    -------     13.33 MHz
+1.15 #define DRV_SPI_BAUDRATE   15000000    -------     13.33 MHz
+1.16 #define DRV_SPI_BAUDRATE   16000000    -------     13.33 MHz
+1.17 #define DRV_SPI_BAUDRATE   17000000    -------     20.00 MHz
+1.18 #define DRV_SPI_BAUDRATE   18000000    -------     20.00 MHz
+1.19 #define DRV_SPI_BAUDRATE   19000000    -------     20.00 MHz
+1.20 #define DRV_SPI_BAUDRATE   20000000    -------     20.00 MHz
+1.21 #define DRV_SPI_BAUDRATE   25000000    -------     20.00 MHz
+
+2. PIC32MZ at 240 MHz:
+                                configured              real
+2.01 #define DRV_SPI_BAUDRATE    1000000    -------     1.00 MHz
+2.02 #define DRV_SPI_BAUDRATE    2000000    -------     2.00 MHz
+2.03 #define DRV_SPI_BAUDRATE    3000000    -------     3.00 MHz
+2.04 #define DRV_SPI_BAUDRATE    4000000    -------     3.85 MHz
+2.05 #define DRV_SPI_BAUDRATE    5000000    -------     5.00 MHz
+2.06 #define DRV_SPI_BAUDRATE    6000000    -------     6.15 MHz
+2.07 #define DRV_SPI_BAUDRATE    7000000    -------     7.14 MHz
+2.08 #define DRV_SPI_BAUDRATE    8000000    -------     8.30 MHz
+2.09 #define DRV_SPI_BAUDRATE    9000000    -------     10.00 MHz
+2.10 #define DRV_SPI_BAUDRATE   10000000    -------     10.00 MHz
+2.12 #define DRV_SPI_BAUDRATE   11000000    -------     10.00 MHz
+2.13 #define DRV_SPI_BAUDRATE   12000000    -------     12.50 MHz
+2.14 #define DRV_SPI_BAUDRATE   13000000    -------     12.50 MHz
+2.15 #define DRV_SPI_BAUDRATE   14000000    -------     12.50 MHz
+2.16 #define DRV_SPI_BAUDRATE   15000000    -------     16.66 MHz
+2.17 #define DRV_SPI_BAUDRATE   16000000    -------     16.66 MHz
+2.18 #define DRV_SPI_BAUDRATE   17000000    -------     16.66 MHz
+2.19 #define DRV_SPI_BAUDRATE   18000000    -------     16.66 MHz
+2.20 #define DRV_SPI_BAUDRATE   19000000    -------     16.66 MHz
+2.21 #define DRV_SPI_BAUDRATE   20000000    -------     25.00 MHz
+2.22 #define DRV_SPI_BAUDRATE   25000000    -------     25.00 MHz

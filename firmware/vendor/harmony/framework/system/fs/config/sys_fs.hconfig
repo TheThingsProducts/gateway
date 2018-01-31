@@ -1,0 +1,174 @@
+menu "File System"
+
+config USE_SYS_FS_NEEDED
+    bool
+
+enum SYS_FS_MEDIA_TYPE
+    "SYS_FS_MEDIA_TYPE_NVM"
+    || "SYS_FS_MEDIA_TYPE_MSD"
+    || "SYS_FS_MEDIA_TYPE_SD_CARD"
+    || "SYS_FS_MEDIA_TYPE_RAM"
+    || "SYS_FS_MEDIA_TYPE_SPIFLASH"
+
+enum SYS_FS_FILE_SYSTEM_TYPE
+	"FAT"
+	|| "MPFS2"
+
+config USE_SYS_FS
+    bool "Use File System Service?"
+    default n if !USE_SYS_FS_NEEDED
+    default y if USE_SYS_FS_NEEDED
+    ---help---
+    IDH_HTML_File_System_Service_Library
+    ---endhelp---
+
+menu "RTOS Configuration"
+    depends on USE_SYS_FS
+    depends on USE_3RDPARTY_RTOS
+
+config SYS_FS_RTOS
+    string "Run Library Tasks As"
+    range 3RDPARTY_RTOS_SYS_TASKS_OPTIONS
+    default "Standalone"
+
+config SYS_FS_RTOS_TASK_SIZE
+    int "Task Size"
+    depends on SYS_FS_RTOS = "Standalone"
+    default 1024
+
+config SYS_FS_RTOS_TASK_PRIORITY
+    int "Task Priority"
+    depends on SYS_FS_RTOS = "Standalone"
+    default 1
+
+config SYS_FS_RTOS_USE_DELAY
+    bool "Use Task Delay?"
+    depends on SYS_FS_RTOS = "Standalone"
+    default y
+
+config SYS_FS_RTOS_DELAY
+    int "Task Delay"
+    depends on SYS_FS_RTOS = "Standalone"
+    depends on SYS_FS_RTOS_USE_DELAY
+    default 1000
+
+endmenu
+
+config SYS_FS_MAX_FILES
+    int "Maximum Simultaneous File Access"
+    depends on USE_SYS_FS
+    default 1
+    ---help---
+    IDH_HTML_SYSTEM_FS_Configuring_the_Library
+    ---endhelp---
+
+config SYS_FS_MEDIA_MAX_BLOCK_SIZE
+    int "Size Of Block"
+    depends on USE_SYS_FS
+    default 512
+    persistent
+    ---help---
+    IDH_HTML_SYSTEM_FS_Configuring_the_Library
+    ---endhelp---
+
+config SYS_FS_MEDIA_MANAGER_BUFFER_SIZE
+    int "Size Of Media Flash Page Buffer"
+    depends on USE_SYS_FS
+    default 2048 if PIC32MZ
+    default 512 if PIC32MX
+    ---help---
+    IDH_HTML_SYSTEM_FS_Configuring_the_Library
+    ---endhelp---
+
+config SYS_FS_AUTO_MOUNT
+    bool "Use File System Auto Mount Feature?"
+    depends on USE_SYS_FS
+    default n
+    ---help---
+    IDH_HTML_File_System_Service_Library
+    ---endhelp---
+
+config SYS_FS_INSTANCES_NUMBER
+    int "Total Number Of Media"
+    depends on USE_SYS_FS
+    range 1 4
+    default 1
+    ---help---
+    IDH_HTML_SYSTEM_FS_Configuring_the_Library
+    ---endhelp---
+
+config SYS_FS_VOLUME_NUMBER
+    int "Total Number Of Volumes"
+    depends on USE_SYS_FS
+    depends on !SYS_FS_AUTO_MOUNT
+    default 1
+    ---help---
+    IDH_HTML_SYSTEM_FS_Configuring_the_Library
+    ---endhelp---
+source "$HARMONY_VERSION_PATH/framework/system/fs/config/sys_fs_idx.ftl" 9 instances
+config SYS_FS_MAX_FILE_SYSTEM_TYPE
+    int "File System Types"
+    depends on USE_SYS_FS
+    default 1
+    ---help---
+    IDH_HTML_SYSTEM_FS_Configuring_the_Library
+    ---endhelp---
+
+config SYS_FS_FAT
+    bool "FAT File System"
+    depends on USE_SYS_FS
+    default y
+    ---help---
+    IDH_HTML_SYSTEM_FS_Architecture
+    ---endhelp---
+
+config SYS_FS_MPFS
+    bool "Microchip File System"
+    depends on USE_SYS_FS
+    default n
+    ---help---
+    IDH_HTML_SYSTEM_FS_Architecture
+    ---endhelp---
+
+config SYS_FS_USE_MBR
+    bool "Use MBR"
+    depends on USE_SYS_FS
+    persistent
+    default n
+
+
+endmenu
+
+
+ifblock USE_SYS_FS
+
+add "<#include \"/framework/system/fs/templates/sys_fs.c.ftl\">"  to list SYSTEM_INIT_C_MODULE_INITIALIZATION_DATA
+add "<#include \"/framework/system/fs/templates/sys_fs_init.c.ftl\">"  to list SYSTEM_INIT_C_INITIALIZE_SYSTEM_SERVICES
+add "<#assign SYS_FS_TASKS = \"TASK_CALL_NO_RTOS\"><#include \"/framework/system/fs/templates/sys_fs_tasks.c.ftl\">"  to list SYSTEM_TASKS_C_CALL_SYSTEM_TASKS
+
+file SYS_FS_H "$HARMONY_VERSION_PATH/framework/system/fs/sys_fs.h" to "$PROJECT_HEADER_FILES/framework/system/fs/sys_fs.h"
+file SYS_FS_C "$HARMONY_VERSION_PATH/framework/system/fs/src/dynamic/sys_fs.c"  to "$PROJECT_SOURCE_FILES/framework/system/fs/src/dynamic/sys_fs.c"
+file SYS_FS_LOCAL_H "$HARMONY_VERSION_PATH/framework/system/fs/src/sys_fs_local.h" to "$PROJECT_HEADER_FILES/framework/system/fs/src/sys_fs_local.h"
+file SYS_FS_MEDIA_MANAGER_C "$HARMONY_VERSION_PATH/framework/system/fs/src/dynamic/sys_fs_media_manager.c"  to "$PROJECT_SOURCE_FILES/framework/system/fs/src/dynamic/sys_fs_media_manager.c"
+file SYS_FS_MEDIA_MANAGER_H "$HARMONY_VERSION_PATH/framework/system/fs/sys_fs_media_manager.h"  to "$PROJECT_HEADER_FILES/framework/system/fs/sys_fs_media_manager.h"
+file SYS_FS_MEDIA_MANAGER_LOCAL_H "$HARMONY_VERSION_PATH/framework/system/fs/src/sys_fs_media_manager_local.h"  to "$PROJECT_HEADER_FILES/framework/system/fs/src/sys_fs_media_manager_local.h"
+endif
+
+ifblock (USE_SYS_FS) && (SYS_FS_FAT)
+file FAT_FS_FF_C "$HARMONY_VERSION_PATH/framework/system/fs/fat_fs/src/file_system/ff.c" to "$PROJECT_SOURCE_FILES/framework/system/fs/ff.c"
+file FAT_FS_FF_H "$HARMONY_VERSION_PATH/framework/system/fs/fat_fs/src/file_system/ff.h" to "$PROJECT_HEADER_FILES/framework/system/fs/ff.h"
+file FAT_FS_FFCONF_H "$HARMONY_VERSION_PATH/framework/system/fs/fat_fs/src/file_system/ffconf.h" to "$PROJECT_HEADER_FILES/framework/system/fs/ffconf.h"
+file FAT_FS_DISKIO_C "$HARMONY_VERSION_PATH/framework/system/fs/fat_fs/src/hardware_access/diskio.c" to "$PROJECT_SOURCE_FILES/framework/system/fs/diskio.c"
+file FAT_FS_DISKIO_H "$HARMONY_VERSION_PATH/framework/system/fs/fat_fs/src/hardware_access/diskio.h" to "$PROJECT_HEADER_FILES/framework/system/fs/diskio.h"
+ifblock SYS_FS_USE_MBR
+template FAT_FS_DISK_IMAGE_C "$HARMONY_VERSION_PATH/framework/system/fs/templates/nvm_disk_images.c.ftl" to "$PROJECT_SOURCE_FILES/framework/system/fs/nvm_disk_images.c"
+template FAT_FS_DISK_IMAGE_H "$HARMONY_VERSION_PATH/framework/system/fs/templates/nvm_disk_images.h.ftl" to "$PROJECT_HEADER_FILES/framework/system/fs/nvm_disk_images.h"
+endif
+endif
+
+
+ifblock (USE_SYS_FS) && (SYS_FS_MPFS)
+file SYS_FS_MPFS_H "$HARMONY_VERSION_PATH/framework/system/fs/mpfs/mpfs.h" to "$PROJECT_HEADER_FILES/framework/system/fs/mpfs.h"
+file FAT_FS_MPFS_C "$HARMONY_VERSION_PATH/framework/system/fs/mpfs/src/mpfs.c" to "$PROJECT_SOURCE_FILES/framework/system/fs/mpfs.c"
+file SYS_FS_MPFS_LOCAL_H "$HARMONY_VERSION_PATH/framework/system/fs/mpfs/src/mpfs_local.h" to "$PROJECT_HEADER_FILES/framework/system/fs/mpfs/src/mpfs_local.h"
+endif

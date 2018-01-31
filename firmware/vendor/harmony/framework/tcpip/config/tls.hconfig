@@ -1,0 +1,3 @@
+ifblock USE_TCPIP_STACK
+file TCPIP_TLS_H "$HARMONY_VERSION_PATH/framework/tcpip/tls.h"  to "$PROJECT_HEADER_FILES/framework/tcpip/tls.h"
+endif

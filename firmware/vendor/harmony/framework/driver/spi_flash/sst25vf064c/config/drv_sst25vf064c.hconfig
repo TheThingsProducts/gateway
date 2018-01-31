@@ -1,0 +1,67 @@
+config USE_DRV_SST25VF064C_NEEDED
+    bool
+
+enum DRV_SST25VF064C_MODE
+    "STATIC"
+    || "DYNAMIC"
+    
+config USE_DRV_SST25VF064C
+    bool "Use SST25VF064C Driver?"
+    depends on HAVE_SPI
+    default n if !USE_DRV_SST25VF064C_NEEDED
+    default y if USE_DRV_SST25VF064C_NEEDED
+    select DRV_SPI_USE_DRIVER_NEEDED
+    ---help---
+    IDH_HTML_SST25VF064C_Driver_Library
+    ---endhelp---
+
+config DRV_SST25VF064C_DRIVER_MODE
+    string "Driver Implementation"
+    depends on USE_DRV_SST25VF064C
+    range DRV_SST25VF064C_MODE
+    default "DYNAMIC"
+    persistent
+    ---help---
+    IDH_HTML_SST25VF064C_Driver_Library
+    ---endhelp---
+    
+config DRV_SST25VF064C_INSTANCES_NUMBER
+    int "Number of SST25VF064C Driver Instances"
+    depends on USE_DRV_SST25VF064C
+    range 1 2
+    default 1
+    ---help---
+    IDH_HTML_DRV_SST25VF064C_INSTANCES_NUMBER
+    ---endhelp---
+ 
+config DRV_SST25VF064C_CLIENTS_NUMBER
+    int "Number of SST25VF064C Driver Clients"
+    depends on USE_DRV_SST25VF064C
+    default 1
+    ---help---
+    IDH_HTML_DRV_SST25VF064C_CLIENTS_NUMBER
+    ---endhelp---
+    
+config DRV_SST25VF064C_QUEUE_DEPTH_COMBINED
+    int "Combined Queue Depth"
+    depends on USE_DRV_SST25VF064C 
+    default 16
+    ---help---
+    IDH_HTML_DRV_SST25VF064C_QUEUE_DEPTH_COMBINED
+    ---endhelp---
+
+source "$HARMONY_VERSION_PATH/framework/driver/spi_flash/sst25vf064c/config/drv_sst25vf064c_idx.ftl" 3 instances
+
+
+ifblock USE_DRV_SST25VF064C
+
+add "<#include \"/framework/driver/spi_flash/sst25vf064c/templates/drv_sst25vf064c.c.ftl\">"  to list SYSTEM_INIT_C_DRIVER_INITIALIZATION_DATA
+add "<#include \"/framework/driver/spi_flash/sst25vf064c/templates/drv_sst25vf064c_init.c.ftl\">"  to list SYSTEM_INIT_C_SYS_INITIALIZE_DRIVERS
+add "<#include \"/framework/driver/spi_flash/sst25vf064c/templates/drv_sst25vf064c_tasks.c.ftl\">"  to list SYSTEM_TASKS_C_CALL_DRIVER_TASKS
+
+file DRV_SST25VF064C_H "$HARMONY_VERSION_PATH/framework/driver/spi_flash/sst25vf064c/drv_sst25vf064c.h" to "$PROJECT_HEADER_FILES/framework/driver/spi_flash/sst25vf064c/drv_sst25vf064c.h"
+file DRV_SST25VF064C_LOCAL_H "$HARMONY_VERSION_PATH/framework/driver/spi_flash/sst25vf064c/src/drv_sst25vf064c_local.h" to "$PROJECT_HEADER_FILES/framework/driver/spi_flash/sst25vf064c/src/drv_sst25vf064c_local.h"
+file DRV_SST25VF064C_VAR_MAPPING_H "$HARMONY_VERSION_PATH/framework/driver/spi_flash/sst25vf064c/src/drv_sst25vf064c_variant_mapping.h" to "$PROJECT_HEADER_FILES/framework/driver/spi_flash/sst25vf064c/src/drv_sst25vf064c_variant_mapping.h"
+file DRV_SST25VF064C_C "$HARMONY_VERSION_PATH/framework/driver/spi_flash/sst25vf064c/src/dynamic/drv_sst25vf064c.c" to "$PROJECT_SOURCE_FILES/framework/driver/spi_flash/sst25vf064c/src/dynamic/drv_sst25vf064c.c"
+
+endif

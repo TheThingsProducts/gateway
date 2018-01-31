@@ -1,0 +1,274 @@
+menu "NVM"
+    depends on HAVE_NVM
+
+enum DRV_NVM_MODE
+    "DYNAMIC"
+	
+ config DRV_NVM_NEEDED
+    bool 
+	
+config USE_DRV_NVM
+    bool "Use NVM Driver?"
+    select DRIVER
+    select USE_SYS_INT_NEEDED
+    default n if !DRV_NVM_NEEDED
+	default y if DRV_NVM_NEEDED
+    ---help---
+      IDH_HTML_Non_Volatile_Memory__NVM__Driver_Library
+    ---endhelp---
+
+config DRV_NVM_DRIVER_MODE
+    string "Driver Implementation"
+    depends on USE_DRV_NVM
+    range DRV_NVM_MODE
+    default "DYNAMIC"
+    ---help---
+    IDH_HTML_Non_Volatile_Memory__NVM__Driver_Library
+    ---endhelp---
+
+ifblock DRV_NVM_DRIVER_MODE = "DYNAMIC"   
+
+config DRV_NVM_INSTANCES_NUMBER
+    int
+    depends on USE_DRV_NVM
+    default 1	
+    ---help---
+      IDH_HTML_DRV_NVM_INSTANCES_NUMBER
+    ---endhelp---
+    
+config DRV_NVM_CLIENTS_NUMBER
+    int "Number of NVM Driver Clients"
+    depends on USE_DRV_NVM
+    default 1
+    ---help---
+      IDH_HTML_DRV_NVM_CLIENTS_NUMBER
+    ---endhelp---
+    
+enum DRV_NVM_IDX
+    "DRV_NVM_INDEX_0"
+
+config DRV_NVM_INDEX
+    string
+    depends on USE_DRV_NVM
+    range DRV_NVM_IDX
+    default "DRV_NVM_INDEX_0"
+    ---help---
+      IDH_HTML_DRV_NVM_INDEX_0
+    ---endhelp---
+
+config USE_DRV_NVM_MEDIA
+    bool "Use NVM Media Layer?"
+    depends on USE_DRV_NVM 
+    select USE_SYS_FS_NEEDED
+    select DRIVER
+    default n
+    ---help---
+      IDH_HTML_Non_Volatile_Memory__NVM__Driver_Library
+    ---endhelp---
+
+config DRV_NVM_MEDIA_OBJECT_NUMBER
+    int "Number of NVM Media Objects (Disks)"
+    depends on USE_DRV_NVM
+    depends on USE_DRV_NVM_MEDIA
+    default 1
+    ---help---
+      IDH_HTML_DRV_NVM_MEDIA_OBJECT_NUMBER
+    ---endhelp---
+    
+config DRV_NVM_MEDIA_START_ADDRESS
+    hex "NVM Media Start Address"
+    depends on USE_DRV_NVM
+    depends on USE_DRV_NVM_MEDIA
+    default 0x9D004000
+    ---help---
+      IDH_HTML_NVM_MEDIA_START_ADDRESS
+    ---endhelp---
+    
+config DRV_NVM_MEDIA_SIZE
+    int "NVM Media Size"
+    depends on USE_DRV_NVM
+    depends on USE_DRV_NVM_MEDIA
+    default DRV_NVM_PAGE_SIZE
+    ---help---
+      IDH_HTML_NVM_MEDIA_SIZE
+    ---endhelp---
+    
+config DRV_NVM_MEDIA_SECTOR_SIZE
+    int "NVM Media Sector Size (bytes)"
+    depends on USE_DRV_NVM
+    depends on USE_DRV_NVM_MEDIA
+    default 2048 if ((SYS_FS_MPFS = y) && PIC32MZ)
+	default 512  if ((SYS_FS_MPFS = y) && PIC32MX)
+    default 512 if SYS_FS_FAT = y
+    ---help---
+      IDH_HTML_NVM_MEDIA_SECTOR_SIZE
+    ---endhelp---
+    
+config USE_DRV_NVM_ERASE_WRITE
+    bool "Enable Erase Write Function?"
+    depends on USE_DRV_NVM    
+    select DRIVER
+    default n
+    ---help---
+      IDH_HTML_DRV_NVM_ERASE_WRITE_ENABLE
+    ---endhelp---
+
+config DRV_NVM_BUFFER_OBJECT_NUMBER
+    int "Number of NVM Buffer Objects"
+    depends on USE_DRV_NVM
+    range 1 5
+    default 5
+    ---help---
+      IDH_HTML_DRV_NVM_BUFFER_OBJECT_NUMBER
+    ---endhelp---
+    
+config DRV_NVM_PERIPHERAL_ID
+    string
+    depends on USE_DRV_NVM
+    range FLASH_MODULE_ID
+    default "NVM_ID_0"
+    ---help---
+      IDH_HTML_NVM_MODULE_ID
+    ---endhelp---
+
+config DRV_NVM_INTERRUPT_MODE
+    bool
+    depends on USE_DRV_NVM
+    default y
+    ---help---
+      IDH_HTML_DRV_NVM_INTERRUPT_MODE
+    ---endhelp---
+    
+config DRV_NVM_INTERRUPT_SOURCE
+    string
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    default "INT_SOURCE_FLASH_CONTROL"
+    ---help---
+      IDH_HTML_INT_SOURCE
+    ---endhelp---
+    
+config DRV_NVM_INTERRUPT_VECTOR
+    string
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    default "INT_VECTOR_FLASH"
+    ---help---
+      IDH_HTML_INT_VECTOR
+    ---endhelp---
+    
+config DRV_NVM_INTERRUPT_PRIORITY
+    string "Interrupt Priority"
+    depends on USE_DRV_NVM
+    range INT_PRIORITY_LEVEL
+    default "INT_PRIORITY_LEVEL3"
+    ---help---
+      IDH_HTML_INT_PRIORITY_LEVEL
+    ---endhelp---
+    
+config DRV_NVM_INTERRUPT_SUB_PRIORITY
+    string "Interrupt Sub-priority"
+    depends on USE_DRV_NVM
+    range INT_SUBPRIORITY_LEVEL
+    default "INT_SUBPRIORITY_LEVEL0"
+    ---help---
+      IDH_HTML_INT_SUBPRIORITY_LEVEL
+    ---endhelp---
+   
+config DRV_NVM_INT_PRIO_NUM
+    string
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    default "INT_DISABLE_INTERRUPT" if DRV_NVM_INTERRUPT_PRIORITY = "INT_DISABLE_INTERRUPT"
+    default "INT_PRIORITY_LEVEL1" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL1"
+    default "INT_PRIORITY_LEVEL2" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL2"
+    default "INT_PRIORITY_LEVEL3" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL3"
+    default "INT_PRIORITY_LEVEL4" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL4"
+    default "INT_PRIORITY_LEVEL5" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL5"
+    default "INT_PRIORITY_LEVEL6" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL6"
+    default "INT_PRIORITY_LEVEL7" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL7"    
+
+config DRV_NVM_INT_IPL
+    string
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    default "0" if DRV_NVM_INTERRUPT_PRIORITY = "INT_DISABLE_INTERRUPT"
+    default "1" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL1"
+    default "2" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL2"
+    default "3" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL3"
+    default "4" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL4"
+    default "5" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL5"
+    default "6" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL6"
+    default "7" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL7"    
+
+config DRV_NVM_SYS_INTERRUPT_VECTOR
+    string
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    default "INT_VECTOR_FLASH" if ((DRV_NVM_INTERRUPT_VECTOR = "INT_VECTOR_FLASH") && PIC32MZ)
+    default "INT_VECTOR_FCE" if ((DRV_NVM_INTERRUPT_VECTOR = "INT_VECTOR_FLASH") && PIC32MX)
+ 
+config DRV_NVM_ISR_VECTOR
+    string
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    default "_FLASH_CONTROL_VECTOR" if ((DRV_NVM_INTERRUPT_VECTOR = "INT_VECTOR_FLASH") && PIC32MZ)
+    default "_FCE_VECTOR" if ((DRV_NVM_INTERRUPT_VECTOR = "INT_VECTOR_FLASH") && PIC32MX)
+     
+config  DRV_NVM_ROW_SIZE
+    int "NVM Row Size"
+    depends on USE_DRV_NVM
+    default 2048 if PIC32MZ = y
+    default 512 if PIC32MX = y
+    ---help---
+      IDH_HTML_DRV_NVM_ROW_SIZE
+    ---endhelp---
+    
+config DRV_NVM_PAGE_SIZE
+    int "NVM Page Size"
+    depends on USE_DRV_NVM
+    default 16384  if PIC32MZ = y
+    default 4096  if PIC32MX = y    
+    ---help---
+      This symbol holds NVM page size. Refer to the device datasheet to obtain this information.
+    ---endhelp---
+    
+config DRV_NVM_PROGRAM_UNLOCK_KEY1
+    hex "NVM Unlock Key #1"
+    depends on USE_DRV_NVM
+    default 0xAA996655
+    ---help---
+      IDH_HTML_DRV_NVM_UNLOCK_KEY1
+    ---endhelp---
+    
+config DRV_NVM_PROGRAM_UNLOCK_KEY2
+    hex "NVM Unlock Key #2"
+    depends on USE_DRV_NVM
+    default 0x556699AA  
+    ---help---
+      IDH_HTML_DRV_NVM_UNLOCK_KEY2
+    ---endhelp---
+    
+config DRV_NVM_POWER_STATE
+    depends on USE_DRV_NVM
+    string "Power State"
+    range SYS_MODULE_POWER_STATE
+    default "SYS_MODULE_POWER_RUN_FULL"
+    ---help---
+    IDH_HTML_SYS_MODULE_INIT
+    ---endhelp---
+
+endif    
+
+endmenu
+
+ifblock USE_DRV_NVM
+file DRV_NVM_H "$HARMONY_VERSION_PATH/framework/driver/nvm/drv_nvm.h" to "$PROJECT_HEADER_FILES/framework/driver/nvm/drv_nvm.h"
+file DRV_NVM_LOCAL_H "$HARMONY_VERSION_PATH/framework/driver/nvm/drv_nvm_local.h" to "$PROJECT_HEADER_FILES/framework/driver/nvm/drv_nvm_local.h"
+file DRV_NVM_VAR_H "$HARMONY_VERSION_PATH/framework/driver/nvm/drv_nvm_variant_mapping.h" to "$PROJECT_HEADER_FILES/framework/driver/nvm/drv_nvm_variant_mapping.h"
+file DRV_NVM_C "$HARMONY_VERSION_PATH/framework/driver/nvm/src/dynamic/drv_nvm.c" to "$PROJECT_SOURCE_FILES/framework/driver/nvm/src/dynamic/drv_nvm.c"
+endif
+
+ifblock USE_DRV_NVM_ERASE_WRITE
+file DRV_NVM_ERASEWRITE_C "$HARMONY_VERSION_PATH/framework/driver/nvm/src/dynamic/drv_nvm_erasewrite.c" to "$PROJECT_SOURCE_FILES/framework/driver/nvm/src/dynamic/drv_nvm_erasewrite.c"
+endif
+
+ifblock USE_DRV_NVM_MEDIA
+file DRV_NVM_MEDIA_H "$HARMONY_VERSION_PATH/framework/driver/nvm/drv_nvm_media.h" to "$PROJECT_HEADER_FILES/framework/driver/nvm/drv_nvm_media.h"
+file DRV_NVM_MEDIA_LOCAL_H "$HARMONY_VERSION_PATH/framework/driver/nvm/drv_nvm_media_local.h" to "$PROJECT_HEADER_FILES/framework/driver/nvm/drv_nvm_media_local.h"
+file DRV_NVM_MEDIA_C "$HARMONY_VERSION_PATH/framework/driver/nvm/src/dynamic/drv_nvm_media.c" to "$PROJECT_SOURCE_FILES/framework/driver/nvm/src/dynamic/drv_nvm_media.c"
+endif

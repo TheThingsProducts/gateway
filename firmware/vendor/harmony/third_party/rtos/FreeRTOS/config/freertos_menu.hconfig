@@ -1,0 +1,1748 @@
+menu "RTOS Configuration"
+    ---help---
+<p><strong>FreeRTOS & OpenRTOS</strong></p>
+<div>
+	&nbsp;</div>
+<p>Refer to http://www.freertos.org/RTOS.html</p>
+    ---endhelp---
+
+
+choice FREERTOS_SCHEDULER
+    prompt "Scheduler type"
+    default FREERTOS_PREEMPTIVE_SCHEDULER
+    ---help---
+<p><strong>Scheduler type</strong></p>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Select either the preemptive RTOS scheduler, or the cooperative RTOS scheduler.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable &quot;configUSE_PREEMPTION&quot; to 1 to use the preemptive RTOS scheduler, or 0 to use the cooperative RTOS scheduler.</div>
+    ---endhelp---
+    
+    config FREERTOS_PREEMPTIVE_SCHEDULER
+        bool "Preemptive"
+        ---help---
+<p><strong>FreeRTOS - Preemptive Schedule</strong></p>
+<div>
+	&nbsp;</div>
+<div>
+	Selects the preemptive RTOS scheduler.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable &quot;configUSE_PREEMPTION&quot; to 1 to use the preemptive RTOS scheduler.</div>
+        ---endhelp---
+        
+    config FREERTOS_COOPERATIVE_SCHEDULER
+        bool "Cooperative"
+        ---help---
+<p><strong>FreeRTOS - Cooperative Scheduler</strong></p>
+<div>
+	&nbsp;</div>
+<div>
+	Selects the cooperative RTOS scheduler.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable &quot;configUSE_PREEMPTION&quot; to 0 to use the cooperative RTOS scheduler.</div>
+        ---endhelp---
+        
+endchoice
+
+choice FREERTOS_TASK_SELECTION
+    prompt "Task Selection"
+    default FREERTOS_PORT_OPTIMIZED_TASK_SELECTION
+    ---help---
+<p><strong>FreeRTOS - Task Selection</strong></p>
+<div>
+	&nbsp;</div>
+<div>
+	Some FreeRTOS ports have two methods of selecting the next task to execute - a generic method, and a method that is specific to that port.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	The generic method:</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Is used when configUSE_PORT_OPTIMISED_TASK_SELECTION is set to 0, or when a port specific method is not implemented.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Can be used with all FreeRTOS ports.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Is completely written in C, making it less efficient than a port specific method.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Does not impose a limit on the maximum number of available priorities.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	A port specific method:</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Is not available for all ports.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Is used when configUSE_PORT_OPTIMISED_TASK_SELECTION is set to 1.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Relies on one or more architecture specific assembly instructions (typically a Count Leading Zeros [CLZ] of equivalent instruction) so can only be used with the architecture for which it was specifically written.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Is more efficient than the generic method.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Typically imposes a limit of 32 on the maximum number of available priorities.</div>
+    ---endhelp---
+    
+    config FREERTOS_PORT_OPTIMIZED_TASK_SELECTION
+        bool "Port specific"
+        ---help---
+<p><strong>FreeRTOS - Port Specific Task Selection</strong></p>
+<div>
+	&nbsp;</div>
+<div>
+	A port specific task selection method relies on one or more architecture specific assembly instructions (typically a Count Leading Zeros [CLZ] of equivalent instruction) so can only be used with the architecture for which it was specifically written.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Is more efficient than the generic method.</div>
+<div>
+	Typically imposes a limit of 32 on the maximum number of available priorities.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable &quot;configUSE_PORT_OPTIMISED_TASK_SELECTION&quot; to 1 &nbsp;to select the port specific task selection method. imposes a limit of 32 on the maximum number of availabl
+        ---endhelp---
+    
+    config FREERTOS_GENERIC_TASK_SELECTION
+        bool "Generic"
+        ---help---
+<p><strong>FreeRTOS - Generic Task Selection</strong></p>
+<div>
+	&nbsp;</div>
+<div>
+	A generic task selection method can be used with all FreeRTOS ports(architectures).</div>
+<div>
+	&nbsp;</div>
+<div>
+	Is completely written in C, making it less efficient than a port specific method.</div>
+<div>
+	Does not impose a limit on the maximum number of available priorities.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable &quot;configUSE_PORT_OPTIMISED_TASK_SELECTION&quot; to 0 to select the generic task selection method.</div>
+        ---endhelp---
+
+endchoice
+
+choice FREERTOS_TICKLESS_IDLE_CHOICE
+    prompt "Tick mode"
+    default FREERTOS_TICK_INTERRUPT
+    ---help---
+<p><strong>FreeRTOS - Tick Mode</strong></p>
+<div>
+	&nbsp;</div>
+<div>
+	Selects either the low power tickless mode, or keeps the tick interrupt running at all times.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_TICKLESS_IDLE to 1 to use the low power tickless mode, or 0 to keep the tick interrupt running at all times.</div>
+    ---endhelp---
+    
+    config FREERTOS_TICKLESS_IDLE
+        bool "Tickless idle mode"
+        ---help---
+<div>
+	<strong>FreeRTOS - Tickless Idle Mode</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_TICKLESS_IDLE to 1 to use the low power tickless mode.</div>
+        ---endhelp---
+        
+    config FREERTOS_TICK_INTERRUPT
+        select USE_SYS_INT_NEEDED
+        bool "Tick interrupt"
+        ---help---
+<div>
+	<strong>FreeRTOS - Tick Interrupt</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_TICKLESS_IDLE to 0 to keep the tick interrupt running at all times.</div>
+        ---endhelp---
+        
+endchoice
+
+config FREERTOS_EXPECTED_IDLE_TIME_BEFORE_SLEEP
+    int "Expected idle time before sleep"
+    default 2
+    range 2 9999999999999
+    depends on FREERTOS_TICKLESS_IDLE
+    ---help---
+<div>
+	<strong>FreeRTOS - Expected idle time before sleep</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	When the tickless idle functionality is enabled, the kernel will call the portSUPPRESS_TICKS_AND_SLEEP() macro when the following two conditions are both true:</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; 1) The Idle task is the only task able to run because all the application tasks are either in the Blocked state or in the Suspended state.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;</div>
+<div>
+	&nbsp; &nbsp; 2) At least n further complete tick periods will pass before the kernel is due to transition an application task out of the Blocked state, where n is set by the configEXPECTED_IDLE_TIME_BEFORE_SLEEP definition in FreeRTOSConfig.h.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configEXPECTED_IDLE_TIME_BEFORE_SLEEP to the specified value.</div>
+
+    ---endhelp---
+    
+config FREERTOS_CPU_CLOCK_HZ
+    string "CPU clock speed (Hz)"
+    default SYS_CLK_FREQ if USE_SYS_CLK
+    default "40000000" if !USE_SYS_CLK
+    persistent if USE_SYS_CLK
+        
+    ---help---
+<div>
+	<strong>FreeRTOS - CPU clock speed (Hz)</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	This is the CPU clock speed (SYSCLK), typically obtained from the Clock System Service configuration.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configCPU_CLOCK_HZ.</div>
+    ---endhelp---
+
+config FREERTOS_PERIPHERAL_CLOCK_HZ
+    string "Peripheral clock speed (Hz)"
+    default SYS_CLK_PBCLK_FREQ if USE_SYS_CLK && PIC32MX
+    default SYS_CLK_PBCLK2_FREQ if USE_SYS_CLK && PIC32MZ
+    default "40000000" if !USE_SYS_CLK
+    persistent if USE_SYS_CLK
+    
+    ---help---
+<div>
+	<strong>FreeRTOS - Peripheral clock speed (Hz)</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	This is the frequency in Hz at which the Timer peripherals are clocked (PBCLK), obtained from the Clock System Service configuration.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configPERIPHERAL_CLOCK_HZ.</div>
+    ---endhelp---
+    
+config FREERTOS_TIMER_ID
+    string "Timer Module ID"
+    range TMR_MODULE_ID
+    persistent
+    default "TMR_ID_1"
+    ---help---
+<div>
+	<strong>FreeRTOS - Hardware Timer ID</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	This is hardware timer ID that is used for tick. This timer is defined in port.c file.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC reserves this timer ID for use by FreeRTOS.</div>
+    ---endhelp---
+
+config FREERTOS_TICK_RATE_HZ
+    int "Tick rate (Hz)"
+    default 250
+    ---help---
+<div>
+	<strong>FreeRTOS - Tick rate (Hz)</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	The frequency of the RTOS tick interrupt. &nbsp;The tick interrupt is used to measure time. &nbsp;Therefore a higher tick frequency means time can be measured to a higher resolution.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	However, a high tick frequency also means that the RTOS kernel will use more CPU time so be less efficient. The RTOS demo applications all use a tick rate of 1000Hz. This is used to test the RTOS kernel and is higher than would normally be required.</div>
+<div>
+	&nbsp;</div>
+<div>
+	More than one task can share the same priority. The RTOS scheduler will share processor time between tasks of the same priority by switching between the tasks during each RTOS tick. &nbsp;A high tick rate frequency will therefore also have the effect of reducing the &#39;time slice&#39; given to each task.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configTICK_RATE_HZ.</div>
+    ---endhelp---
+    
+config FREERTOS_MAX_PRIORITIES
+    int "Maximum number of priorities"
+    default 5
+    range 1 999999999
+    ---help---
+<div>
+	<strong>FreeRTOS - Maximum number of priorities</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	The number of priorities available to the application tasks.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	Any number of tasks can share the same priority.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	Co-routines are prioritised separately - see configMAX_CO_ROUTINE_PRIORITIES.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Each available priority consumes RAM within the RTOS kernel so this value should not be set any higher than actually required by your application.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configMAX_PRIORITIES.</div>
+    ---endhelp---
+    
+config FREERTOS_MINIMAL_STACK_SIZE
+    int "Minimal stack size"
+    default 128
+    ---help---
+<div>
+	<strong>FreeRTOS - Minimal stack size</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	The size of the stack (in words) used by the idle task.&nbsp;</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Generally this should not be reduced from the value &nbsp; &nbsp;set in the FreeRTOSConfig.h file provided with the demo application for the port you are using.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Like the stack size parameter to the xTaskCreate() function, the stack size is specified in words, not bytes. If each item placed on the stack is 32-bits, then a stack size of 100 means 400 bytes (each 32-bit stack item consuming 4 bytes).</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configMINIMAL_STACK_SIZE.</div>
+    ---endhelp---
+
+config FREERTOS_ISR_STACK_SIZE
+    int "ISR stack size"
+    default 400
+    ---help---
+<div>
+	<strong>FreeRTOS - ISR stack size</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	The size of the stack (in words) used by interrupt service routines that cause a context switch.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configISR_STACK_SIZE.</div>
+    ---endhelp---
+
+choice FREERTOS_MEMORY_MANAGEMENT_CHOICE
+    prompt "Memory management type"
+    default FREERTOS_HEAP_1
+    ---help---
+<div>
+	<strong>FreeRTOS - Memory management type</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	The FreeRTOS download includes five sample memory allocation implementations.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	Each provided implementation is contained in a separate source file (heap_1.c, heap_2.c, heap_3.c, heap_4.c, and heap_5.c respectively). &nbsp;Exactly one of these source files should be included in a project at a time [the heap defined by these portable layer functions will be used by the RTOS kernel even if the application that is using the RTOS opts to use its own heap implementation].</div>
+<div>
+	&nbsp;</div>
+<div>
+	Following below:</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; heap_1 - the very simplest, does not permit memory to be freed</div>
+<div>
+	&nbsp; &nbsp; heap_2 - permits memory to be freed, but does coalescence adjacent free blocks.</div>
+<div>
+	&nbsp; &nbsp; heap_3 - simply wraps the standard malloc() and free() for thread safety</div>
+<div>
+	&nbsp; &nbsp; heap_4 - include coalescence of adjacent free blocks to avoid fragmentation</div>
+<div>
+	&nbsp; &nbsp; heap_5 - similar to heap_4 but allows the heap to span multiple non-contiguous memory regions</div>
+    ---endhelp---
+    
+    config FREERTOS_HEAP_1
+        bool "Heap 1"
+        ---help---
+<div>
+	<strong>FreeRTOS - Heap 1</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	heap_1 is the simplest implementation of all. It does not permit memory to be freed once it has been allocated. Despite this, heap_1.c is appropriate for a large number of embedded applications. This is because the majority of deeply embedded applications create all the tasks, queues, semaphores, etc. required when the system boots, and then use all of these objects for the lifetime of program (until the application is switched off again, or is rebooted). Nothing ever gets deleted.</div>
+<div>
+	&nbsp;</div>
+<div>
+	The implementation simply subdivides a single array into smaller blocks as RAM is requested.&nbsp;</div>
+<div>
+	The total size of the array (the total size of the heap) is set by configTOTAL_HEAP_SIZE - which is defined in FreeRTOSConfig.h.</div>
+<div>
+	&nbsp;</div>
+<div>
+	The xPortGetFreeHeapSize() API function returns the total amount of heap space that remains unallocated, allowing the configTOTAL_HEAP_SIZE setting to be optimised.</div>
+<div>
+	&nbsp;</div>
+<div>
+	The heap_1 implementation:</div>
+<div>
+	&nbsp;</div>
+<div>
+	Can be used if your application never deletes a task, queue, semaphore, mutex, etc. (which actually covers the majority of applications in which FreeRTOS gets used).</div>
+<div>
+	&nbsp;</div>
+<div>
+	Is always deterministic (always takes the same amount of time to execute) and cannot result in memory fragmentation.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Is very simple and allocated memory from a statically allocated array, meaning it is often suitable for use in applications that do not permit true dynamic memory allocation.</div>
+        ---endhelp---
+        
+    config FREERTOS_HEAP_2
+        bool "Heap 2"
+        ---help---
+<div>
+	<strong>FreeRTOS - Heap 2</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	This scheme uses a best fit algorithm and, unlike scheme 1, allows previously allocated blocks to be freed. &nbsp;It does not however combine adjacent free blocks into a single large block (it does not include a coalescence algorithm - see heap_4.c for an implementation that does coalescence free blocks).</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	The total amount of available heap space is set by configTOTAL_HEAP_SIZE - which is defined in FreeRTOSConfig.h.</div>
+<div>
+	&nbsp;</div>
+<div>
+	The xPortGetFreeHeapSize() API function returns the total amount of heap space that remains unallocated (allowing the configTOTAL_HEAP_SIZE setting to be optimised), but does not provided information on how the unallocated memory is fragmented into smaller blocks.</div>
+<div>
+	&nbsp;</div>
+<div>
+	This implementation:</div>
+<div>
+	&nbsp;</div>
+<div>
+	Can be used even when the application repeatedly deletes tasks, queues, semaphores, mutexes, etc., with the caveat below regarding memory fragmentation.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Should not be used if the memory being allocated and freed is of a random size.&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	For example:</div>
+<div>
+	&nbsp;</div>
+<div>
+	If an application dynamically creates and deletes tasks, and the size of the stack allocated to the tasks being created is always the same, then heap2.c can be used in most cases. However, if the size of the stack allocated to the tasks being created was not always the same, then the available free memory might become fragmented into many small blocks, eventually resulting in allocation failures. heap_4.c would be a better choice in this case.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	If an application dynamically creates and deletes queues, and the queue storage area is the same in each case (the queue storage area is the queue item size multiplied by the length of the queue), then heap_2.c can be used in most cases. However, if the queue storage area were not the same in each case, then the available free memory might become fragmented into many small blocks, eventually resulting in allocation failures. &nbsp;heap_4.c would be a better choice in this case.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	The application called pvPortMalloc() and vPortFree() directly, rather than just indirectly through other FreeRTOS API functions. Could possibly result in memory fragmentation problems if your application queues, tasks, semaphores, mutexes, etc. in an unpredictable order. This would be unlikely for nearly all applications but should be kept in mind. Is not deterministic - but is much more efficient that most standard C library malloc implementations.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	heap_2.c is suitable for most small real time systems that have to dynamically create tasks.</div>
+        ---endhelp---
+ 
+    config FREERTOS_HEAP_3
+        bool "Heap 3"
+        ---help---
+<div>
+	<strong>FreeRTOS - Heap 3</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	This implements a simple wrapper for the standard C library malloc() and free() functions that will, &nbsp;in most cases, be supplied with your chosen compiler. The wrapper simply makes the malloc() and free() functions thread safe.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	This implementation:</div>
+<div>
+	&nbsp;</div>
+<div>
+	Requires the linker to setup a heap, and the compiler library to provide malloc() and free() implementations.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Is not deterministic.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Will probably considerably increase the RTOS kernel code size.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Note that the configTOTAL_HEAP_SIZE setting in FreeRTOSConfig.h has no effect when heap_3 is used.</div>
+        ---endhelp---
+
+    config FREERTOS_HEAP_4
+        bool "Heap 4"
+        ---help---
+<div>
+	<strong>FreeRTOS - Heap 4</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	This scheme uses a first fit algorithm and, unlike scheme 2, does combine adjacent free memory blocks into a single large block (it does include a coalescence algorithm).</div>
+<div>
+	&nbsp;</div>
+<div>
+	The total amount of available heap space is set by configTOTAL_HEAP_SIZE - which is defined in FreeRTOSConfig.h.</div>
+<div>
+	&nbsp;</div>
+<div>
+	The xPortGetFreeHeapSize() API function returns the total amount of heap space that remains unallocated (allowing the configTOTAL_HEAP_SIZE setting to be optimised), but does not provided information on how the unallocated memory is fragmented into smaller blocks.</div>
+<div>
+	&nbsp;</div>
+<div>
+	This implementation:</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Can be used even when the application repeatedly deletes tasks, queues, semaphores, mutexes, etc.</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Is much less likely than the heap_2 implementation to result in a heap space that is badly fragmented into multiple small blocks - even when the memory being allocated and freed is of random size.</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Is not deterministic - but is much more efficient that most standard C library malloc implementations.</div>
+<div>
+	&nbsp;&nbsp;</div>
+<div>
+	heap_4.c is particularly useful for applications that want to use the portable layer memory allocation schemes directly in the application code (rather than just indirectly by calling API functions that themselves call pvPortMalloc() and vPortFree()).</div>
+    ---endhelp---
+        
+    config FREERTOS_HEAP_5
+        bool "Heap 5"
+        ---help---
+<div>
+	<strong>FreeRTOS - Heap 5</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	This scheme uses the same first fit and memory coalescence algorithms as heap_4, and allows the heap to span multiple non adjacent (non-contiguous) memory regions.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Heap_5 is initialised by calling vPortDefineHeapRegions(), and cannot be used until after vPortDefineHeapRegions() has executed. Creating an RTOS object (task, queue, semaphore, etc.) will implicitly call pvPortMalloc() so it is essential that, when using heap_5, vPortDefineHeapRegions() is called before the creation of any such object.</div>
+<div>
+	&nbsp;</div>
+<div>
+	vPortDefineHeapRegions() takes a single parameter. The parameter is an array of HeapRegion_t structures. HeapRegion_t is defined in portable.h</div>
+<div>
+	&nbsp;</div>
+<div>
+	The array is terminated using a NULL zero sized region definition, and the memory regions defined in the array must appear in address order, from low address to high address.</div>
+    ---endhelp---
+    
+endchoice
+    
+config FREERTOS_TOTAL_HEAP_SIZE
+    int "Total heap size"
+    default 10240
+    depends on !FREERTOS_HEAP_3
+    ---help---
+<div>
+	<strong>FreeRTOS - Total heap size</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	The total amount of RAM available to the RTOS kernel for heap allocation.</div>
+<div>
+	&nbsp;</div>
+<div>
+	This value will only be used if your application makes use of one of the sample memory allocation schemes provided in the FreeRTOS source code download.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configTOTAL_HEAP_SIZE.</div>
+    ---endhelp---
+
+config FREERTOS_MAX_TASK_NAME_LEN
+    int "Maximum task name length"
+    default 16
+    range 1 1024
+    ---help---
+<div>
+	<strong>FreeRTOS - Maximum task name length</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	The maximum permissible length of the descriptive name given to a task when the task is created.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	The length is specified in the number of characters including the NULL termination byte.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configMAX_TASK_NAME_LEN.</div>
+    ---endhelp---
+
+config FREERTOS_USE_16_BIT_TICKS
+    bool "Use 16-bit ticks"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Use 16-bit ticks</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	Time is measured in &#39;ticks&#39; - which is the number of times the tick interrupt has executed since the RTOS kernel was started. The tick count is held in a variable of type TickType_t.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Using 16-bit ticks causes TickType_t to be defined (typedef&#39;ed) as an unsigned 16bit type. Not using 16-bit ticks causes TickType_t to be defined (typedef&#39;ed) as an unsigned 32bit type.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Using a 16 bit type will greatly improve performance on 8 and 16 bit architectures, but limits the maximum specifiable time period to 65535 &#39;ticks&#39;. Therefore, assuming a tick frequency of 250Hz, the maximum time a task can delay or block when a 16bit counter is used is 262 seconds, compared to 17179869 seconds when using a 32bit counter.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_16_BIT_TICKS to 1 for 16-bit ticks or 0 for 32-bit ticks.</div>
+    ---endhelp---
+    
+config FREERTOS_IDLE_SHOULD_YIELD
+    bool "Idle task should yield"
+    depends on FREERTOS_PREEMPTIVE_SCHEDULER
+    default y
+    ---help---
+<div>
+	<strong>FreeRTOS - Idle task should yield</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	This parameter controls the behaviour of tasks at the idle priority. It only has an effect if the preemptive scheduler is being used. &nbsp;The user&#39;s application creates tasks that run at the idle priority.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Tasks that share the same priority will time slice. Assuming none of the tasks get preempted, it might be assumed that each task of at a given priority will be allocated an equal amount of processing time - and if the shared priority is above the idle priority then this is indeed the case.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	When tasks share the idle priority the behaviour can be slightly different. When idle tasks should yield, the idle task will yield immediately should any other task at the idle priority be ready to run. This ensures the minimum amount of time is spent in the idle task when application tasks are available for scheduling. This behaviour can however have undesirable effects (depending on the needs of your application) as depicted below:</div>
+<div>
+	&nbsp;</div>
+<div>
+	Suppose we have four tasks at the idle priority. Tasks A, B and C are application tasks. Task I is the idle task. A context switch occurs with regular period at times T0, T1, ..., T6. When the idle task yields task A starts to execute - but the idle task has already taken up some of the current time slice. &nbsp;This results in task I and task A effectively sharing a time slice. The application tasks B and C therefore get more processing time than the application task A.</div>
+<div>
+	&nbsp;</div>
+<div>
+	This situation can be avoided by:</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; If appropriate, using an idle hook in place of separate tasks at the idle priority.</div>
+<div>
+	&nbsp; &nbsp; Creating all application tasks at a priority greater than the idle priority.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	&nbsp; &nbsp; Configuring the idle task to not yield prevents the idle task from yielding processing time until the end of its time slice. This ensure all tasks at the idle priority are allocated an equal amount of processing time - but at the cost of a greater proportion of the total processing time being allocated to the idle task.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configIDLE_SHOULD_YIELD.</div>
+    ---endhelp---
+    
+config FREERTOS_USE_MUTEXES
+    bool "Use mutexes"
+    default y
+    ---help---
+<div>
+	<strong>FreeRTOS - Use mutexes</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit mutex functionality in the build.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Readers should familiarize themselves with the differences between mutexes and binary semaphores in relation to the FreeRTOS functionality.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_MUTEXES.</div>
+    ---endhelp---
+
+config FREERTOS_USE_RECURSIVE_MUTEXES
+    bool "Use recursive mutexes"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Use recursive mutexes</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	Indicates whether to include or omit recursive mutex functionality from the build.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_RECURSIVE_MUTEXES.</div>
+    ---endhelp---
+
+config FREERTOS_USE_COUNTING_SEMAPHORES
+    bool "Use counting semaphores"
+    default y
+    ---help---
+<div>
+	<strong>FreeRTOS - Use counting semaphores</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	Indicates whether to include or omit counting semaphore functionality in the build.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_COUNTING_SEMAPHORES.</div>
+    ---endhelp---
+
+config FREERTOS_USE_TASK_NOTIFICATIONS
+    bool "Use task notifications"
+    default y
+    ---help---
+<div>
+	<strong>FreeRTOS - Use task notifications</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	Indicates whether to include or omit task notifications functionality in the build.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_TASK_NOTIFICATIONS.</div>
+    ---endhelp---
+    
+config FREERTOS_QUEUE_REGISTRY_SIZE
+    int "Queue registry size"
+    default 0
+    ---help---
+<div>
+	<strong>FreeRTOS - Queue registry size</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	The queue registry has two purposes, both of which are associated with RTOS kernel aware debugging:</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; It allows a textual name to be associated with a queue for easy queue identification within a debugging GUI.</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; It contains the information required by a debugger to locate each registered queue and semaphore.</div>
+<div>
+	&nbsp;</div>
+<div>
+	The queue registry has no purpose unless you are using a RTOS kernel aware debugger.</div>
+<div>
+	&nbsp;</div>
+<div>
+	configQUEUE_REGISTRY_SIZE defines the maximum number of queues and semaphores that can be registered. &nbsp;Only those queues and semaphores that you want to view using a RTOS kernel aware debugger need be registered.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	See the API reference documentation for vQueueAddToRegistry() and vQueueUnregisterQueue() for more information.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configQUEUE_REGISTRY_SIZE.</div>
+    ---endhelp---
+    
+config FREERTOS_USE_QUEUE_SETS
+    bool "Use queue sets"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Use queue sets</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	Indicates whether to include or omit queue set functionality (the ability to block, or pend, on multiple queues and semaphores).</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_QUEUE_SETS.</div>
+    ---endhelp---
+
+config FREERTOS_USE_TIME_SLICING
+    bool "Use time slicing"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Use time slicing</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	By default, FreeRTOS uses prioritised preemptive scheduling with time slicing.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	That means the RTOS scheduler will always run the highest priority task that is in the Ready state, and will switch between tasks of equal priority on every RTOS tick interrupt.&nbsp;</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	If time slicing is not used, then the RTOS scheduler will still run the highest priority task that is in the Ready state, but will not switch between tasks of equal priority just because a tick interrupt has occurred.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_TIME_SLICING.</div>
+    ---endhelp---
+
+config FREERTOS_USE_NEWLIB_REENTRANT
+    bool "Use newlib reentrant structure"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Use newlib reentrant structure</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	Indicates whether to allocate a newlib reent structure for each created task.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Note Newlib support has been included by popular demand, but is not used by the FreeRTOS maintainers themselves. FreeRTOS is not responsible for resulting newlib operation. Users must be familiar with newlib and must provide system-wide implementations of the necessary stubs. Be warned that (at the time of writing) the current newlib design implements a system-wide malloc() that must be provided with locks.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_NEWLIB_REENTRANT.</div>
+    ---endhelp---
+    
+config FREERTOS_ENABLE_BACKWARD_COMPATIBILITY
+    bool "Enable backward compatibility"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Enable backward compatibility</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	The FreeRTOS.h header file includes a set of #define macros that map the names of data types used in versions of FreeRTOS prior to version 8.0.0 to the names used in FreeRTOS version 8.0.0. The macros allow application code to update the version of FreeRTOS they are built against from a pre 8.0.0 version to a post 8.0.0 version without modification. Setting this option excludes the macors from the build, and in so doing allowing validation that no pre version 8.0.0 names are being used.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configENABLE_BACKWARD_COMPATIBILITY.</div>
+    ---endhelp---
+
+config FREERTOS_USE_TASK_FPU_SUPPORT
+    depends on HAVE_FPU
+	bool "Enable hardware FPU support for tasks"
+	default n
+	---help---
+<div>
+	<strong>FreeRTOS - Enable hard FPU support for tasks</strong></div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	For PIC32 parts that support a hardware floating point unit (FPU), FreeRTOS implements an optimized context switch sequence. Setting this option sets the configUSE_TASK_FPU_SUPPORT to 1. This will enable the optimized context switching code that saves the FPU registers for those tasks currently needing FPU support. Clearing this option prevents FPU support being added. If this option is selected but no hardware FPU support is available then a compilation error will be generated. This will occur if floating point support has been selected and no hardware is available on the device OR if the -msoft-float option has been passed to the command line compiler.</div>
+<div>
+	The FPU context is inherently quite large (a minimum of 264 bytes per interrupt nesting level per task) and so only those tasks that need FPU support should enable it. This is enabled by calling the function: portTASK_USES_FLOATING_POINT() at the very start of the task. From this point onwards all context switches will save the additional FPU registers.
+<div>
+	A restriction is that floating point operations can only be performed from tasks operating at the normal interrupt priority (IPL0). No floating point operations are permitted from interrupt routines as the context saving code would become prohibitively large.
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>	
+	---endhelp---
+	
+config FREERTOS_IDLE_HOOK
+    bool "Use idle hook"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Use idle hook</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_IDLE_HOOK to 1 to use an idle hook, or 0 to omit an idle hook.</div>
+    ---endhelp---
+
+config FREERTOS_TICK_HOOK
+    bool "Use tick hook"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Use tick hook</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_TICK_HOOK to 1 to use a tick hook, or 0 to omit a tick hook.</div>
+    ---endhelp---
+
+choice FREERTOS_CHECK_FOR_STACK_OVERFLOW
+    prompt "Stack overflow checking"
+    default FREERTOS_STACK_OVERFLOW_CHECK_METHOD_2
+    ---help---
+<div>
+	<strong>FreeRTOS - Stack overflow checking</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Each task maintains its own stack. The memory used by the task stack is allocated automatically when the task is created, and dimensioned by a parameter passed to the xTaskCreate() API function. Stack overflow is a very common cause of application instability. FreeRTOS therefore provides two optional mechanisms that can be used to assist in the detection and correction of just such an occurrence.&nbsp;</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Note that these options are only available on architectures where the memory map is not segmented. Also, some processors could generate a fault or exception in response to a stack corruption before the RTOS kernel overflow check can occur.&nbsp;</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	The application must provide a stack overflow hook function if stack checking is enabled.&nbsp;</div>
+<div>
+	The hook function must be called vApplicationStackOverflowHook(), and have the prototype below:</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName );</div>
+<div>
+	&nbsp;</div>
+<div>
+	The xTask and pcTaskName parameters pass to the hook function the handle and name of the offending task respectively.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	Note however, depending on the severity of the overflow, these parameters could themselves be corrupted, in which case the pxCurrentTCB variable can be inspected directly.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Stack overflow checking introduces a context switch overhead so its use is only recommended during the development or testing phases.</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; Stack Overflow Detection - Method 1</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; It is likely that the stack will reach its greatest (deepest) value after the RTOS kernel has swapped the task out of the Running state because this is when the stack will contain the task context. At this point the RTOS kernel can check that the processor stack pointer remains within the valid stack space. The stack overflow hook function is called if the stack pointer contain a value that is outside of the valid stack range.This method is quick but not guaranteed to catch all stack overflows.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; Stack Overflow Detection - Method 2</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; When a task is first created its stack is filled with a known value. When swapping a task out of the Running state the RTOS kernel can check the last 16 bytes within the valid stack range to ensure that these known values have not been overwritten by the task or interrupt activity. The stack overflow hook function is called should any of these 16 bytes not remain at their initial value.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	This method is less efficient than method one, but still fairly fast. It is very likely to catch stack overflows but is still not guaranteed to catch all overflows.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Method 2 supplements Method 1. It is not possible to use only this method.&nbsp;</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configCHECK_FOR_STACK_OVERFLOW to 0, 1, or 2, depending on the selection.</div>
+    ---endhelp---
+    
+    config FREERTOS_NO_STACK_OVERFLOW_CHECK
+        bool "No stack overflow check"
+        ---help---
+<div>
+	<strong>FreeRTOS - No stack overflow check</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Disables stack overflow checking&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configCHECK_FOR_STACK_OVERFLOW to 0.</div>
+        ---endhelp---
+    
+    config FREERTOS_STACK_OVERFLOW_CHECK_METHOD_1
+        bool "Check stack overflow using method 1"
+        ---help---
+<div>
+	<strong>FreeRTOS - Check stack overflow using method 1</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Stack Overflow Detection - Method 1</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; It is likely that the stack will reach its greatest (deepest) value after the RTOS kernel has swapped the task out of the Running state because this is when the stack will contain the task context. At this point the RTOS kernel can check that the processor stack pointer remains within the valid stack space. The stack overflow hook function is called if the stack pointer contain a value that is outside of the valid stack range.</div>
+<div>
+	&nbsp;</div>
+<div>
+	This method is quick but not guaranteed to catch all stack overflows. &nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configCHECK_FOR_STACK_OVERFLOW to 1.</div>
+        ---endhelp---
+        
+    config FREERTOS_STACK_OVERFLOW_CHECK_METHOD_2
+        bool "Check stack overflow using method 2"
+        ---help---
+<div>
+	<strong>FreeRTOS - Check stack overflow using method 2</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Stack Overflow Detection - Method 2</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; When a task is first created its stack is filled with a known value. When swapping a task out of the Running state the RTOS kernel can check the last 16 bytes within the valid stack range to ensure that these known values have not been overwritten by the task or interrupt activity. The stack overflow hook function is called should any of these 16 bytes not remain at their initial value.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	This method is less efficient than method one, but still fairly fast. It is very likely to catch stack overflows but is still not guaranteed to catch all overflows.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Method 2 supplements Method 1. It is not possible to use only this method.&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configCHECK_FOR_STACK_OVERFLOW to 2.</div>
+        ---endhelp---
+
+endchoice
+        
+config FREERTOS_USE_MALLOC_FAILED_HOOK
+    bool "Use malloc failed hook"
+    default y
+    ---help---
+<div>
+	<strong>FreeRTOS - Use malloc failed hook</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	The kernel uses a call to pvPortMalloc() to allocate memory from the heap each time a task, queue or semaphore is created. The official FreeRTOS download includes four sample memory allocation schemes for this purpose. The schemes are implemented in the heap_1.c, heap_2.c, heap_3.c, and heap_4.c source files respectively.&nbsp;</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	The malloc() failed hook is only relevant when one of these sample schemes is being used.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	The malloc() failed hook function is a hook (or callback) function that, if defined and configured, will be called if pvPortMalloc() ever returns NULL. NULL will be returned only if there is insufficient FreeRTOS heap memory remaining for the requested allocation to succeed.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_MALLOC_FAILED_HOOK to either 1, so that the application must define a malloc() failed hook function, or 0, so that the malloc() failed hook function will not be called, even if one is defined.&nbsp;</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Malloc() failed hook functions must have the name and prototype shown below.</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; void vApplicationMallocFailedHook( void );&nbsp;</div>   
+    ---endhelp---
+    
+config FREERTOS_GENERATE_RUN_TIME_STATS
+    bool "Generate runtime statistics"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Generate runtime statistics</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	FreeRTOS can optionally collect information on the amount of processing time that has been used by each task. The vTaskGetRunTimeStats() API function can then be used to present this information in a tabular format.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Two values are given for each task:</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Abs Time (absolute time)</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; This is the total &#39;time&#39; that the task has actually been executing (the total time that the task has been in the Running state). It is up to the user to select a suitable time base for their application.</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; % Time (percentage time)</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; This shows essentially the same information but as a percentage of the total processing time rather than as an absolute time.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Configuration and Usage</div>
+<div>
+	&nbsp;</div>
+<div>
+	Three macros are required.&nbsp;</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	&nbsp; &nbsp; configGENERATE_RUN_TIME_STATS</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Collection of run time statistics is enabled by #defining configGENERATE_RUN_TIME_STATS as 1. &nbsp;Once this has been set the other two macros must also be defined to achieve a successful compilation.</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; The run time statistics time base needs to have a higher resolution than the tick interrupt - otherwise the statistics may be too inaccurate to be truly useful. It is recommended to make the time base between 10 and 100 times faster than the tick interrupt. The faster the time base the more accurate the statistics will be - but also the sooner the timer value will overflow.</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; If configGENERATE_RUN_TIME_STATS is defined as 1 then the RTOS kernel will automatically call portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() as it is started (it is called from within the vTaskStartScheduler() API function). It is intended that the application designer uses the macro to configure a suitable time base.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	&nbsp; &nbsp; portGET_RUN_TIME_COUNTER_VALUE()</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; This macro should just return the current &#39;time&#39;, as configured by portCONFIGURE_TIMER_FOR_RUN_TIME_STATS().&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	The vTaskGetRunTimeStats() API function is used to retrieve the gathered statistics.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configGENERATE_RUN_TIME_STATS; &nbsp;however, portCONFIGURE_TIMER_FOR_RUN_TIME_STATS and portGET_RUN_TIME_COUNTER_VALUE must be manually provided.</div>
+    ---endhelp---
+
+config FREERTOS_USE_TRACE_FACILITY
+    bool "Use trace facility"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Use trace facility</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	If selected, MHC sets the FreeRTOS preprocessor variable configUSE_TRACE_FACILITY to 1 to include additional structure members and functions to assist with execution visualisation and tracing.</div>
+    ---endhelp---
+
+config FREERTOS_USE_STATS_FORMATTING_FUNCTIONS
+    bool "Use stats formatting functions"
+    default n
+    depends on FREERTOS_USE_TRACE_FACILITY
+    ---help---
+<div>
+	<strong>FreeRTOS - Use stats formatting functions</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include the vTaskList() and vTaskGetRunTimeStats() functions in the build.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_STATS_FORMATTING_FUNCTIONS.</div>
+    ---endhelp---
+
+config FREERTOS_USE_CO_ROUTINES
+    bool "Use co-routines"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Use co-routines</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Indicates whether to include or omit co-routine functionality from the build.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_CO_ROUTINES.</div>
+    ---endhelp---
+
+config FREERTOS_MAX_CO_ROUTINE_PRIORITIES
+    int "Maximum co-routine priority"
+    default 2
+    range 1 999999999
+    ---help---
+<div>
+	<strong>FreeRTOS - Maximum co-routine priority</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	The number of priorities available to the application co-routines.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	Any number of co-routines can share the same priority.&nbsp;</div>
+<div>
+	Tasks are prioritized separately.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configMAX_CO_ROUTINE_PRIORITIES.</div>
+    ---endhelp---
+
+config FREERTOS_USE_TIMERS
+    bool "Use timers"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Use timers</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Indicates whether to include or omit software timer functionality.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_TIMERS.</div>
+    ---endhelp---
+
+config FREERTOS_TIMER_TASK_PRIORITY
+    int "Timer task priority"
+    default 3
+    depends on FREERTOS_USE_TIMERS
+    ---help---
+<div>
+	<strong>FreeRTOS - Timer task priority</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Sets the priority of the software timer service/daemon task. &nbsp; &nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configTIMER_TASK_PRIORITY.</div>
+    ---endhelp---
+    
+config FREERTOS_TIMER_QUEUE_LENGTH
+    int "Timer queue length"
+    default 10
+    depends on FREERTOS_USE_TIMERS
+    ---help---
+<div>
+	<strong>FreeRTOS - Timer queue length</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Sets the length of the software timer command queue.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configTIMER_QUEUE_LENGTH.</div>
+    ---endhelp---
+    
+config FREERTOS_TIMER_TASK_STACK_DEPTH
+    int "Timer task stack depth"
+    default 256
+    depends on FREERTOS_USE_TIMERS
+    ---help---
+<div>
+	<strong>FreeRTOS - Timer task stack depth</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Sets the stack depth allocated to the software timer service/daemon task.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configTIMER_TASK_STACK_DEPTH.</div>
+    ---endhelp---
+        
+config FREERTOS_USE_APPLICATION_TASK_TAG
+    bool "Use application task tags"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Use application task tags</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	A &#39;tag&#39; value can be assigned to each task. This value is for the use of the application only - the RTOS kernel itself does not make use of it in any way. The RTOS trace macros documentation page provides a good example of how an application might make use of this feature.</div>
+<div>
+	&nbsp;</div>
+<div>
+	When selected, the vTaskSetApplicationTaskTag function is provided:</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; void vTaskSetApplicationTaskTag(&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; TaskHandle_t xTask,&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; TaskHookFunction_t pxTagValue );</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; Parameters:</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; xTask &nbsp; &nbsp; &nbsp; &nbsp; The handle of the task to which a tag value is being assigned.  Passing xTask as NULL causes the tag to be assigned to the calling task.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp; pxTagValue &nbsp; &nbsp; The value being assigned to the task tag. This is of type TaskHookFunction_t to permit a function pointer to be assigned as the tag, although any value can actually be assigned.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configUSE_APPLICATION_TASK_TAG.</div>
+    ---endhelp---
+
+config FREERTOS_USE_CONFIGASSERT
+    bool "Use the configAssert macro"
+    default n
+    ---help---
+<div>
+	<strong>FreeRTOS - Use the configAssert macro</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	The semantics of the configASSERT() macro are the same as the standard C assert() macro.&nbsp;</div>
+<div>
+	An assertion is triggered if the parameter passed into configASSERT() is zero. &nbsp;configASSERT() is called throughout the FreeRTOS source files to check how the application is using FreeRTOS. It is highly recommended to develop FreeRTOS applications with configASSERT() defined.</div>
+<div>
+	&nbsp;</div>
+<div>
+	The example definition (shown below) calls vAssertCalled(), passing in the file name and line number of the triggering configASSERT() call (__FILE__ and __LINE__ are standard macros provided by most compilers).&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	vAssertCalled() is not a standard FreeRTOS function, although it is implemented in each demo program.</div>
+<div>
+	&nbsp;</div>
+<div>
+	configASSERT() can be defined to take whatever action the application writer deems appropriate.</div>
+<div>
+	&nbsp;</div>
+<div>
+	It is normal to define configASSERT() in such a way that it will prevent the application from executing any further. This if for two reasons; stopping the application at the point of the assertion allows the cause of the assertion to be debugged, and executing past a triggered assertion will probably result in a crash anyway.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Note defining configASSERT() will increase both the application code size and execution time.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	<span style="font-family:courier new,courier,monospace;">&nbsp; &nbsp; /* Define configASSERT() to call vAssertCalled() if the </span></div>
+<div>
+	<span style="font-family:courier new,courier,monospace;">&nbsp; &nbsp; &nbsp; &nbsp;assertion fails. &nbsp;The assertion</span><span style="font-family: 'courier new', courier, monospace;">&nbsp;has failed if the value </span></div>
+<div>
+	<span style="font-family: 'courier new', courier, monospace;">&nbsp; &nbsp; &nbsp; &nbsp;of the parameter passed into configASSERT() equals zero. */</span></div>
+<div>
+	&nbsp;</div>
+<div>
+	<span style="font-family:courier new,courier,monospace;">&nbsp; &nbsp;#define configASSERT( ( x ) ) &nbsp; &nbsp; if( ( x ) == 0 ) vAssertCalled( __FILE__, __LINE__ )</span></div>
+   ---endhelp---
+
+config FREERTOS_KERNEL_INTERRUPT_PRIORITY
+    int "Kernel interrupt priority"
+    default 1
+    ---help---
+<div>
+	<strong>FreeRTOS - Kernel interrupt priority</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Sets the interrupt priority used by the RTOS kernel itself.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	The priority at which the tick interrupt runs. &nbsp;This should probably be kept at 1.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Interrupts that call API functions must also execute at this priority.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	Interrupts that do not call API functions can execute at higher priorities and therefore never have their execution delayed by the RTOS kernel activity (within the limits of the hardware itself).</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configKERNEL_INTERRUPT_PRIORITY.</div>
+    ---endhelp---
+
+config FREERTOS_MAX_SYSCALL_INTERRUPT_PRIORITY
+    int "Maximum system call interrupt priority"
+    default 3
+    range 1 6
+    ---help---
+<div>
+	<strong>FreeRTOS - Maximum system call interrupt priority</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	The maximum interrupt priority from which FreeRTOS.org API functions can be called. &nbsp;Only API functions that end in ...FromISR() can be used within interrupts.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	configMAX_SYSCALL_INTERRUPT_PRIORITY sets the highest interrupt priority from which interrupt safe FreeRTOS API functions can be called.</div>
+<div>
+	&nbsp;</div>
+<div>
+	A full interrupt nesting model is achieved by setting configMAX_SYSCALL_INTERRUPT_PRIORITY above (that is, at a higher priority level) than configKERNEL_INTERRUPT_PRIORITY.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	This means the FreeRTOS kernel does not completely disable interrupts, even inside critical sections.&nbsp;</div>
+<div>
+	Further, this is achieved without the disadvantages of a segmented kernel architecture.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	Note however, certain microcontroller architectures will (in hardware) disable interrupts when a new interrupt is accepted - meaning interrupts are unavoidably disabled for the short period between the hardware accepting the interrupt, and the FreeRTOS code re-enabling interrupts.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Interrupts that do not call API functions can execute at priorities above configMAX_SYSCALL_INTERRUPT_PRIORITY and therefore never be delayed by the RTOS kernel execution.</div>
+<div>
+	&nbsp;</div>
+<div>
+	Interrupt handling &#39;tasks&#39; can be written and prioritised as per any other task in the system. These are tasks that are woken by an interrupt. The interrupt service routine (ISR) itself should be written to be as short as it possibly can be - it just grabs the data then wakes the high priority handler task.&nbsp;</div>
+<div>
+	&nbsp;</div>
+<div>
+	The ISR then returns directly into the woken handler task - so interrupt processing is contiguous in time just as if it were all done in the ISR itself. The benefit of this is that all interrupts remain enabled while the handler task executes.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Ports that implement configMAX_SYSCALL_INTERRUPT_PRIORITY take this further - permitting a fully nested model where interrupts between the RTOS kernel interrupt priority and configMAX_SYSCALL_INTERRUPT_PRIORITY can nest and make applicable API calls. Interrupts with priority above configMAX_SYSCALL_INTERRUPT_PRIORITY are never delayed by the RTOS kernel activity.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	ISR&#39;s running above the maximum syscall priority are never masked out by the RTOS kernel itself, so their responsiveness is not effected by the RTOS kernel functionality. This is ideal for interrupts that require very high temporal accuracy - for example interrupts that perform motor commutation. However, such ISR&#39;s cannot use the FreeRTOS API functions.</div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	To utilize this scheme your application design must adhere to the following rule: Any interrupt that uses the FreeRTOS API must be set to the same priority as the RTOS kernel (as configured by the configKERNEL_INTERRUPT_PRIORITY macro), or at or below configMAX_SYSCALL_INTERRUPT_PRIORITY for ports that include this functionality.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable configMAX_SYSCALL_INTERRUPT_PRIORITY.</div>
+    ---endhelp---
+
+menu "Include components"
+    ---help---
+<div>
+	<strong>FreeRTOS - Include components</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Explicitly include or exclude FreeRTOS components from the build.</div>
+    ---endhelp---
+    
+    config FREERTOS_INCLUDE_VTASKPRIORITYSET
+        bool "Include vTaskPrioritySet"
+        default y
+        ---help---
+<div>
+	<strong>FreeRTOS - Include vTaskPrioritySet</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component vTaskPrioritySet.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_vTaskPrioritySet.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_UXTASKPRIORITYGET
+        bool "Include uxTaskPriorityGet"
+        default y
+        ---help---
+<div>
+	<strong>FreeRTOS - Include uxTaskPriorityGet</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component uxTaskPriorityGet.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_uxTaskPriorityGet.</div>
+        ---endhelp---
+
+    config FREERTOS_INCLUDE_VTASKDELETE
+        bool "Include vTaskDelete"
+        default y
+        ---help---
+<div>
+	<strong>FreeRTOS - Include vTaskDelete</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component vTaskDelete.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_vTaskDelete.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_VTASKCLEANUPRESOURCES
+        bool "Include vTaskCleanUpResources"
+        default n
+        ---help---
+<div>
+	<strong>FreeRTOS - Include vTaskCleanUpResources</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component vTaskCleanUpResources.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_vTaskCleanUpResources.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_VTASKSUSPEND
+        bool "Include vTaskSuspend"
+        default y
+        ---help---
+<div>
+	Include or omit the component vTaskSuspend.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_vTaskSuspend.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_VTASKDELAYUNTIL
+        bool "Include vTaskDelayUntil"
+        default y
+        ---help---
+<div>
+	<strong>FreeRTOS - Include vTaskDelayUntil</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component vTaskDelayUntil.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_vTaskDelayUntil.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_VTASKDELAY
+        bool "Include vTaskDelay"
+        default y
+        ---help---
+<div>
+	<strong>FreeRTOS - Include vTaskDelay</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component vTaskDelay.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_vTaskDelay.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_UXTASKGETSTACKHIGHWATERMARK
+        bool "Include uxTaskGetStackHighWaterMark"
+        default n
+        ---help---
+<div>
+	<strong>FreeRTOS - Include uxTaskGetStackHighWaterMark</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component uxTaskGetStackHighWaterMark.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_uxTaskGetStackHighWaterMark.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_XTASKGETSCHEDULERSTATE
+        bool "Include xTaskGetSchedulerState"
+        default n
+        ---help---
+<div>
+	<strong>FreeRTOS - Include xTaskGetSchedulerState</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component xTaskGetSchedulerState.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_xTaskGetSchedulerState.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_XTASKGETCURRENTTASKHANDLE
+        bool "Include xTaskGetCurrentTaskHandle"
+        default n
+        ---help---
+<div>
+	<strong>FreeRTOS - Include xTaskGetCurrentTaskHandle</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component xTaskGetCurrentTaskHandle.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_xTaskGetCurrentTaskHandle.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_XTASKGETIDLETASKHANDLE
+        bool "Include xTaskGetIdleTaskHandle"
+        default n
+        ---help---
+<div>
+	<strong>FreeRTOS - Include xTaskGetIdleTaskHandle</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component xTaskGetIdleTaskHandle.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_xTaskGetIdleTaskHandle.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_XTASKGETTIMERDAEMONTASKHANDLE
+        bool "Include xTimerGetTimerDaemonTaskHandle"
+        default n
+        ---help---
+<div>
+	<strong>FreeRTOS - Include xTimerGetTimerDaemonTaskHandle</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component xTimerGetTimerDaemonTaskHandle.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_xTimerGetTimerDaemonTaskHandle.</div>
+        ---endhelp---
+
+    config FREERTOS_INCLUDE_XQUEUEGETMUTEXHOLDER
+        bool "Include xQueueGetMutexHolder"
+        default n
+        ---help---
+<div>
+	<strong>FreeRTOS - Include xQueueGetMutexHolder</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component xQueueGetMutexHolder.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_xQueueGetMutexHolder.</div>
+        ---endhelp---
+
+    config FREERTOS_INCLUDE_XSEMAPHOREGETMUTEXHOLDER
+        bool "Include xSemaphoreGetMutexHolder"
+        default n
+        ---help---
+<div>
+	<strong>FreeRTOS - Include xSemaphoreGetMutexHolder</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component xSemaphoreGetMutexHolder.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_xSemaphoreGetMutexHolder.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_PCTASKGETTASKNAME
+        bool "Include pcTaskGetTaskName"
+        default n
+        ---help---
+<div>
+	<strong>FreeRTOS - Include pcTaskGetTaskName</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component pcTaskGetTaskName.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_pcTaskGetTaskName.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_ETASKGETSTATE
+        bool "Include eTaskGetState"
+        default n
+        ---help---
+<div>
+	<strong>FreeRTOS - Include eTaskGetState</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component eTaskGetState.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_eTaskGetState.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_XEVENTGROUPSETBITFROMISR
+        bool "Include xEventGroupSetBitFromISR"
+        default n
+        ---help---
+<div>
+	<strong>FreeRTOS - Include xEventGroupSetBitFromISR</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component xEventGroupSetBitFromISR.</div>
+<div>
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_xEventGroupSetBitFromISR.</div>
+        ---endhelp---
+        
+    config FREERTOS_INCLUDE_XTIMERPENDFUNCTIONCALL
+        bool "Include xTimerPendFunctionCall"
+        default n
+        ---help---
+<div>
+	<strong>FreeRTOS - Include xTimerPendFunctionCall</strong></div>
+<div>
+	&nbsp; &nbsp;&nbsp;</div>
+<div>
+	Include or omit the component xTimerPendFunctionCall.</div>
+<div>
+	&nbsp;</div>
+<div>
+	MHC sets the FreeRTOS preprocessor variable INCLUDE_xTimerPendFunctionCall.</div>
+        ---endhelp---
+        
+endmenu
+
+template FREERTOS_CONFIG_H "$HARMONY_VERSION_PATH/third_party/rtos/FreeRTOS/templates/FreeRTOSConfig.h.ftl" to "$PROJECT_HEADER_FILES/app/system_config/$CONFIGURATION/FreeRTOSConfig.h"
+    
+ifblock (3RDPARTY_RTOS_USED = "FreeRTOS_V8.x.x")
+source  "$HARMONY_VERSION_PATH/third_party/rtos/FreeRTOS/config/freertos.hconfig"
+endif
+
+ifblock (3RDPARTY_RTOS_USED = "OpenRTOS_V8.x.x")
+source  "$HARMONY_VERSION_PATH/third_party/rtos/OpenRTOS/config/openrtos.hconfig"
+endif
+
+endmenu

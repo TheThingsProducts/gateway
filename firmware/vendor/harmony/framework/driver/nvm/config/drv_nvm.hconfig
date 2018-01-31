@@ -1,0 +1,327 @@
+menu "NVM"
+    depends on HAVE_NVM
+
+enum DRV_NVM_TYPE
+    "BLOCK_DRIVER"
+    || "BETA"
+
+enum DRV_NVM_MODE
+    "STATIC"
+    || "DYNAMIC"
+	
+ config DRV_NVM_NEEDED
+    bool 
+	
+config USE_DRV_NVM
+    bool "Use NVM Driver?"
+    select DRIVER
+    select USE_SYS_INT_NEEDED
+    default n if !DRV_NVM_NEEDED
+	default y if DRV_NVM_NEEDED
+    ---help---
+      IDH_HTML_Non_Volatile_Memory__NVM__Driver_Library
+    ---endhelp---
+
+config DRV_NVM_DRIVER_MODE
+    string "Driver Implementation"
+    depends on USE_DRV_NVM
+    range DRV_NVM_MODE
+    default "DYNAMIC"
+    ---help---
+    IDH_HTML_Non_Volatile_Memory__NVM__Driver_Library
+    ---endhelp---
+
+config DRV_NVM_DRIVER_TYPE
+    string
+    depends on USE_DRV_NVM
+    range DRV_NVM_TYPE
+    default "BLOCK_DRIVER" if DRV_NVM_DRIVER_MODE = "STATIC"
+    default DRV_NVM_DRIVER_TYPE_SELECT if DRV_NVM_DRIVER_MODE = "DYNAMIC"
+    ---help---
+    IDH_HTML_Non_Volatile_Memory__NVM__Driver_Library
+    ---endhelp---
+
+# DRV_NVM_DRIVER_TYPE_SELECT is added to make static to support only Block type of driver
+config DRV_NVM_DRIVER_TYPE_SELECT
+    string "Driver Type"
+    depends on USE_DRV_NVM
+    depends on DRV_NVM_DRIVER_MODE = "DYNAMIC"
+    range DRV_NVM_TYPE
+    default "BLOCK_DRIVER"
+    ---help---
+    IDH_HTML_Non_Volatile_Memory__NVM__Driver_Library
+    ---endhelp---
+comment "**** STATIC mode supports only Block type of driver****"
+    depends on USE_DRV_NVM
+    depends on DRV_NVM_DRIVER_MODE = "STATIC"
+
+config DRV_NVM_INSTANCES_NUMBER
+    int
+    depends on USE_DRV_NVM && DRV_NVM_DRIVER_MODE = "DYNAMIC"
+    default 1
+    ---help---
+      IDH_HTML_DRV_NVM_INSTANCES_NUMBER
+    ---endhelp---
+    
+comment "**** STATIC mode supports only single client****"
+    depends on USE_DRV_NVM
+    depends on DRV_NVM_DRIVER_MODE = "STATIC"
+
+config DRV_NVM_CLIENTS_NUMBER
+    int "Number of NVM Driver Clients"
+    depends on USE_DRV_NVM && DRV_NVM_DRIVER_MODE = "DYNAMIC"
+    default 1
+    ---help---
+      IDH_HTML_DRV_NVM_CLIENTS_NUMBER
+    ---endhelp---
+    
+enum DRV_NVM_IDX
+    "DRV_NVM_INDEX_0"
+
+config DRV_NVM_INDEX
+    string
+    depends on USE_DRV_NVM
+    range DRV_NVM_IDX
+    default "DRV_NVM_INDEX_0"
+    ---help---
+      IDH_HTML_DRV_NVM_INDEX_0
+    ---endhelp---
+
+ifblock DRV_NVM_DRIVER_TYPE = "BETA"
+
+config USE_DRV_NVM_MEDIA
+    bool "Use NVM Media Layer?"
+    depends on USE_DRV_NVM 
+    select USE_SYS_FS_NEEDED
+    select DRIVER
+    default n
+    ---help---
+      IDH_HTML_Non_Volatile_Memory__NVM__Driver_Library
+    ---endhelp---
+
+config DRV_NVM_MEDIA_OBJECT_NUMBER
+    int "Number of NVM Media Objects (Disks)"
+    depends on USE_DRV_NVM
+    depends on USE_DRV_NVM_MEDIA
+    default 1
+    ---help---
+      IDH_HTML_DRV_NVM_MEDIA_OBJECT_NUMBER
+    ---endhelp---
+    
+endif
+
+config DRV_NVM_MEDIA_START_ADDRESS
+    hex "NVM Media Start Address"
+    depends on USE_DRV_NVM
+    depends on USE_DRV_NVM_MEDIA || DRV_NVM_DRIVER_TYPE = "BLOCK_DRIVER"
+    default 0x9D004000 if DRV_NVM_DRIVER_TYPE = "BETA"
+    default 0x9D010000 if DRV_NVM_DRIVER_TYPE = "BLOCK_DRIVER"
+    ---help---
+      IDH_HTML_NVM_MEDIA_START_ADDRESS
+    ---endhelp---
+    
+config DRV_NVM_MEDIA_SIZE
+    int "NVM Media Size"
+    depends on USE_DRV_NVM
+    depends on USE_DRV_NVM_MEDIA || DRV_NVM_DRIVER_TYPE = "BLOCK_DRIVER"
+    default DRV_NVM_PAGE_SIZE if DRV_NVM_DRIVER_TYPE = "BETA"
+    default 32 if DRV_NVM_DRIVER_TYPE = "BLOCK_DRIVER"
+    ---help---
+      IDH_HTML_NVM_MEDIA_SIZE
+    ---endhelp---
+    
+ifblock DRV_NVM_DRIVER_TYPE = "BETA"   
+
+config DRV_NVM_MEDIA_SECTOR_SIZE
+    int "NVM Media Sector Size (bytes)"
+    depends on USE_DRV_NVM
+    depends on USE_DRV_NVM_MEDIA
+    default 2048 if ((SYS_FS_MPFS = y) && PIC32MZ)
+	default 512  if ((SYS_FS_MPFS = y) && PIC32MX)
+    default 512 if SYS_FS_FAT = y
+    ---help---
+      IDH_HTML_NVM_MEDIA_SECTOR_SIZE
+    ---endhelp---
+    
+endif
+
+config DRV_NVM_BUFFER_OBJECT_NUMBER
+    int "Number of NVM Buffer Objects"
+    depends on USE_DRV_NVM
+    range 1 10
+    default 5
+    ---help---
+      IDH_HTML_DRV_NVM_BUFFER_OBJECT_NUMBER
+    ---endhelp---
+    
+config DRV_NVM_PERIPHERAL_ID
+    string
+    depends on USE_DRV_NVM
+    range FLASH_MODULE_ID
+    default "NVM_ID_0"
+    ---help---
+      IDH_HTML_NVM_MODULE_ID
+    ---endhelp---
+
+config DRV_NVM_INTERRUPT_MODE
+    bool "Interrupt Mode"
+    depends on USE_DRV_NVM
+    default y
+    ---help---
+      IDH_HTML_DRV_NVM_INTERRUPT_MODE
+    ---endhelp---
+    
+config DRV_NVM_INTERRUPT_SOURCE
+    string
+    depends on USE_DRV_NVM
+    default "INT_SOURCE_FLASH_CONTROL"
+    ---help---
+      IDH_HTML_INT_SOURCE
+    ---endhelp---
+    
+config DRV_NVM_INTERRUPT_VECTOR
+    string
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    default "INT_VECTOR_FLASH"
+    ---help---
+      IDH_HTML_INT_VECTOR
+    ---endhelp---
+    
+config DRV_NVM_INTERRUPT_PRIORITY
+    string "Interrupt Priority"
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    range INT_PRIORITY_LEVEL
+    default "INT_PRIORITY_LEVEL3"
+    ---help---
+      IDH_HTML_INT_PRIORITY_LEVEL
+    ---endhelp---
+    
+config DRV_NVM_INTERRUPT_SUB_PRIORITY
+    string "Interrupt Sub-priority"
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    range INT_SUBPRIORITY_LEVEL
+    default "INT_SUBPRIORITY_LEVEL0"
+    ---help---
+      IDH_HTML_INT_SUBPRIORITY_LEVEL
+    ---endhelp---
+   
+config DRV_NVM_INT_PRIO_NUM
+    string
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    default "INT_DISABLE_INTERRUPT" if DRV_NVM_INTERRUPT_PRIORITY = "INT_DISABLE_INTERRUPT"
+    default "INT_PRIORITY_LEVEL1" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL1"
+    default "INT_PRIORITY_LEVEL2" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL2"
+    default "INT_PRIORITY_LEVEL3" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL3"
+    default "INT_PRIORITY_LEVEL4" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL4"
+    default "INT_PRIORITY_LEVEL5" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL5"
+    default "INT_PRIORITY_LEVEL6" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL6"
+    default "INT_PRIORITY_LEVEL7" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL7"    
+
+config DRV_NVM_INT_IPL
+    string
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    default "0" if DRV_NVM_INTERRUPT_PRIORITY = "INT_DISABLE_INTERRUPT"
+    default "1" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL1"
+    default "2" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL2"
+    default "3" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL3"
+    default "4" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL4"
+    default "5" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL5"
+    default "6" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL6"
+    default "7" if DRV_NVM_INTERRUPT_PRIORITY = "INT_PRIORITY_LEVEL7"    
+
+config DRV_NVM_SYS_INTERRUPT_VECTOR
+    string
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    default "INT_VECTOR_FLASH" if ((DRV_NVM_INTERRUPT_VECTOR = "INT_VECTOR_FLASH") && PIC32MZ)
+    default "INT_VECTOR_FCE" if ((DRV_NVM_INTERRUPT_VECTOR = "INT_VECTOR_FLASH") && PIC32MX)
+ 
+config DRV_NVM_ISR_VECTOR
+    string
+    depends on USE_DRV_NVM && DRV_NVM_INTERRUPT_MODE
+    default "_FLASH_CONTROL_VECTOR" if ((DRV_NVM_INTERRUPT_VECTOR = "INT_VECTOR_FLASH") && PIC32MZ)
+    default "_FCE_VECTOR" if ((DRV_NVM_INTERRUPT_VECTOR = "INT_VECTOR_FLASH") && PIC32MX)
+     
+config DRV_NVM_POWER_STATE
+    depends on USE_DRV_NVM
+    depends on USE_DRV_NVM && DRV_NVM_DRIVER_MODE = "DYNAMIC"
+    string "Power State"
+    range SYS_MODULE_POWER_STATE
+    default "SYS_MODULE_POWER_RUN_FULL"
+    ---help---
+    IDH_HTML_SYS_MODULE_INIT
+    ---endhelp---
+
+config USE_DRV_NVM_ERASE_WRITE
+    bool "Enable Erase Write Function?"
+    depends on USE_DRV_NVM    
+    select DRIVER
+    default n
+    ---help---
+      IDH_HTML_DRV_NVM_ERASE_WRITE_ENABLE
+    ---endhelp---
+
+ifblock DRV_NVM_DRIVER_TYPE = "BLOCK_DRIVER"   
+    
+config USE_DRV_NVM_SYS_FS_REGISTER
+    bool "Register with File System?"
+    depends on USE_DRV_NVM
+    select USE_SYS_FS_NEEDED
+    select DRIVER
+    default n
+    ---help---
+      IDH_HTML_DRV_NVM_SYS_FS_REGISTER
+    ---endhelp---
+
+config USE_DRV_NVM_DISABLE_ERROR_CHECK
+    bool "Disable Error Checks?"
+    depends on USE_DRV_NVM    
+    default n
+    ---help---
+      IDH_HTML_DRV_NVM_DISABLE_ERROR_CHECK
+    ---endhelp---
+endif
+
+endmenu
+
+
+ifblock USE_DRV_NVM
+
+add "<#include \"/framework/driver/nvm/config/drv_nvm.c.ftl\">"  to list SYSTEM_INIT_C_DRIVER_INITIALIZATION_DATA
+add "<#include \"/framework/driver/nvm/config/drv_nvm_init.c.ftl\">"  to list SYSTEM_INIT_C_SYS_INITIALIZE_DRIVERS
+add "<#include \"/framework/driver/nvm/config/drv_nvm_tasks.c.ftl\">"  to list SYSTEM_TASKS_C_CALL_DRIVER_TASKS
+
+ifblock DRV_NVM_DRIVER_MODE = "STATIC"
+file DRV_NVM_STATIC_H "$HARMONY_VERSION_PATH/framework/driver/nvm/drv_nvm.h" to "$PROJECT_HEADER_FILES/framework/driver/nvm/drv_nvm.h"
+file DRV_NVM_STATIC_LOCAL_H "$HARMONY_VERSION_PATH/framework/driver/nvm/src/drv_nvm_local.h" to "$PROJECT_HEADER_FILES/framework/driver/nvm/src/drv_nvm_local.h"
+file DRV_NVM_STATIC_VAR_MAP_H "$HARMONY_VERSION_PATH/framework/driver/nvm/src/drv_nvm_variant_mapping.h" to "$PROJECT_HEADER_FILES/framework/driver/nvm/src/drv_nvm_variant_mapping.h"
+template DRV_NVM_STATIC_C_FTL "$HARMONY_VERSION_PATH/framework/driver/nvm/templates/drv_nvm_static.c.ftl" to "$PROJECT_SOURCE_FILES/app/system_config/$CONFIGURATION/framework/driver/nvm/src/drv_nvm_static.c"
+template DRV_NVM_STATIC_LOCAL_H_FTL "$HARMONY_VERSION_PATH/framework/driver/nvm/templates/drv_nvm_static_local.h.ftl" to "$PROJECT_HEADER_FILES/app/system_config/$CONFIGURATION/framework/driver/nvm/src/drv_nvm_static_local.h"
+endif
+
+ifblock DRV_NVM_DRIVER_MODE = "DYNAMIC"
+ifblock DRV_NVM_DRIVER_TYPE = "BLOCK_DRIVER"   
+file DRV_NVM_H "$HARMONY_VERSION_PATH/framework/driver/nvm/drv_nvm.h" to "$PROJECT_HEADER_FILES/framework/driver/nvm/drv_nvm.h"
+file DRV_NVM_LOCAL_H "$HARMONY_VERSION_PATH/framework/driver/nvm/src/drv_nvm_local.h" to "$PROJECT_HEADER_FILES/framework/driver/nvm/src/drv_nvm_local.h"
+file DRV_NVM_VAR_MAP_H "$HARMONY_VERSION_PATH/framework/driver/nvm/src/drv_nvm_variant_mapping.h" to "$PROJECT_HEADER_FILES/framework/driver/nvm/src/drv_nvm_variant_mapping.h"
+file DRV_NVM_C "$HARMONY_VERSION_PATH/framework/driver/nvm/src/dynamic/drv_nvm.c" to "$PROJECT_SOURCE_FILES/framework/driver/nvm/src/dynamic/drv_nvm.c"
+endif
+
+ifblock DRV_NVM_DRIVER_TYPE = "BETA"   
+file DRV_NVM_BETA_H "$HARMONY_VERSION_PATH/framework/driver/nvm/beta_sw/drv_nvm.h" to "$PROJECT_HEADER_FILES/framework/driver/nvm/drv_nvm.h"
+file DRV_NVM_BETA_C "$HARMONY_VERSION_PATH/framework/driver/nvm/beta_sw/src/dynamic/drv_nvm.c" to "$PROJECT_SOURCE_FILES/framework/driver/nvm/src/dynamic/drv_nvm.c"
+endif
+
+ifblock USE_DRV_NVM_ERASE_WRITE
+
+ifblock DRV_NVM_DRIVER_TYPE = "BLOCK_DRIVER"   
+file DRV_NVM_ERASEWRITE_C "$HARMONY_VERSION_PATH/framework/driver/nvm/src/dynamic/drv_nvm_erasewrite.c" to "$PROJECT_SOURCE_FILES/framework/driver/nvm/src/dynamic/drv_nvm_erasewrite.c"
+endif
+
+ifblock DRV_NVM_DRIVER_TYPE = "BETA"
+file DRV_NVM_BETA_ERASEWRITE_C "$HARMONY_VERSION_PATH/framework/driver/nvm/beta_sw/src/dynamic/drv_nvm_erasewrite.c" to "$PROJECT_SOURCE_FILES/framework/driver/nvm/src/dynamic/drv_nvm_erasewrite.c"
+endif
+
+endif
+endif
+endif
+

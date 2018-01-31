@@ -1,0 +1,57 @@
+#!groovy
+
+node {
+	gitCommit = ""
+	stage('Checkout') {
+		checkout scm
+		sh './git-clean.sh'
+		gitCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+		shortCommit = gitCommit.take(8)
+		currentBuild.displayName = "#${env.BUILD_NUMBER} [${shortCommit}]"
+	}
+	stage('Static code analysis') {
+	  dir ('firmware') {
+		sh 'cppcheck --enable=all --inconclusive --force --xml --xml-version=2 src 2> cppcheck.xml'
+		step([$class: 'CppcheckPublisher', 
+			pattern: "cppcheck.xml",
+			ignoreBlankFiles: false, threshold: "", 
+			allowNoReport: false,
+			newThreshold: "0", failureThreshold: "",
+			newFailureThreshold: "", healthy: "", unHealthy: "",
+			severityError: true,
+			severityWarning: true,
+			severityStyle: false,
+			severityPerformance: false,
+			severityInformation: false,
+			severityNoCategory: false,
+			severityPortability: false,
+			xSize: 500, ySize: 200,
+			numBuildsInGraph: 0,
+			displayAllErrors: true,
+			displayErrorSeverity: true,
+			displayWarningSeverity: true,
+			displayStyleSeverity: true,
+			displayPerformanceSeverity: true,
+			displayInformationSeverity: true,
+			displayNoCategorySeverity: true,
+			displayPortabilitySeverity: true])
+		step([$class: 'TasksPublisher', canComputeNew: false, defaultEncoding: '', excludePattern: '', healthy: '', high: 'FIXME', ignoreCase: true, low: 'REVIEW', normal: 'TODO', pattern: 'src/*.c,src/*.h,**/*.md', unHealthy: ''])
+	  }
+	}
+	stage('Build') {
+	  dir ('firmware') {
+		sh './generate_version_header.sh'
+		sh './fix_mplab.sh'
+		sh './compile.sh'
+		step([$class: 'WarningsPublisher', defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'GNU Make + GNU C Compiler (gcc)', pattern: 'compile_log.txt']], unHealthy: ''])
+	  }
+	}
+	stage('Package') {
+	  dir ('firmware') {
+		sh './generate_hex_with_checksum.sh'
+
+		zip archive: true, glob: "firmware.hex, checksums", zipFile: "things-gateway-${env.BRANCH_NAME}-${env.BUILD_NUMBER}-${shortCommit}.zip"
+		archiveArtifacts artifacts: 'TTN_Gateway.X/dist/TTN_Gateway_v1/production/TTN_Gateway.X.production.*'
+	  }
+	}
+}

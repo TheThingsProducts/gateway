@@ -1,0 +1,5 @@
+menu "MPLAB Harmony Networking"
+
+source "$HARMONY_VERSION_PATH/framework/net/pres/config/net_pres.hconfig"
+
+endmenu

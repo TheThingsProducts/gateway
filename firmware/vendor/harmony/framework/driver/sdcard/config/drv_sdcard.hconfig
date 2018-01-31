@@ -1,0 +1,207 @@
+menu "SD Card"
+    depends on HAVE_SPI
+
+enum DRV_SDCARD_IDX
+    "DRV_SDCARD_INDEX_0"
+    || "DRV_SDCARD_INDEX_1"
+    
+enum DRV_SDCARD_IMPLEMENTATION
+    "DYNAMIC"
+
+config DRV_SDCARD_NEEDED
+    bool 
+	
+config USE_DRV_SDCARD
+    bool "Use SD Card Driver?"
+    select DRIVER
+    select DRV_SPI_USE_DRIVER_NEEDED
+    select USE_SYS_PORTS_NEEDED
+    select USE_SYS_TMR_NEEDED
+    select USE_DRV_TMR_NEEDED
+    default n if !DRV_SDCARD_NEEDED
+	default y if DRV_SDCARD_NEEDED
+    ---help---
+    IDH_HTML_Secure_Digital__SD__Card_Driver_Library
+    ---endhelp---
+
+menu "RTOS Configuration"
+    depends on USE_DRV_SDCARD
+    depends on USE_3RDPARTY_RTOS
+    depends on DRV_SDCARD_IMPL = "DYNAMIC"
+
+config DRV_SDCARD_RTOS
+    string "Run Library Tasks As"
+    range 3RDPARTY_RTOS_SYS_TASKS_OPTIONS
+    default "Standalone"
+
+config DRV_SDCARD_RTOS_TASK_SIZE
+    int "Task Size"
+    depends on DRV_SDCARD_RTOS = "Standalone"
+    default 1024
+
+config DRV_SDCARD_RTOS_TASK_PRIORITY
+    int "Task Priority"
+    depends on DRV_SDCARD_RTOS = "Standalone"
+    default 1
+
+config DRV_SDCARD_RTOS_USE_DELAY
+    bool "Use Task Delay?"
+    depends on DRV_SDCARD_RTOS = "Standalone"
+    default y
+
+config DRV_SDCARD_RTOS_DELAY
+    int "Task Delay"
+    depends on DRV_SDCARD_RTOS = "Standalone"
+    depends on DRV_SDCARD_RTOS_USE_DELAY
+    default 1000
+endmenu
+
+config DRV_SDCARD_IMPL
+    string "Driver Implementation"
+    depends on USE_DRV_SDCARD
+    range DRV_SDCARD_IMPLEMENTATION
+    default "DYNAMIC"
+    persistent
+    ---help---
+    IDH_HTML_Secure_Digital__SD__Card_Driver_Library
+    ---endhelp---
+    
+config DRV_SDCARD_INSTANCES_NUMBER
+    int
+    depends on USE_DRV_SDCARD
+    default 1	
+    ---help---
+      IDH_HTML_DRV_SDCARD_INSTANCES_NUMBER
+    ---endhelp---
+    
+config DRV_SDCARD_CLIENTS_NUMBER
+    int "Number of SD Card Driver Clients"
+    depends on USE_DRV_SDCARD
+    default 1
+    ---help---
+      IDH_HTML_DRV_SDCARD_CLIENTS_NUMBER
+    ---endhelp---
+
+config DRV_SDCARD_INDEX
+    string "SD Card Driver Index"
+    depends on USE_DRV_SDCARD
+    range DRV_SDCARD_IDX
+    default "DRV_SDCARD_INDEX_0"
+    ---help---
+      IDH_HTML_DRV_SDCARD_INDEX_0
+    ---endhelp---
+    
+config DRV_SDCARD_INDEX_MAX
+    int "Maximum Driver Indeces (limit 2)"
+    depends on USE_DRV_SDCARD
+    default 1
+    ---help---
+    IDH_HTML_SDCARD_MAX_LIMIT
+    ---endhelp---
+    
+config DRV_SDCARD_QUEUE_POOL_SIZE
+    int "SD Card Data Queue Size"
+    depends on USE_DRV_SDCARD
+    range 1 20
+    default 10
+    ---help---
+    IDH_HTML_Secure_Digital__SD__Card_Driver_Library
+    ---endhelp---
+
+config DRV_SDCARD_SPI_CLOCK_ID
+    string "Clock To Use"
+    depends on USE_DRV_SDCARD
+    range CLK_BUSES_PERIPHERAL
+    default "CLK_BUS_PERIPHERAL_1"
+    ---help---
+    IDH_HTML_Secure_Digital__SD__Card_Driver_Library
+    ---endhelp---
+    
+config DRV_SDCARD_SPEED
+    int "SD Card Speed(Hz)"
+    depends on USE_DRV_SDCARD
+    default 20000000
+    ---help---
+      IDH_HTML_DRV_SDCARD_INIT
+    ---endhelp---
+    
+config DRV_SDCARD_WRITE_PROTECT_SUPPORT
+    bool "Enable Write Protect Check?"
+    depends on USE_DRV_SDCARD
+    default y
+    ---help---
+    IDH_HTML_DRV_SDCARD_INIT
+    ---endhelp---
+
+ifblock DRV_SDCARD_WRITE_PROTECT_SUPPORT
+
+config  DRV_SDCARD_WP_PORT_CHANNEL
+    string "Write Protect Port"
+    depends on USE_DRV_SDCARD
+    range PORTS_CHANNEL
+    default "PORT_CHANNEL_A"
+    ---help---
+    IDH_HTML_DRV_SDCARD_INIT
+    ---endhelp---
+    
+config  DRV_SDCARD_WP_BIT_POSITION
+    string "Write Protect Port Bit"
+    depends on USE_DRV_SDCARD
+    range PORTS_BIT_POS
+    default "PORTS_BIT_POS_1"
+    ---help---
+    IDH_HTML_DRV_SDCARD_INIT
+    ---endhelp---
+
+endif
+
+config  DRV_SDCARD_CS_PORT_CHANNEL
+    string "Chip Select Port"
+    depends on USE_DRV_SDCARD
+    range PORTS_CHANNEL
+    default "PORT_CHANNEL_A"
+    ---help---
+    IDH_HTML_DRV_SDCARD_INIT
+    ---endhelp---
+    
+config  DRV_SDCARD_CS_BIT_POSITION
+    string "Chip Select Port Bit"
+    depends on USE_DRV_SDCARD
+    range PORTS_BIT_POS
+    default "PORTS_BIT_POS_1"
+    ---help---
+    IDH_HTML_DRV_SDCARD_INIT
+    ---endhelp---
+
+config DRV_SDCARD_SPI_DRV_INSTANCE
+    int "SPI Driver Instance to use for SD Card Driver"
+    depends on USE_DRV_SDCARD    
+    range 0 5
+    default 0
+    ---help---
+    ---endhelp---
+    
+config USE_DRV_SDCARD_SYS_FS_REGISTER
+    bool "Register with File System?"
+    depends on USE_DRV_SDCARD
+    select USE_SYS_FS_NEEDED
+    select DRIVER
+    default y
+    ---help---
+      IDH_HTML_DRV_SDCARD_SYS_FS_REGISTER
+    ---endhelp---
+
+endmenu
+
+ifblock USE_DRV_SDCARD
+
+add "<#include \"/framework/driver/sdcard/config/drv_sdcard.c.ftl\">"  to list SYSTEM_INIT_C_DRIVER_INITIALIZATION_DATA
+add "<#include \"/framework/driver/sdcard/config/drv_sdcard_init.c.ftl\">"  to list SYSTEM_INIT_C_SYS_INITIALIZE_DRIVERS
+add "<#include \"/framework/driver/sdcard/config/drv_sdcard_tasks.c.ftl\">"  to list SYSTEM_TASKS_C_CALL_DRIVER_TASKS
+
+file DRV_SDCARD_H "$HARMONY_VERSION_PATH/framework/driver/sdcard/drv_sdcard.h" to "$PROJECT_HEADER_FILES/framework/driver/sdcard/drv_sdcard.h"
+file DRV_SDCARD_MAPPING_H "$HARMONY_VERSION_PATH/framework/driver/sdcard/drv_sdcard_mapping.h" to "$PROJECT_HEADER_FILES/framework/driver/sdcard/drv_sdcard_mapping.h"
+file DRV_SDCARD_VAR_MAPPING_H "$HARMONY_VERSION_PATH/framework/driver/sdcard/src/drv_sdcard_variant_mapping.h" to "$PROJECT_HEADER_FILES/framework/driver/sdcard/src/drv_sdcard_variant_mapping.h"
+file DRV_SDCARD_LOCAL_H "$HARMONY_VERSION_PATH/framework/driver/sdcard/src/drv_sdcard_local.h" to "$PROJECT_HEADER_FILES/framework/driver/sdcard/src/drv_sdcard_local.h"
+file DRV_SDCARD_C "$HARMONY_VERSION_PATH/framework/driver/sdcard/src/dynamic/drv_sdcard.c" to "$PROJECT_SOURCE_FILES/framework/driver/sdcard/src/dynamic/drv_sdcard.c"
+endif
