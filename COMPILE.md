@@ -22,6 +22,7 @@ Next, Finish
 
 To prevent error java not found:
 
+    sudo mkdir /opt/microchip/mplab_ide
     sudo ln -s /opt/microchip/mplabx/v4.05/sys /opt/microchip/mplab_ide/sys
 
 
@@ -43,9 +44,9 @@ If anyone find a safer download source, please let me know.
 
 Next, Accept, Next, Next
 /opt/microchip/xc32/v1.42
-Next, Add path, Next, Next, Get Coffee, Next, Finish
+Next, Add path, Next, Next, Next, Finish
 
-    sudo apt install cppcheck
+    sudo apt install build-essential cppcheck
 
     mkdir ~/ttn-gw-dev && cd ~/ttn-gw-dev
 
@@ -63,9 +64,6 @@ Next, Add path, Next, Next, Get Coffee, Next, Finish
       prjMakefilesGenerator='/opt/microchip/mplabx/v4.05/mplab_ide/bin/prjMakefilesGenerator.sh'
 
     ./compile.sh 
-
-[Get Coffee here]
-
     ./generate_hex_with_checksum.sh
 
     ls -l firmware.hex 
