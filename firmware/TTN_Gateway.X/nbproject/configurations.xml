@@ -1108,7 +1108,9 @@
         <makeCustomizationEnableLongLines>false</makeCustomizationEnableLongLines>
         <makeCustomizationNormalizeHexFile>false</makeCustomizationNormalizeHexFile>
       </makeCustomizationType>
-      <item path="../vendor/mbedtls/library/net_sockets.c" ex="true" overriding="false">
+      <item path="../vendor/mbedtls/library/net_sockets.c"
+            ex="true"
+            overriding="false">
         <C32>
         </C32>
         <C32-AR>

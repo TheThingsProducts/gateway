@@ -24,9 +24,11 @@ git submodule update --init
 
 Download the following tools from the Microchip download pages:
 
-- [MPLAB IDE X v3.45](http://www.microchip.com/development-tools/downloads-archive)
-- [MPLAB XC32 v1.42](http://www.microchip.com/development-tools/downloads-archive)
-- [Harmony v1.08.01](http://www.microchip.com/mplab/mplab-harmony/mplab-harmony-1-0) (under Archived Downloads)
+| Tool | Windows | Mac | Linux | 
+|--------|---------|---------------------------|-----------------|
+| MPLAB IDE X v3.45|  [link](http://ww1.microchip.com/downloads/en/DeviceDoc/MPLABX-v3.45-windows-installer.exe)|  [link](http://ww1.microchip.com/downloads/en/DeviceDoc/MPLABX-v3.45-osx-installer.dmg)|[link](http://ww1.microchip.com/downloads/en/DeviceDoc/MPLABX-v3.45-linux-installer.tar)|
+| MPLAB XC32 v1.42 | [link](http://ww1.microchip.com/downloads/en/DeviceDoc/xc32-v1.42-full-install-windows-installer.exe)| [link](http://ww1.microchip.com/downloads/en/DeviceDoc/xc32-v1.42-full-install-osx-installer.dmg)| [link](http://ww1.microchip.com/downloads/en/DeviceDoc/xc32-v1.42-full-install-linux-installer.run)|
+| Harmony v1.08.01| [link](http://ww1.microchip.com/downloads/en/DeviceDoc/harmony_v1_08_01_windows_installer.exe)| [link](http://ww1.microchip.com/downloads/en/DeviceDoc/harmony_v1_08_01_osx_installer.dmg)| [link](http://ww1.microchip.com/downloads/en/DeviceDoc/harmony_v1_08_01_linux_installer.run)|
 
 ## Fix MPLab script
 

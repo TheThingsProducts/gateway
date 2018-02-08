@@ -8,7 +8,7 @@ if [ "$(uname -s)" = "Darwin" ]; then
   prjMakefilesGenerator='/Applications/microchip/mplabx/v3.45/mplab_ide.app/Contents/Resources/mplab_ide/bin/prjMakefilesGenerator.sh'
 elif [ "$(uname -s)" = "Linux" ]; then
   export PATH="$PATH:/opt/microchip/xc32/v1.42/bin"
-  prjMakefilesGenerator='/opt/microchip/mplab_ide/bin/prjMakefilesGenerator.sh'
+  prjMakefilesGenerator='/opt/microchip/mplabx/v3.45/mplab_ide/bin/prjMakefilesGenerator.sh'
 else
   echo "We're not sure how to handle your platform or OS. Please add your platform or OS to compile.sh and submit a pull request."
   exit 1
