@@ -1,0 +1,17 @@
+firmware/TTN_Gateway.X/build/TTN_Gateway_v1/
+firmware/TTN_Gateway.X/dist/TTN_Gateway_v1/
+firmware/TTN_Gateway.X/nbproject/Makefile-*
+firmware/TTN_Gateway.X/nbproject/Package-TTN_Gateway_v1*.bash
+*.DS_Store
+*.o
+*.d
+*.bak
+build/
+dist/
+jlinkscript
+
+firmware/TTN_Gateway.X/nbproject/private/
+firmware/compile_log.txt
+firmware/firmware.hex
+firmware/checksums
+firmware/cppcheck.xml
