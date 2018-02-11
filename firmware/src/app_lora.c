@@ -56,6 +56,7 @@ QueueHandle_t xRXQueue, xTXQueue, xUARTRXQueue;
 /* ************************************************************************** */
 /* ************************************************************************** */
 
+void    flushUart(DRV_HANDLE handle);
 bool    readUart(DRV_HANDLE handle, uint8_t* msg, uint16_t maxlen);
 uint8_t readUartBulk(DRV_HANDLE handle, uint8_t* msg, uint16_t maxlen);
 bool    initLora();
@@ -95,6 +96,24 @@ static uint32_t lastAckTime   = 0;
      ((SYS_TMR_TickCountGet() - timeout_timer) >= (SYS_TMR_TickCounterFrequencyGet() * X)))
 
 #include "Harmony/MQTTHarmony.h"
+
+// flushUart removes any pending bytes from the receive buffer.
+void flushUart(DRV_HANDLE handle)
+{
+    bool flushing = false;
+    uint8_t buffer[1]; 
+    while(DRV_USART_Read(handle, buffer, 1) > 0) 
+    {
+        if(!flushing)
+        {
+            SYS_DEBUG(SYS_ERROR_DEBUG, "LORA: flushing: ");
+            flushing = true;
+        }
+        SYS_DEBUG(SYS_ERROR_DEBUG, "%02x ", buffer[0]);
+    }
+    if(flushing)
+        SYS_DEBUG(SYS_ERROR_DEBUG, "\r\n");
+}
 
 // readUart reads bytes into msg. It keeps track of the number of characters received.
 // If the number exceeds maxlen, then wraps around and begins to write to msg at
@@ -251,12 +270,7 @@ bool initLora(void)
 bool configLora(void)
 {
     bool    status = 1;
-    uint8_t buff[9];
-    uint8_t r = 1;
-
-    // flush Lora UART RX before sending any command
-    while(r > 0)
-        r = DRV_USART_Read(appData.USARTHandle, buff, 8);
+    flushUart(appData.USARTHandle);
 
     stopLora();
 
@@ -348,6 +362,7 @@ bool configLora(void)
     /* Reset command for module */
     stopLora();
     startLora();
+    SYS_DEBUG(SYS_ERROR_DEBUG, "LORA: configLora %s\r\n", status ? "OK" : "ERROR");
     return status;
 }
 
@@ -605,7 +620,9 @@ bool sendPacket(loraTXPacket* txpkt)
 }
 
 bool sendCommand(uint8_t command, uint8_t* payload, uint16_t len)
-{
+{  
+    flushUart(appData.USARTHandle);
+
     bool     gotresponse   = false;
     uint16_t packet_length = len + 6;
     uint8_t  pkt[packet_length + 1];
@@ -648,8 +665,11 @@ bool sendCommand(uint8_t command, uint8_t* payload, uint16_t len)
         TIMEOUTSTART;
         while(readUart(appData.USARTHandle, appData.rx_uart_buffer, UART_BUFF_LENGTH) == 0)
         {
-            if(TIMEOUT(4))
+            if(TIMEOUT(4)) 
+            {
+                SYS_DEBUG(SYS_ERROR_WARNING, "LORA: UART TIMEOUT\r\n");
                 return false;
+            }
         }
         if(appData.rx_uart_buffer[1] == command)
         {
@@ -667,6 +687,7 @@ bool sendCommand(uint8_t command, uint8_t* payload, uint16_t len)
         SYS_DEBUG(SYS_ERROR_DEBUG, "%#x\r\n", appData.rx_uart_buffer[j]);
 #endif
     }
+    SYS_DEBUG(SYS_ERROR_DEBUG, "LORA: sendCommand %s\r\n", gotresponse ? "OK" : "ERROR");
     return gotresponse;
 }
 
