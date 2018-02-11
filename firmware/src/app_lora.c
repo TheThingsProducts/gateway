@@ -101,8 +101,8 @@ static uint32_t lastAckTime   = 0;
 void flushUart(DRV_HANDLE handle)
 {
     bool flushing = false;
-    uint8_t buffer[1]; 
-    while(DRV_USART_Read(handle, buffer, 1) > 0) 
+    uint8_t buffer[1];
+    while(DRV_USART_Read(handle, buffer, 1) > 0)
     {
         if(!flushing)
         {
@@ -270,7 +270,6 @@ bool initLora(void)
 bool configLora(void)
 {
     bool    status = 1;
-    flushUart(appData.USARTHandle);
 
     stopLora();
 
@@ -621,6 +620,7 @@ bool sendPacket(loraTXPacket* txpkt)
 
 bool sendCommand(uint8_t command, uint8_t* payload, uint16_t len)
 {  
+    // flush Lora UART RX before sending any command
     flushUart(appData.USARTHandle);
 
     bool     gotresponse   = false;
