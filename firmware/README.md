@@ -49,6 +49,12 @@ After building the project using the MPLabX GUI, the paths in the `configuration
 - Link this repository
 - Hit *Scan Multibranch Pipeline Now*
 
+## Build in Docker
+
+- Install [Docker](https://www.docker.com/community-edition#/download)
+- To build the Docker image, run `docker build -t firmware-builder -f Dockerfile.build .` (uou only need to do this once).
+- To compile the firmware, run `docker run --rm -it -v $(pwd):/build -w /build firmware-builder ./compile.sh && ./generate_hex_with_checksum.sh`
+
 ## TASKS
 
 | Task        | Priority | Size |
