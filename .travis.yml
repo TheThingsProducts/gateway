@@ -6,8 +6,7 @@ cache:
   - /tmp/microchip
 install:
 - sudo dpkg --add-architecture i386
-- sudo apt-get update
-- sudo apt-get install -y libc6:i386 libx11-6:i386 libxext6:i386 libstdc++6:i386 libexpat1:i386
+- sudo apt-get update && sudo apt-get install -y libc6:i386 libx11-6:i386 libxext6:i386 libstdc++6:i386 libexpat1:i386
 - if [[ ! -f /tmp/microchip/MPLABX-v3.45-linux-installer.tar ]]; then curl -sSL -o /tmp/microchip/MPLABX-v3.45-linux-installer.tar http://ww1.microchip.com/downloads/en/DeviceDoc/MPLABX-v3.45-linux-installer.tar; fi
 - if [[ ! -f /tmp/microchip/MPLABX-v3.45-linux-installer.sh ]]; then tar -xvf /tmp/microchip/MPLABX-v3.45-linux-installer.tar -C /tmp/microchip && chmod +x /tmp/microchip/MPLABX-v3.45-linux-installer.sh; fi
 - if [[ ! -d /opt/microchip/mplabx/v3.45 ]]; then sudo /tmp/microchip/MPLABX-v3.45-linux-installer.sh -- --mode unattended; fi
