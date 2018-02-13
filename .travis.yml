@@ -1,0 +1,18 @@
+language: c
+sudo: required
+cache:
+  timeout: 600
+  directories:
+  - /tmp/microchip
+install:
+- sudo dpkg --add-architecture i386
+- sudo apt-get update
+- sudo apt-get install -y libc6:i386 libx11-6:i386 libxext6:i386 libstdc++6:i386 libexpat1:i386
+- if [[ ! -f /tmp/microchip/MPLABX-v3.45-linux-installer.tar ]]; then curl -sSL -o /tmp/microchip/MPLABX-v3.45-linux-installer.tar http://ww1.microchip.com/downloads/en/DeviceDoc/MPLABX-v3.45-linux-installer.tar; fi
+- if [[ ! -f /tmp/microchip/MPLABX-v3.45-linux-installer.sh ]]; then tar -xvf /tmp/microchip/MPLABX-v3.45-linux-installer.tar -C /tmp/microchip && chmod +x /tmp/microchip/MPLABX-v3.45-linux-installer.sh; fi
+- if [[ ! -d /opt/microchip/mplabx/v3.45 ]]; then sudo /tmp/microchip/MPLABX-v3.45-linux-installer.sh -- --mode unattended; fi
+- if [[ ! -e /opt/microchip/mplab_ide ]]; then sudo ln -s /opt/microchip/mplabx/v3.45/mplab_ide /opt/microchip/mplab_ide; fi
+- if [[ ! -f /tmp/microchip/xc32-v1.42-full-install-linux-installer.run ]]; then curl -sSL -o /tmp/microchip/xc32-v1.42-full-install-linux-installer.run http://ww1.microchip.com/downloads/en/DeviceDoc/xc32-v1.42-full-install-linux-installer.run && chmod +x /tmp/microchip/xc32-v1.42-full-install-linux-installer.run; fi
+- if [[ ! -d /opt/microchip/xc32/v1.42 ]]; then sudo /tmp/microchip/xc32-v1.42-full-install-linux-installer.run -- --mode unattended --netservername ""; fi
+script:
+- cd $TRAVIS_BUILD_DIR/firmware && ./compile.sh && ./generate_hex_with_checksum.sh
