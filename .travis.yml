@@ -15,4 +15,4 @@ install:
 - if [[ ! -f /tmp/microchip/xc32-v1.42-full-install-linux-installer.run ]]; then curl -sSL -o /tmp/microchip/xc32-v1.42-full-install-linux-installer.run http://ww1.microchip.com/downloads/en/DeviceDoc/xc32-v1.42-full-install-linux-installer.run && chmod +x /tmp/microchip/xc32-v1.42-full-install-linux-installer.run; fi
 - if [[ ! -d /opt/microchip/xc32/v1.42 ]]; then sudo /tmp/microchip/xc32-v1.42-full-install-linux-installer.run -- --mode unattended --netservername ""; fi
 script:
-- cd $TRAVIS_BUILD_DIR/firmware && ./compile.sh && ./generate_hex_with_checksum.sh
+- cd $TRAVIS_BUILD_DIR/firmware && ./generate_version_header.sh && ./compile.sh && ./generate_hex_with_checksum.sh
