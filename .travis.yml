@@ -13,5 +13,13 @@ install:
 - if [[ ! -e /opt/microchip/mplab_ide ]]; then sudo ln -s /opt/microchip/mplabx/v3.45/mplab_ide /opt/microchip/mplab_ide; fi
 - if [[ ! -f /tmp/microchip/xc32-v1.42-full-install-linux-installer.run ]]; then curl -sSL -o /tmp/microchip/xc32-v1.42-full-install-linux-installer.run http://ww1.microchip.com/downloads/en/DeviceDoc/xc32-v1.42-full-install-linux-installer.run && chmod +x /tmp/microchip/xc32-v1.42-full-install-linux-installer.run; fi
 - if [[ ! -d /opt/microchip/xc32/v1.42 ]]; then sudo /tmp/microchip/xc32-v1.42-full-install-linux-installer.run -- --mode unattended --netservername ""; fi
+- if [[ ! -z "$AZURE_STORAGE_KEY" ]]; then sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 52E16F86FEE04B979B07E28DB02C46DF417A0893; fi
+- if [[ ! -z "$AZURE_STORAGE_KEY" ]]; then echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/azure-cli.list; fi
+- if [[ ! -z "$AZURE_STORAGE_KEY" ]]; then sudo apt-get update && sudo apt-get install -y azure-cli; fi
 script:
 - cd $TRAVIS_BUILD_DIR/firmware && ./generate_version_header.sh && ./compile.sh && ./generate_hex_with_checksum.sh
+after_success:
+- if [[ ! -z "$AZURE_STORAGE_KEY" && ! -z "$TRAVIS_COMMIT" ]]; then az storage blob upload --container-name the-things-gateway --name "v1/$TRAVIS_COMMIT/firmware.hex" --file ./firmware.hex; fi
+- if [[ ! -z "$AZURE_STORAGE_KEY" && ! -z "$TRAVIS_COMMIT" ]]; then az storage blob upload --container-name the-things-gateway --name "v1/$TRAVIS_COMMIT/checksums" --file ./checksums; fi
+- if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" && ! -z "$AZURE_STORAGE_KEY" && ! -z "$TRAVIS_BRANCH" ]]; then az storage blob upload --container-name the-things-gateway --name "v1/$TRAVIS_BRANCH/firmware.hex" --file ./firmware.hex; fi
+- if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" && ! -z "$AZURE_STORAGE_KEY" && ! -z "$TRAVIS_BRANCH" ]]; then az storage blob upload --container-name the-things-gateway --name "v1/$TRAVIS_BRANCH/checksums" --file ./checksums; fi
