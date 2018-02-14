@@ -8,6 +8,13 @@ Installing the firmware is usually done using over-the-air updates from our offi
 - Copy the `firmware.hex` and `checksums` files to the `update` folder.
 - Place the SD card in the gateway and power cycle the gateway.
 
+```
+SDCARD
+└── update
+    ├── checksums
+    └── firmware.hex
+```
+
 ## Development Setup
 
 You probably already have the following "essential" development tools, but just to be sure:
