@@ -19,10 +19,10 @@ SDCARD
 
 | **Branch** | **Downloads** | **Notes** |
 | ---------- | ------------- | --------- |
-| `stable`   | [`firmware.hex`](https://thethingsproducts.azureedge.net/the-things-gateway/v1/stable/firmware.hex) [`checksums`](https://thethingsproducts.azureedge.net/the-things-gateway/v1/stable/checksums) | Default over-the-air update channel |
-| `beta`     | [`firmware.hex`](https://thethingsproducts.azureedge.net/the-things-gateway/v1/beta/firmware.hex) [`checksums`](https://thethingsproducts.azureedge.net/the-things-gateway/v1/beta/checksums) | Over-the-air update channel when "Beta Updates" enabled |
-| `master`   | [`firmware.hex`](https://thethingsproducts.azureedge.net/the-things-gateway/v1/master/firmware.hex) [`checksums`](https://thethingsproducts.azureedge.net/the-things-gateway/v1/master/checksums) | Release candidate for `stable` |
-| `develop`  | [`firmware.hex`](https://thethingsproducts.azureedge.net/the-things-gateway/v1/develop/firmware.hex) [`checksums`](https://thethingsproducts.azureedge.net/the-things-gateway/v1/develop/checksums) | Release candidate for `beta` |
+| `stable`   | [`firmware.hex`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/stable/firmware.hex) [`checksums`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/stable/checksums) | Default over-the-air update channel |
+| `beta`     | [`firmware.hex`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/beta/firmware.hex) [`checksums`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/beta/checksums) | Over-the-air update channel when "Beta Updates" enabled |
+| `master`   | [`firmware.hex`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/master/firmware.hex) [`checksums`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/master/checksums) | Release candidate for `stable` |
+| `develop`  | [`firmware.hex`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/develop/firmware.hex) [`checksums`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/develop/checksums) | Release candidate for `beta` |
 
 ## Development Setup
 
