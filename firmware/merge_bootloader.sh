@@ -3,7 +3,7 @@
 set -e
 
 if [ "$(uname -s)" = "Darwin" ]; then
-  export PATH="$PATH:/Applications/microchip/xc32/v1.42/bin:/Applications/microchip/mplabx/v3.45/mplab_ide/bin"
+  export PATH="$PATH:/Applications/microchip/xc32/v1.42/bin:/Applications/microchip/mplabx/v3.45/mplab_ide.app/Contents/Resources/mplab_ide/bin"
 elif [ "$(uname -s)" = "Linux" ]; then
   export PATH="$PATH:/opt/microchip/xc32/v1.42/bin:/opt/microchip/mplabx/v3.45/mplab_ide/bin"
 else
