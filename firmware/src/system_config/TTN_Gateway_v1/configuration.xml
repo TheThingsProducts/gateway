@@ -1423,7 +1423,7 @@
         <Name>net_pres_enc_glue.c</Name>
         <Path>Source Files/app/system_config/TTN_Gateway_v1/framework/net/pres</Path>
         <Checksum>8F13D10CFF8835AB70B06EC48EF088D1</Checksum>
-        <ProjectFileChecksum>5B61C2857873B10C26C7BAA85793B91B</ProjectFileChecksum>
+        <ProjectFileChecksum>90A5079896192F530A57D5EC052D3B97</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>drv_spi_tasks.c</Name>
@@ -1434,7 +1434,7 @@
         <Name>custom_http_app.c</Name>
         <Path>Source Files/app</Path>
         <Checksum>283533DA50899A5E229916A235B747D0</Checksum>
-        <ProjectFileChecksum>3A1FBEB0F6FD60535D1C267E1E07A4DC</ProjectFileChecksum>
+        <ProjectFileChecksum>AB59ECABAF0B07157467E83FEB4CFFE7</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>sys_clk_static.c</Name>
@@ -1444,26 +1444,26 @@
       <Template>
         <Name>system_config.h</Name>
         <Path>Header Files/app/system_config/TTN_Gateway_v1</Path>
-        <Checksum>7CF9F09AD1910A2DDF726E1E4EFAAB97</Checksum>
-        <ProjectFileChecksum>4888403734BF220C7558173D2DEB52DE</ProjectFileChecksum>
+        <Checksum>609F6BF54BCE0A6BC3586C4B5171ABA7</Checksum>
+        <ProjectFileChecksum>C1291221099E99EFEEC82B97478D8400</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>FreeRTOSConfig.h</Name>
         <Path>Header Files/app/system_config/TTN_Gateway_v1</Path>
         <Checksum>53008A5B2372D635DACCFABEE7453A8D</Checksum>
-        <ProjectFileChecksum>051094EECFC1C40F1D28F47EE5AC935B</ProjectFileChecksum>
+        <ProjectFileChecksum>C994DF550FDC44E4CB55BF319A43CEE6</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>system_init.c</Name>
         <Path>Source Files/app/system_config/TTN_Gateway_v1</Path>
-        <Checksum>05D7D50B1C288230705ECE3A69AF0683</Checksum>
-        <ProjectFileChecksum>AA40015884352CC4D7791C61ECC1F399</ProjectFileChecksum>
+        <Checksum>EAE94DAFC7BE69049CF9AB9B5C41D05B</Checksum>
+        <ProjectFileChecksum>1BC90B24C0B9B39459F8894C6007548B</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>mpfs_img2.c</Name>
         <Path>Source Files/app</Path>
         <Checksum>FC44C4C72205F892A244F763F0E7B4B8</Checksum>
-        <ProjectFileChecksum>FB51D4530E44ECEA3BE99A63360E01C4</ProjectFileChecksum>
+        <ProjectFileChecksum>1B562AF678E00897B35216D08F3430DA</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>drv_spi_master_ebm_tasks.c</Name>
@@ -1478,19 +1478,19 @@
         <Name>http_print.c</Name>
         <Path>Source Files/app</Path>
         <Checksum>36A16C64F0D37124A6311EF2414217A6</Checksum>
-        <ProjectFileChecksum>ED5744671DF883C3AEE3918633FC8B12</ProjectFileChecksum>
+        <ProjectFileChecksum>1E05D0D324B23DF9F0B8E6906BA36AC9</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>system_definitions.h</Name>
         <Path>Header Files/app/system_config/TTN_Gateway_v1</Path>
         <Checksum>26820CE90945BC819C628D4972A127E6</Checksum>
-        <ProjectFileChecksum>867C98C973204994295C188ED4C4A58A</ProjectFileChecksum>
+        <ProjectFileChecksum>5798225B590E2D9B76846AA099D9D2DA</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>system_tasks.c</Name>
         <Path>Source Files/app/system_config/TTN_Gateway_v1</Path>
-        <Checksum>D6F790EF28E037B495D8838D1CBE1FB2</Checksum>
-        <ProjectFileChecksum>DEAF84B3571D37BB2B606CF3ECD2F600</ProjectFileChecksum>
+        <Checksum>59EAF86254A19FA936F07D161E7B310E</Checksum>
+        <ProjectFileChecksum>96EBE93C87BA826402D6DBE8112743CE</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>main.c</Name>
@@ -1510,7 +1510,7 @@
         <Name>system_exceptions.c</Name>
         <Path>Source Files/app/system_config/TTN_Gateway_v1</Path>
         <Checksum>C111969CA43D6CEA1E9E33A6164E7AE0</Checksum>
-        <ProjectFileChecksum>99905EDEB47370DA47EB9C1BAC8F4543</ProjectFileChecksum>
+        <ProjectFileChecksum>10F2AB1F3ECFD5DBA64DD26123230A7C</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>app.c</Name>
@@ -1539,7 +1539,7 @@
         <Name>system_interrupt.c</Name>
         <Path>Source Files/app/system_config/TTN_Gateway_v1</Path>
         <Checksum>BE3A62B951276DBEE1F3B8BC56E7EE7A</Checksum>
-        <ProjectFileChecksum>4ED332B7E95B9D194D7D6BA4A0DFD8ED</ProjectFileChecksum>
+        <ProjectFileChecksum>35A0E2F332BBD7191042AEB7BBFC18F1</ProjectFileChecksum>
       </Template>
       <Template>
         <Name>drv_spi_master_rm_tasks.c</Name>
@@ -1550,28 +1550,28 @@
         <Name>rtos_hooks.c</Name>
         <Path>Source Files/app/system_config/TTN_Gateway_v1</Path>
         <Checksum>FA52743264536E5207D2ADBE57B48D05</Checksum>
-        <ProjectFileChecksum>75C888233DAE6612BF5C2EC124CCA0B1</ProjectFileChecksum>
+        <ProjectFileChecksum>1380704809F9E60A2D3A2AC33AFF0F52</ProjectFileChecksum>
       </Template>
     </Templates>
     <CompilerItems>
       <C32-AS>
-        <Include value="../harmony/third_party/rtos/FreeRTOS/Source/portable/MPLAB/PIC32MZ"/>
-        <Include value="../harmony/third_party/rtos/FreeRTOS/Source/include"/>
+        <Include value="../vendor/harmony/third_party/rtos/FreeRTOS/Source/portable/MPLAB/PIC32MZ"/>
+        <Include value="../vendor/harmony/third_party/rtos/FreeRTOS/Source/include"/>
         <Include value="../src/system_config/TTN_Gateway_v1"/>
       </C32-AS>
       <C32>
-        <Include value="../harmony/framework/driver/wifi/mrf24wn/include"/>
-        <Include value="../harmony/framework/driver/wifi/mrf24wn/wireless_driver/include"/>
-        <Include value="../harmony/framework/driver/wifi/mrf24wn/wireless_driver_extension"/>
-        <Include value="../harmony/third_party/rtos/FreeRTOS/Source/portable/MPLAB/PIC32MZ"/>
-        <Include value="../harmony/third_party/rtos/FreeRTOS/Source/include"/>
+        <Include value="../vendor/harmony/framework/driver/wifi/mrf24wn/include"/>
+        <Include value="../vendor/harmony/framework/driver/wifi/mrf24wn/wireless_driver/include"/>
+        <Include value="../vendor/harmony/framework/driver/wifi/mrf24wn/wireless_driver_extension"/>
+        <Include value="../vendor/harmony/third_party/rtos/FreeRTOS/Source/portable/MPLAB/PIC32MZ"/>
+        <Include value="../vendor/harmony/third_party/rtos/FreeRTOS/Source/include"/>
         <Include value="../src/system_config/TTN_Gateway_v1"/>
       </C32>
     </CompilerItems>
     <Libraries>
-      <Library value="../harmony/bin/framework/peripheral/PIC32MZ2048EFM144_peripherals.a"/>
-      <Library value="../harmony/framework/driver/wifi/mrf24wn/wireless_driver_extension/wdrvext_mz_ef.a"/>
-      <Library value="../harmony/framework/tcpip/src/crypto/aes_pic32mx.a"/>
+      <Library value="../vendor/harmony/framework/tcpip/src/crypto/aes_pic32mx.a"/>
+      <Library value="../vendor/harmony/framework/driver/wifi/mrf24wn/wireless_driver_extension/wdrvext_mz_ef.a"/>
+      <Library value="../vendor/harmony/bin/framework/peripheral/PIC32MZ2048EFM144_peripherals.a"/>
     </Libraries>
   </Manifest>
 </configuration>

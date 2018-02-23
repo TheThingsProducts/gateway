@@ -46,12 +46,17 @@ node {
 		step([$class: 'WarningsPublisher', defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'GNU Make + GNU C Compiler (gcc)', pattern: 'compile_log.txt']], unHealthy: ''])
 	  }
 	}
+	stage('Merge bootloader') {
+	  dir ('firmware') {
+		sh './merge_bootloader.sh'
+	  }
+	}
 	stage('Package') {
 	  dir ('firmware') {
 		sh './generate_hex_with_checksum.sh'
 
 		zip archive: true, glob: "firmware.hex, checksums", zipFile: "things-gateway-${env.BRANCH_NAME}-${env.BUILD_NUMBER}-${shortCommit}.zip"
-		archiveArtifacts artifacts: 'TTN_Gateway.X/dist/TTN_Gateway_v1/production/TTN_Gateway.X.production.*'
+		archiveArtifacts artifacts: 'TTN_Gateway.X/dist/TTN_Gateway_v1/production/TTN_Gateway.X.production.*, *with-bootloader.hex'
 	  }
 	}
 }
