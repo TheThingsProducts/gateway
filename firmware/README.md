@@ -53,6 +53,7 @@ After building the project using the MPLabX GUI, the paths in the `configuration
 ## Local Build
 
 - Make sure you have downloaded and installed the IDE and compilers stated at **Development Setup** above.
+- Run `./generate_version_header.sh`.
 - Run `./compile.sh`.
 - After successful build, create the `firmware.hex` and `checksums` files with `./generate_hex_with_checksum.sh`.
 - Use those two files in the **Installation** procedure above.
