@@ -24,6 +24,17 @@ SDCARD
 | `master`   | [`firmware.hex`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/master/firmware.hex) [`checksums`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/master/checksums) | Release candidate for `stable` |
 | `develop`  | [`firmware.hex`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/develop/firmware.hex) [`checksums`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/develop/checksums) | Release candidate for `beta` |
 
+## Firmware with bootloader
+
+⚠️ Only for experts ⚠️
+
+If you have a Microchip Debugger/Programmer, you can use the following files to flash the bootloader and firmware simultaneously. 
+
+- [`stable`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/stable/firmware-with-bootloader.hex)
+- [`beta`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/beta/firmware-with-bootloader.hex)
+- [`master`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/master/firmware-with-bootloader.hex)
+- [`develop`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/develop/firmware-with-bootloader.hex)
+
 ## Development Setup
 
 You probably already have the following "essential" development tools, but just to be sure:
