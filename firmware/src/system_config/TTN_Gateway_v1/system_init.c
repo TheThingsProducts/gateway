@@ -1003,6 +1003,15 @@ void SYS_Initialize ( void* data )
     LORA_Initialize();
 }
 
+void SYS_ReInitializeUsart1 ( uint32_t baud )
+{
+    DRV_USART_INIT initData = drvUsart1InitData;
+    DRV_USART_Deinitialize(sysObj.drvUsart1);
+    initData.baud = baud;
+    sysObj.drvUsart1 = DRV_USART_Initialize(DRV_USART_INDEX_1, (SYS_MODULE_INIT *)&initData);
+}
+
+
 /*******************************************************************************
  End of File
 */

@@ -29,24 +29,30 @@
 #define TXPACKET_PAYLOAD_MAX_LENGTH 247
 #define MAX_TXPACKET_LENGTH (TXPACKET_HEADER_LENGTH + TXPACKET_PAYLOAD_MAX_LENGTH)
 #define KICK_MODULE_AFTER_LAST_ACK_TIMEOUT 60
-
+#define WAIT_FOR_INIT_COMPLETE_TIME_MS 7000
+#define CHECK_FOR_COMMUNICATION_TIMEOUT_MS 10000
 #define UART_ERROR_NO_DATA 0
 #define UART_ERROR_INCOMPLETE_DATA 1
 #define UART_ERROR_REJECTED_DATA 2
 #define UART_ERROR_BROKEN_DATA 3
 #define UART_NO_ERROR 4
+#define UART_DEFAULT_BAUD 115200
+#define UART_SAFE_BAUD 9600
+#define INITIAL_COMMUNICATION_RETRY_COUNT 3 // retries before we tell module is not found
 
 static bool                   allowed_to_start = false; // TODO: Can be part of APP_DATA_LORA when it made local
 static APP_DATA_LORA          appData          = {0};
 extern APP_GW_ACTIVATION_DATA appGWActivationData;
 
-static SYS_TMR_HANDLE handle;
+static SYS_TMR_HANDLE timeoutTimerHandle;
 static TaskHandle_t   loraRxThreadHandle = NULL;
 
 static uint32_t last_rx_timestamp          = 0;
 static uint32_t lora_config_failed_counter = 0;
 static bool     freqplan_correct           = 0;
 static uint8_t  frequency_band             = 0;
+static uint32_t baudSetting = UART_DEFAULT_BAUD;
+static uint8_t initialCommunicationRetryCount;
 
 QueueHandle_t xRXQueue, xTXQueue, xUARTRXQueue;
 
@@ -59,14 +65,17 @@ QueueHandle_t xRXQueue, xTXQueue, xUARTRXQueue;
 void    flushUart(DRV_HANDLE handle);
 bool    readUart(DRV_HANDLE handle, uint8_t* msg, uint16_t maxlen);
 uint8_t readUartBulk(DRV_HANDLE handle, uint8_t* msg, uint16_t maxlen);
-bool    initLora();
+void    initLora();
 bool    configLora();
 bool    setLeds(bool led0, bool led1, bool led2);
 uint8_t getStatus(uint8_t command);
 bool    startLora();
 bool    stopLora();
 uint8_t getVersion();
-bool    getBaudrate();
+bool doSave(void);
+bool doReset(void);
+bool setBaudrate(uint32_t baud);
+uint32_t getBaudrate(void);
 bool    txAbort();
 bool    sendRXReply(bool ack);
 bool    getRXChain(uint8_t RFChain);
@@ -86,6 +95,7 @@ static bool getSync();
 static bool setSync(bool public);
 static void _setState(APP_STATES_LORA newState);
 static void restart_lora_configuration();
+static uint32_t preferredBaud(void);
 
 static uint32_t timeout_timer = 0;
 static uint32_t lastAckTime   = 0;
@@ -240,9 +250,12 @@ bool writeUart(DRV_HANDLE handle, uint8_t* msg, size_t pkt_len)
     return false;
 }
 
-bool initLora(void)
+void initLora(void)
 {
-    bool init_complete = false;
+    baudSetting = preferredBaud();
+    initialCommunicationRetryCount = INITIAL_COMMUNICATION_RETRY_COUNT;
+    appData.rxwrite_pos = 0;
+    appData.rxread_pos  = 0;
 
     // RF ENABLE LOW
     PLIB_PORTS_PinClear(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_5);
@@ -250,21 +263,11 @@ bool initLora(void)
     // RESET HIGH
     PLIB_PORTS_PinSet(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_6);
 
-    /* Open USART Driver instance 1 (USART1 in this case) and obtain a handle to it. */
-    appData.USARTHandle = DRV_USART_Open(DRV_USART_INDEX_1, DRV_IO_INTENT_READWRITE | DRV_IO_INTENT_NONBLOCKING);
-
     // RESET LOW
     PLIB_PORTS_PinClear(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_6);
     vTaskDelay(500 / portTICK_PERIOD_MS);
     // RESET HIGH
     PLIB_PORTS_PinSet(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_6);
-
-    if(appData.USARTHandle != DRV_HANDLE_INVALID)
-    {
-        init_complete = true;
-    }
-
-    return init_complete;
 }
 
 bool configLora(void)
@@ -452,9 +455,39 @@ uint8_t getVersion()
     return 0;
 }
 
-bool getBaudrate()
+bool doSave(void)
 {
-    return sendCommand(LORA_COMMAND_GETUART, 0, 0);
+    return sendCommand(LORA_COMMAND_SAVE, 0, 0);
+}
+
+bool doReset(void)
+{
+    return sendCommand(LORA_COMMAND_RESET, 0, 0);
+}
+
+bool setBaudrate(uint32_t baud)
+{
+    uint8_t bytes[4];
+    bytes[0] = baud & 0xFF;
+    bytes[1] = (baud >> 8) & 0xFF;
+    bytes[2] = (baud >> 16) & 0xFF;
+    bytes[3] = (baud >> 24) & 0xFF;
+    return sendCommand(LORA_COMMAND_SETUART, bytes, 4);
+}
+
+uint32_t getBaudrate(void)
+{
+    uint32_t baud = 0;
+    if (sendCommand(LORA_COMMAND_GETUART, 0, 0)) {
+        baud = appData.rx_uart_buffer[4];
+        baud |= appData.rx_uart_buffer[5] << 8;
+        baud |= appData.rx_uart_buffer[6] << 16;
+        baud |= appData.rx_uart_buffer[7] << 24;
+        
+        return baud;
+    }
+    
+    return 0;
 }
 
 bool txAbort()
@@ -669,7 +702,7 @@ bool sendCommand(uint8_t command, uint8_t* payload, uint16_t len)
         TIMEOUTSTART;
         while(readUart(appData.USARTHandle, appData.rx_uart_buffer, UART_BUFF_LENGTH) == 0)
         {
-            if(TIMEOUT(4)) 
+            if(TIMEOUT(1)) 
             {
                 SYS_DEBUG(SYS_ERROR_WARNING, "LORA: UART TIMEOUT\r\n");
                 return false;
@@ -963,32 +996,90 @@ void APP_LORA_Tasks(void)
     {
         case APP_LORA_INIT:
         {
-            if(initLora())
-            {
-                SYS_PRINT("LORA: Initialisation complete\r\n");
-                handle = SYS_TMR_DelayMS(7000);
-                _setState(APP_LORA_WAIT_INIT_COMPLETE);
-            }
-            appData.rxwrite_pos = 0;
-            appData.rxread_pos  = 0;
+            initLora();
+            SYS_PRINT("LORA: Initialisation complete\r\n");
+            timeoutTimerHandle = SYS_TMR_DelayMS(WAIT_FOR_INIT_COMPLETE_TIME_MS);
+            _setState(APP_LORA_WAIT_INIT_COMPLETE);
             break;
         }
 
         case APP_LORA_WAIT_INIT_COMPLETE:
         {
-            // Super temporary ugly delay to wait on the other apps
-            if(SYS_TMR_DelayStatusGet(handle))
+            if(SYS_TMR_DelayStatusGet(timeoutTimerHandle))
             {
-                SYS_PRINT("LORA: Wait init complete, waiting for application.\r\n");
-                // Empty UART driver buffer
-                // uint8_t buf[1] = {};
-                // if(readUart(appData.USARTHandle, buf, 1))  {;}
-                // SYS_DEBUG(SYS_ERROR_DEBUG, "BUFFER: %#x\r\n", buf[1]);
-
-                _setState(APP_LORA_WAIT_FOR_APP);
+                SYS_ReInitializeUsart1(baudSetting);
+                /* Open USART Driver instance 1 (USART1 in this case) and obtain a handle to it. */
+                appData.USARTHandle = DRV_USART_Open(DRV_USART_INDEX_1, DRV_IO_INTENT_READWRITE | DRV_IO_INTENT_NONBLOCKING | DRV_IO_INTENT_EXCLUSIVE);
+                ASSERT(appData.USARTHandle != DRV_HANDLE_INVALID, "Error opening LoRa UART");
+                
+                timeoutTimerHandle = SYS_TMR_DelayMS(CHECK_FOR_COMMUNICATION_TIMEOUT_MS); // Set timeout for initial communications
+                SYS_PRINT("LORA: Wait init complete, check for communication on %d baud.\r\n", baudSetting);
+                _setState(APP_LORA_CHECK_COMMUNICATION);
             }
             break;
         }
+        case APP_LORA_CHECK_COMMUNICATION:
+        {
+            if (getVersion() != 0) {
+                if (baudSetting != preferredBaud()) {
+                    baudSetting = preferredBaud();
+                    SYS_PRINT("LORA: Running on FRC, switching to %d\r\n", baudSetting);
+                    timeoutTimerHandle = SYS_TMR_DelayMS(CHECK_FOR_COMMUNICATION_TIMEOUT_MS);
+                    _setState(APP_LORA_SWITCH_BAUD);
+                } else {
+                    SYS_PRINT("LORA: Communication on %d OK, waiting for application.\r\n", baudSetting);
+                    _setState(APP_LORA_WAIT_FOR_APP);
+                }
+            } else if (SYS_TMR_DelayStatusGet(timeoutTimerHandle)) {
+                if (initialCommunicationRetryCount == 0) {
+                    SYS_PRINT("LORA: LoRa module not found. Make sure the module is connected correctly.\r\n");
+                    _setState(APP_LORA_NOT_FOUND);
+                } else {
+                    if (baudSetting == UART_DEFAULT_BAUD) {
+                        baudSetting = UART_SAFE_BAUD;
+                    } else {
+                        baudSetting = UART_DEFAULT_BAUD;
+                        initialCommunicationRetryCount--;
+                    }
+
+                    SYS_PRINT("LORA: Close and reopen UART on %d baud.\r\n", baudSetting);
+                    DRV_USART_Close(appData.USARTHandle);
+                    appData.USARTHandle = DRV_HANDLE_INVALID;
+                    
+                    SYS_TMR_CallbackStop(timeoutTimerHandle); // cancel pending timeout
+                    timeoutTimerHandle = SYS_TMR_DelayMS(WAIT_FOR_INIT_COMPLETE_TIME_MS);
+                    _setState(APP_LORA_WAIT_INIT_COMPLETE);
+                }
+            }
+            break;
+        }
+        case APP_LORA_SWITCH_BAUD:
+        {
+            SYS_PRINT("LORA: Current baud: %d.\r\n", getBaudrate());
+            if (setBaudrate(baudSetting)) {
+                SYS_PRINT("LORA: Set baud succeeded.\r\n");
+                SYS_PRINT("LORA: Current baud: %d.\r\n", getBaudrate());
+                if (doSave()) {
+                    vTaskDelay(500 / portTICK_PERIOD_MS);
+                    doReset();
+                    SYS_PRINT("LORA: Close and reopen UART on safe baud.\r\n");
+                    DRV_USART_Close(appData.USARTHandle);
+                    appData.USARTHandle = DRV_HANDLE_INVALID;
+                    SYS_TMR_CallbackStop(timeoutTimerHandle); // cancel pending timeout
+                    timeoutTimerHandle = SYS_TMR_DelayMS(WAIT_FOR_INIT_COMPLETE_TIME_MS);
+                    _setState(APP_LORA_WAIT_INIT_COMPLETE);
+                } else {
+                    SYS_PRINT("LORA: Save failed.\r\n");                                    
+                }
+            } else {
+                SYS_PRINT("LORA: Set baud failed.\r\n");                
+            }
+            if (SYS_TMR_DelayStatusGet(timeoutTimerHandle)) {
+                SYS_PRINT("LORA: Failed to switch to %d baud rate.\r\n", baudSetting);
+                _setState(APP_LORA_NOT_FOUND);
+            }            
+            break;
+        }   
         case APP_LORA_WAIT_FOR_APP:
         {
             // Wait for the start event
@@ -1005,7 +1096,8 @@ void APP_LORA_Tasks(void)
             {
                 SYS_PRINT("LORA: Configuration succeeded\r\n");
                 SYS_PRINT("LORA: Starting operation\r\n");
-                handle = SYS_TMR_DelayMS(6000);
+                SYS_TMR_CallbackStop(timeoutTimerHandle); // cancel pending timeout
+                timeoutTimerHandle = SYS_TMR_DelayMS(6000);
                 _setState(APP_LORA_WAIT_TTN_CONFIG_COMPLETE);
             }
             else
@@ -1025,7 +1117,7 @@ void APP_LORA_Tasks(void)
         }
         case APP_LORA_WAIT_TTN_CONFIG_COMPLETE:
         {
-            if(SYS_TMR_DelayStatusGet(handle))
+            if(SYS_TMR_DelayStatusGet(timeoutTimerHandle))
             {
                 _setState(APP_LORA_GO_ASYNC);
             }
@@ -1199,7 +1291,7 @@ void APP_LORA_Tasks(void)
         case APP_LORA_SEND:
         {
             // txStatus();
-            if(!SYS_TMR_DelayStatusGet(handle))
+            if(!SYS_TMR_DelayStatusGet(timeoutTimerHandle))
                 return;
             txpkt.timestamp           = 0;
             txpkt.tx_mode             = 0;
@@ -1256,7 +1348,8 @@ void APP_LORA_Tasks(void)
 
         case APP_LORA_IDLE:
         {
-            handle = SYS_TMR_DelayMS(10000);
+            SYS_TMR_CallbackStop(timeoutTimerHandle); // cancel pending timeout
+            timeoutTimerHandle = SYS_TMR_DelayMS(10000);
             _setState(APP_LORA_SEND);
             Nop();
             break;
@@ -1294,4 +1387,14 @@ bool APP_LORA_HAS_CORRECT_FREQ_PLAN(void)
 uint8_t APP_LORA_GW_CARD_VERSION(void)
 {
     return frequency_band;
+}
+
+// Set baud to preferred according to used clock
+static uint32_t preferredBaud(void)
+{
+    uint32_t baud = UART_DEFAULT_BAUD;
+    if (PLIB_OSC_SysPLLInputClockSourceGet(OSC_ID_0) == OSC_SYSPLL_IN_CLK_SOURCE_FRC) {
+        baud = UART_SAFE_BAUD;        
+    }
+    return baud;
 }
