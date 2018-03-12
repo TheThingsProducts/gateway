@@ -621,7 +621,11 @@ bool sendPacket(loraTXPacket* txpkt)
 bool sendCommand(uint8_t command, uint8_t* payload, uint16_t len)
 {  
     // flush Lora UART RX before sending any command
-    flushUart(appData.USARTHandle);
+    if (appData.state != APP_LORA_GO_ASYNC && appData.state != APP_LORA_POLL_UART)
+    {
+        // only flush when not in ASYNC mode
+        flushUart(appData.USARTHandle);
+    }
 
     bool     gotresponse   = false;
     uint16_t packet_length = len + 6;
