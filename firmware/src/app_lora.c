@@ -1,4 +1,4 @@
-// Copyright Â© 2016-2018 The Things Products
+// Copyright © 2016-2018 The Things Products
 // Use of this source code is governed by the MIT license that can be found in
 // the LICENSE file.
 
@@ -14,6 +14,12 @@
 #include "stdlib.h"
 #include "helper_wdt.h"
 #include "error_messages.h"
+
+
+#include "peripheral/wdt/plib_wdt.h"
+#include "peripheral/tmr/plib_tmr.h"
+#include "peripheral/reset/plib_reset.h"
+#include "peripheral/int/plib_int.h"
 
 /* ************************************************************************** */
 /* ************************************************************************** */
@@ -277,6 +283,12 @@ bool configLora(void)
     stopLora();
 
     frequency_band = getVersion();
+    // add delay for receiving full response TODO: implement proper parser
+    uint32_t t=0x0000FFFF;
+    while(t>0) {
+        t--;
+        PLIB_WDT_TimerClear(WDT_ID_0);
+    }
     SYS_PRINT("LORA: version: %02X\r\n", frequency_band);
     uint32_t config_freq_band = appGWActivationData.configuration_sx1301.rfchain[0].freq;
 
@@ -653,6 +665,12 @@ bool sendPacket(loraTXPacket* txpkt)
 
 bool sendCommand(uint8_t command, uint8_t* payload, uint16_t len)
 {  
+    // FIXME: a magic delay before sending the command, if not some modules refuse to work
+    uint32_t t=0x0000FFFF;
+    while(t>0) {
+        t--;
+        PLIB_WDT_TimerClear(WDT_ID_0);
+    }
     // flush Lora UART RX before sending any command
     if (appData.state != APP_LORA_GO_ASYNC && appData.state != APP_LORA_POLL_UART)
     {
@@ -697,6 +715,7 @@ bool sendCommand(uint8_t command, uint8_t* payload, uint16_t len)
         SYS_DEBUG(SYS_ERROR_WARNING, "LORA: UART WRITE ERROR!\r\n");
         return false;
     }
+    
     if(command != LORA_COMMAND_SEND)
     { // REVIEW: Why this exception?
         TIMEOUTSTART;
@@ -1060,7 +1079,6 @@ void APP_LORA_Tasks(void)
                 SYS_PRINT("LORA: Set baud succeeded.\r\n");
                 SYS_PRINT("LORA: Current baud: %d.\r\n", getBaudrate());
                 if (doSave()) {
-                    vTaskDelay(500 / portTICK_PERIOD_MS);
                     doReset();
                     SYS_PRINT("LORA: Close and reopen UART on safe baud.\r\n");
                     DRV_USART_Close(appData.USARTHandle);
@@ -1133,6 +1151,8 @@ void APP_LORA_Tasks(void)
 
             appData.USARTHandle = DRV_USART_Open(DRV_USART_INDEX_1, DRV_IO_INTENT_READWRITE | DRV_IO_INTENT_BLOCKING);
 
+            appData.rxwrite_pos = 0;		
+    	    appData.rxread_pos  = 0;	
             uint16_t    usTaskStackSize = configMINIMAL_STACK_SIZE;
             UBaseType_t uxTaskPriority  = TASK_PRIORITY_LORA_READ;
 
