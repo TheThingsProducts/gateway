@@ -15,5 +15,5 @@ else
 fi
 
 $prjMakefilesGenerator -v TTN_Gateway.X@TTN_Gateway_v1
-make -C TTN_Gateway.X/ -f nbproject/Makefile-TTN_Gateway_v1.mk SUBPROJECTS= .build-conf 2>&1 | tee compile_log.txt
+make -j -C TTN_Gateway.X/ -f nbproject/Makefile-TTN_Gateway_v1.mk SUBPROJECTS= .build-conf 2>&1 | tee compile_log.txt
 
