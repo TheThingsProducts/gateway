@@ -43,7 +43,7 @@
 #define UART_ERROR_BROKEN_DATA 3
 #define UART_NO_ERROR 4
 #define UART_DEFAULT_BAUD 115200
-#define UART_SAFE_BAUD 9600
+#define UART_SAFE_BAUD 115200
 #define INITIAL_COMMUNICATION_RETRY_COUNT 3 // retries before we tell module is not found
 
 static bool                   allowed_to_start = false; // TODO: Can be part of APP_DATA_LORA when it made local
