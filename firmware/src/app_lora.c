@@ -101,7 +101,7 @@ static bool getSync();
 static bool setSync(bool public);
 static void _setState(APP_STATES_LORA newState);
 static void restart_lora_configuration();
-static uint32_t preferredBaud(void);
+static uint32_t getPreferredBaud(void);
 static void shortSpinloopDelay(void);
 
 static uint32_t timeout_timer = 0;
@@ -259,7 +259,7 @@ bool writeUart(DRV_HANDLE handle, uint8_t* msg, size_t pkt_len)
 
 void initLora(void)
 {
-    baudSetting = preferredBaud();
+    baudSetting = getPreferredBaud();
     initialCommunicationRetryCount = INITIAL_COMMUNICATION_RETRY_COUNT;
     appData.rxwrite_pos = 0;
     appData.rxread_pos  = 0;
@@ -1034,8 +1034,8 @@ void APP_LORA_Tasks(void)
         case APP_LORA_CHECK_COMMUNICATION:
         {
             if (getVersion() != 0) {
-                if (baudSetting != preferredBaud()) {
-                    baudSetting = preferredBaud();
+                if (baudSetting != getPreferredBaud()) {
+                    baudSetting = getPreferredBaud();
                     SYS_PRINT("LORA: Running on FRC, switching to %d\r\n", baudSetting);
                     timeoutTimerHandle = SYS_TMR_DelayMS(CHECK_FOR_COMMUNICATION_TIMEOUT_MS);
                     _setState(APP_LORA_SWITCH_BAUD);
@@ -1404,7 +1404,7 @@ uint8_t APP_LORA_GW_CARD_VERSION(void)
 }
 
 // Set baud to preferred according to used clock
-static uint32_t preferredBaud(void)
+static uint32_t getPreferredBaud(void)
 {
     uint32_t baud = UART_DEFAULT_BAUD;
     if (PLIB_OSC_SysPLLInputClockSourceGet(OSC_ID_0) == OSC_SYSPLL_IN_CLK_SOURCE_FRC) {
