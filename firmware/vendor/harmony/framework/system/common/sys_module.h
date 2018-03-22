@@ -409,6 +409,11 @@ typedef union
 
 void SYS_Initialize( void *data );
 
+/*
+ * Reinitialized Usart to be able to change baud rate (as suggested by
+ * Microchip as DRV_USART_BaudSet does not work properly).
+ */
+void SYS_ReInitializeUsart1( uint32_t baud);
 
 // *****************************************************************************
 /* System Tasks Function
