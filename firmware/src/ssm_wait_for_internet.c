@@ -139,7 +139,13 @@ void SSMWaitForInternet_Tasks(void)
             { // REVIEW: Use isElapsed kind of function
                 SYS_PRINT("INET: No Ethernet and WiFi link (after %d seconds)\r\n",
                           (SYS_TMR_TickCountGet() - wifiConnectStartTick) / SYS_TMR_TickCounterFrequencyGet());
-                _changeState(STATE_AP_ONLY);
+
+                //PATCH: WiFi should only go to AP Mode in case of invalid config, not if the connection breaks 
+                 if(!appWifiData.valid){
+                     SYS_PRINT("INET: Moving to AP Mode due to invalid Config\r\n");
+                     _changeState(STATE_AP_ONLY);
+                 }
+                
             }
             break;
 
@@ -226,7 +232,11 @@ void SSMWaitForInternet_Tasks(void)
                     ping_probe_reply_received = false;
                     if(ping_retry >= PING_RETRIES)
                     {
-                        _changeState(STATE_AP_ONLY);
+                         //PATCH: WiFi should only go to AP Mode in case of invalid config, not if the connection breaks. 
+                        if(!appWifiData.valid){
+                            SYS_PRINT("INET: Moving to AP Mode due to invalid Config\r\n");
+                            _changeState(STATE_AP_ONLY);
+                        }
                     }
                     ping_retry++;
                 }
