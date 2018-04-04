@@ -134,19 +134,6 @@ void SSMWaitForInternet_Tasks(void)
                 SYS_PRINT("INET: Gateway has WiFi\r\n");
                 _changeState(STATE_SETTLE);
             }
-            else if((SYS_TMR_TickCountGet() - wifiConnectStartTick) >=
-                    (SYS_TMR_TickCounterFrequencyGet() * WIFI_CONNECT_TIMEOUT))
-            { // REVIEW: Use isElapsed kind of function
-                SYS_PRINT("INET: No Ethernet and WiFi link (after %d seconds)\r\n",
-                          (SYS_TMR_TickCountGet() - wifiConnectStartTick) / SYS_TMR_TickCounterFrequencyGet());
-
-                //PATCH: WiFi should only go to AP Mode in case of invalid config, not if the connection breaks 
-                 if(!appWifiData.valid){
-                     SYS_PRINT("INET: Moving to AP Mode due to invalid Config\r\n");
-                     _changeState(STATE_AP_ONLY);
-                 }
-                
-            }
             break;
 
         case STATE_AP_ONLY:
@@ -232,11 +219,7 @@ void SSMWaitForInternet_Tasks(void)
                     ping_probe_reply_received = false;
                     if(ping_retry >= PING_RETRIES)
                     {
-                         //PATCH: WiFi should only go to AP Mode in case of invalid config, not if the connection breaks. 
-                        if(!appWifiData.valid){
-                            SYS_PRINT("INET: Moving to AP Mode due to invalid Config\r\n");
-                            _changeState(STATE_AP_ONLY);
-                        }
+                        _changeState(STATE_WAIT_FOR_NETWORK);
                     }
                     ping_retry++;
                 }
