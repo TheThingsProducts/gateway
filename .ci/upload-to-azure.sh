@@ -7,6 +7,11 @@ then
   exit 0
 fi
 
+if [[ -z "$TRAVIS_COMMIT" ]]
+then
+  exit 0
+fi
+
 container_name="the-things-gateway"
 files="firmware.hex checksums firmware-with-bootloader.hex disassembly.txt"
 
@@ -21,6 +26,17 @@ upload() {
   done
 }
 
-if [[ ! -z "$TRAVIS_COMMIT" ]] then upload "$TRAVIS_COMMIT"; fi
+copy() {
+  echo "Copying files from ${1} to ${2}..."
+  az storage blob copy start-batch --source-container "${container_name}" --destination-container "${container_name}" --destination-path "v1/${2}" --pattern "v1/${1}/*"
+}
 
-if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" && ! -z "$TRAVIS_BRANCH" ]] then upload "$TRAVIS_BRANCH"; fi
+if [[ $(az storage blob exists --container-name "${container_name}" --name "v1/$TRAVIS_COMMIT/checksums" | jq '.exists') != 'true' ]]
+then
+  upload "$TRAVIS_COMMIT"
+fi
+
+if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" && ! -z "$TRAVIS_BRANCH" ]]
+then
+  copy "$TRAVIS_COMMIT" "$TRAVIS_BRANCH"
+fi
