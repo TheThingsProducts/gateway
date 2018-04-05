@@ -5,25 +5,10 @@ cache:
   directories:
   - /tmp/microchip
 install:
-- sudo dpkg --add-architecture i386
-- sudo apt-get update && sudo apt-get install -y libc6:i386 libx11-6:i386 libxext6:i386 libstdc++6:i386 libexpat1:i386
-- if [[ ! -f /tmp/microchip/MPLABX-v3.45-linux-installer.tar ]]; then curl -sSL -o /tmp/microchip/MPLABX-v3.45-linux-installer.tar http://ww1.microchip.com/downloads/en/DeviceDoc/MPLABX-v3.45-linux-installer.tar; fi
-- if [[ ! -f /tmp/microchip/MPLABX-v3.45-linux-installer.sh ]]; then tar -xvf /tmp/microchip/MPLABX-v3.45-linux-installer.tar -C /tmp/microchip && chmod +x /tmp/microchip/MPLABX-v3.45-linux-installer.sh; fi
-- if [[ ! -d /opt/microchip/mplabx/v3.45 ]]; then sudo /tmp/microchip/MPLABX-v3.45-linux-installer.sh -- --mode unattended; fi
-- if [[ ! -e /opt/microchip/mplab_ide ]]; then sudo ln -s /opt/microchip/mplabx/v3.45/mplab_ide /opt/microchip/mplab_ide; fi
-- if [[ ! -f /tmp/microchip/xc32-v1.42-full-install-linux-installer.run ]]; then curl -sSL -o /tmp/microchip/xc32-v1.42-full-install-linux-installer.run http://ww1.microchip.com/downloads/en/DeviceDoc/xc32-v1.42-full-install-linux-installer.run && chmod +x /tmp/microchip/xc32-v1.42-full-install-linux-installer.run; fi
-- if [[ ! -d /opt/microchip/xc32/v1.42 ]]; then sudo /tmp/microchip/xc32-v1.42-full-install-linux-installer.run -- --mode unattended --netservername ""; fi
-- if [[ ! -z "$AZURE_STORAGE_KEY" ]]; then sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 52E16F86FEE04B979B07E28DB02C46DF417A0893; fi
-- if [[ ! -z "$AZURE_STORAGE_KEY" ]]; then echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/azure-cli.list; fi
-- if [[ ! -z "$AZURE_STORAGE_KEY" ]]; then sudo apt-get update && sudo apt-get install -y azure-cli; fi
+- sudo $TRAVIS_BUILD_DIR/.ci/install.sh
+- sudo $TRAVIS_BUILD_DIR/.ci/install-mplab.sh
+- sudo $TRAVIS_BUILD_DIR/.ci/install-azure-cli.sh
 script:
-- cd $TRAVIS_BUILD_DIR/firmware && ./generate_version_header.sh && ./compile.sh && ./generate_hex_with_checksum.sh && ./merge_bootloader.sh
+- pushd $TRAVIS_BUILD_DIR/firmware && ./generate_version_header.sh && ./fix_mplab.sh && ./compile.sh && ./generate_hex_with_checksum.sh && ./merge_bootloader.sh && popd
 after_success:
-- if [[ ! -z "$AZURE_STORAGE_KEY" && ! -z "$TRAVIS_COMMIT" ]]; then az storage blob upload --container-name the-things-gateway --name "v1/$TRAVIS_COMMIT/firmware.hex" --file ./firmware.hex; fi
-- if [[ ! -z "$AZURE_STORAGE_KEY" && ! -z "$TRAVIS_COMMIT" ]]; then az storage blob upload --container-name the-things-gateway --name "v1/$TRAVIS_COMMIT/checksums" --file ./checksums; fi
-- if [[ ! -z "$AZURE_STORAGE_KEY" && ! -z "$TRAVIS_COMMIT" ]]; then az storage blob upload --container-name the-things-gateway --name "v1/$TRAVIS_COMMIT/firmware-with-bootloader.hex" --file ./firmware-with-bootlader.hex; fi
-- if [[ ! -z "$AZURE_STORAGE_KEY" && ! -z "$TRAVIS_COMMIT" ]]; then az storage blob upload --container-name the-things-gateway --name "v1/$TRAVIS_COMMIT/disassembly.txt" --file ./disassembly.txt; fi
-- if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" && ! -z "$AZURE_STORAGE_KEY" && ! -z "$TRAVIS_BRANCH" ]]; then az storage blob upload --container-name the-things-gateway --name "v1/$TRAVIS_BRANCH/firmware.hex" --file ./firmware.hex; fi
-- if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" && ! -z "$AZURE_STORAGE_KEY" && ! -z "$TRAVIS_BRANCH" ]]; then az storage blob upload --container-name the-things-gateway --name "v1/$TRAVIS_BRANCH/checksums" --file ./checksums; fi
-- if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" && ! -z "$AZURE_STORAGE_KEY" && ! -z "$TRAVIS_BRANCH" ]]; then az storage blob upload --container-name the-things-gateway --name "v1/$TRAVIS_BRANCH/firmware-with-bootloader.hex" --file ./firmware-with-bootloader.hex; fi
-- if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" && ! -z "$AZURE_STORAGE_KEY" && ! -z "$TRAVIS_BRANCH" ]]; then az storage blob upload --container-name the-things-gateway --name "v1/$TRAVIS_BRANCH/disassembly.txt" --file ./disassembly.txt; fi
+- pushd $TRAVIS_BUILD_DIR/firmware && $TRAVIS_BUILD_DIR/.ci/upload-to-azure.sh && popd
