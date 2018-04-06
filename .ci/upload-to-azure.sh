@@ -28,7 +28,10 @@ upload() {
 
 copy() {
   echo "Copying files from ${1} to ${2}..."
-  az storage blob copy start-batch --source-container "${container_name}" --destination-container "${container_name}" --destination-path "v1/${2}" --pattern "v1/${1}/*"
+  for file in ${files}
+  do
+    az storage blob copy start --source-container "${container_name}" --destination-container "${container_name}" --source-blob "v1/${1}/${file}" --destination-blob "v1/${2}/${file}"
+  done
 }
 
 if [[ $(az storage blob exists --container-name "${container_name}" --name "v1/$TRAVIS_COMMIT/checksums" | jq '.exists') != 'true' ]]
