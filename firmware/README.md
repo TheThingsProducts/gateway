@@ -28,12 +28,14 @@ SDCARD
 
 ⚠️ Only for experts ⚠️
 
-If you have a Microchip Debugger/Programmer, you can use the following files to flash the bootloader and firmware simultaneously. 
+If you have a Microchip Debugger/Programmer, you can use the following files to flash the bootloader and firmware simultaneously. See [the docs](https://www.thethingsnetwork.org/docs/gateways/gateway/programhexfile.html) for more details on the programming procedure.
 
-- [`stable`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/stable/firmware-with-bootloader.hex)
-- [`beta`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/beta/firmware-with-bootloader.hex)
-- [`master`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/master/firmware-with-bootloader.hex)
-- [`develop`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/develop/firmware-with-bootloader.hex)
+| **Branch** | **Downloads** | **Notes** |
+| ---------- | ------------- | --------- |
+| `stable`   | [`firmware-with-bootloader.hex`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/stable/firmware-with-bootloader.hex) | |
+| `beta`     | [`firmware-with-bootloader.hex`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/beta/firmware-with-bootloader.hex) | |
+| `master`   | [`firmware-with-bootloader.hex`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/master/firmware-with-bootloader.hex) | |
+| `develop`  | [`firmware-with-bootloader.hex`](https://thethingsproducts.blob.core.windows.net/the-things-gateway/v1/develop/firmware-with-bootloader.hex) | |
 
 ## Development Setup
 
