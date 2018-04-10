@@ -2,6 +2,10 @@
 
 ![The Things Gateway](doc/header.png)
 
+## Where to buy
+
+A list of resellers can be found [here](https://www.thethingsnetwork.org/the-things-products).
+
 ## Enclosure
 
 Designs of the enclosure can be found in the [enclosure](./enclosure) directory. These designs are licensed under a [Creative Commons Attribution-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-sa/4.0/).
