@@ -19,7 +19,7 @@ typedef enum
 } STATE_t;
 
 #define WIFI_CONNECT_TIMEOUT 10 // seconds before switching to AP mode
-#define PING_TIMEOUT 4          // seconds before retry a ping
+#define PING_TIMEOUT 60          // seconds before retry a ping
 #define PING_RETRIES 2          // retries before giving up
 #define WIFI_RETRY_TIMEOUT 120  // seconds before retrying INFRA mode again if WiFi data valid
 #define NTP_TIMEOUT 20          // seconds trying to receive NTP before waiting for network again
@@ -211,7 +211,7 @@ void SSMWaitForInternet_Tasks(void)
                 if((SYS_TMR_TickCountGet() - pingStartTick) >=
                    (SYS_TMR_TickCounterFrequencyGet() * PING_TIMEOUT)) // REVIEW: Use isElapsed kind of function
                 {
-                    SYS_PRINT("INET: Ping Timeout\r\n");
+                    SYS_PRINT("INET: Ping Timeout of :%d seconds\r\n", PING_TIMEOUT);
                     pingStartTick             = SYS_TMR_TickCountGet();
                     ping_probe_sent           = false;
                     ping_probe_reply_received = false;
