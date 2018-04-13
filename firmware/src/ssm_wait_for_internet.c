@@ -25,7 +25,6 @@ typedef enum
 #define NTP_TIMEOUT 20          // seconds trying to receive NTP before waiting for network again
 
 static STATE_t  _state;
-static uint32_t wifiConnectStartTick = 0;
 static uint32_t settleStartTick      = 0;
 static uint32_t pingStartTick        = 0;
 static uint32_t wifiRetryStartTick   = 0;
@@ -79,7 +78,6 @@ static void _changeState(STATE_t newState)
     switch(newState)
     {
         case STATE_WAIT_FOR_NETWORK:
-            wifiConnectStartTick = SYS_TMR_TickCountGet();
             if(appWifiData.valid)
             {
                 APP_WIFI_INFRA_MODE();
