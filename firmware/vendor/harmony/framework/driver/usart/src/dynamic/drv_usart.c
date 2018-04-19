@@ -47,7 +47,6 @@ SUBSTITUTE  GOODS,  TECHNOLOGY,  SERVICES,  OR  ANY  CLAIMS  BY  THIRD   PARTIES
 // *****************************************************************************
 
 #include "driver/usart/src/drv_usart_local.h"
-#include "error_messages.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -157,7 +156,7 @@ SYS_MODULE_OBJ DRV_USART_Initialize
     SYS_INT_SourceStatusClear(dObj->errorInterruptSource);
 
     /* Enable the interrupt source in case of interrupt mode */
-    //_DRV_USART_InterruptSourceEnable(dObj->errorInterruptSource);
+    _DRV_USART_InterruptSourceEnable(dObj->errorInterruptSource);
 
     _DRV_USART_ByteModelInterruptSourceEnable(dObj->rxInterruptSource);
 
@@ -913,19 +912,6 @@ void DRV_USART_TasksError(SYS_MODULE_OBJ object)
      * condition is cleared.  */
 
     DRV_USART_OBJ * hDriver = &gDrvUSARTObj[object];
-
-    if(PLIB_USART_ReceiverParityErrorHasOccurred(hDriver->moduleId))
-    {
-        PLIB_USART_ReceiverByteReceive(hDriver->moduleId);
-        ErrorMessageWarning_Set(ERROR_MESSAGE_WARNING_LORA_UART_ERROR);
-    }
-        
-    if(PLIB_USART_ReceiverFramingErrorHasOccurred(hDriver->moduleId))
-    {
-        PLIB_USART_ReceiverByteReceive(hDriver->moduleId);
-        ErrorMessageWarning_Set(ERROR_MESSAGE_WARNING_LORA_UART_ERROR);
-    }
-
 
     if((!hDriver->inUse) || (hDriver->status != SYS_STATUS_READY))
     {
