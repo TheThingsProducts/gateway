@@ -83,7 +83,7 @@ extern "C" {
  */
 #define TASK_SIZE_SYS_TASKS         4096
 #define TASK_SIZE_TCPIP_TASKS       4096
-#define TASK_SIZE_APP_TASKS         4096
+#define TASK_SIZE_APP_TASKS         8192
 #define TASK_SIZE_LORA_TASKS        4096
 //#define TASK_SIZE_LORA_READ         4096  // Defined in app_lora.c, line 1005 (by configMINIMAL_STACK_SIZE)
 //#define TASK_SIZE_WIFI_DRV          2048  // Defined in Harmony configuration (CONFIG_DRV_WIFIN_RTOS_MAIN_TASK_SIZE)
