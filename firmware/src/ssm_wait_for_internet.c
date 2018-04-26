@@ -217,7 +217,9 @@ void SSMWaitForInternet_Tasks(void)
                     ping_probe_reply_received = false;
                     if(ping_retry >= PING_RETRIES)
                     {
-                        _changeState(STATE_WAIT_FOR_NETWORK);
+                        // TODO: find a proper recovery -> _changeState(STATE_WAIT_FOR_NETWORK);
+                        RebootWithMessage("Ping timeout %d retries, rebooting", PING_RETRIES);    
+                        
                     }
                     ping_retry++;
                 }
