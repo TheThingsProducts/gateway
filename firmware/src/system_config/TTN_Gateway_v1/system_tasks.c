@@ -93,44 +93,34 @@ uint32_t thread_0_timeout_timer=0;
 #define TIMEOUT_THREAD_0_START (thread_0_timeout_timer = SYS_TMR_TickCountGet())
 #define TIMEOUT_THREAD_0(X) (thread_0_timeout_timer > SYS_TMR_TickCountGet() || ((SYS_TMR_TickCountGet() -  thread_0_timeout_timer) >= (SYS_TMR_TickCounterFrequencyGet()*X)))
 
-
-
-
-uint32_t thread_1_timeout_timer=0;
-
-#define TIMEOUT_THREAD_1_START (thread_1_timeout_timer = SYS_TMR_TickCountGet())
-#define TIMEOUT_THREAD_1(X) (thread_1_timeout_timer > SYS_TMR_TickCountGet() || ((SYS_TMR_TickCountGet() -  thread_1_timeout_timer) >= (SYS_TMR_TickCounterFrequencyGet()*X)))
-
-
-
-uint32_t thread_2_timeout_timer=0;
-
-#define TIMEOUT_THREAD_2_START (thread_2_timeout_timer = SYS_TMR_TickCountGet())
-#define TIMEOUT_THREAD_2(X) (thread_2_timeout_timer > SYS_TMR_TickCountGet() || ((SYS_TMR_TickCountGet() -  thread_2_timeout_timer) >= (SYS_TMR_TickCounterFrequencyGet()*X)))
+static TaskHandle_t sysTaskHandle;
+static TaskHandle_t tcpipTaskHandle;
+static TaskHandle_t appTaskHandle;
+static TaskHandle_t loraTaskHandle;
 
 void SYS_Tasks ( void )
 {
     /* Create OS Thread for Sys Tasks. */
     xTaskCreate((TaskFunction_t) _SYS_Tasks,
                 "Sys Tasks",
-                TASK_SIZE_SYS_TASKS, NULL, TASK_PRIORITY_SYS_TASKS, NULL);
+                TASK_SIZE_SYS_TASKS, NULL, TASK_PRIORITY_SYS_TASKS, &sysTaskHandle);
 
 
     /* Create task for TCPIP state machine*/
     /* Create OS Thread for TCPIP Tasks. */
     xTaskCreate((TaskFunction_t) _TCPIP_Tasks,
                 "TCPIP Tasks",
-                TASK_SIZE_TCPIP_TASKS, NULL, TASK_PRIORITY_TCPIP_TASKS, NULL);
+                TASK_SIZE_TCPIP_TASKS, NULL, TASK_PRIORITY_TCPIP_TASKS, &tcpipTaskHandle);
 
     /* Create OS Thread for APP Tasks. */
     xTaskCreate((TaskFunction_t) _APP_Tasks,
                 "APP Tasks",
-                TASK_SIZE_APP_TASKS, NULL, TASK_PRIORITY_APP_TASKS, NULL);
+                TASK_SIZE_APP_TASKS, NULL, TASK_PRIORITY_APP_TASKS, &appTaskHandle);
 
         /* Create OS Thread for LORA Tasks. */
     xTaskCreate((TaskFunction_t) _LORA_Tasks,
                 "LORA Tasks",
-                TASK_SIZE_LORA_TASKS, NULL, TASK_PRIORITY_LORA_TASKS, NULL);
+                TASK_SIZE_LORA_TASKS, NULL, TASK_PRIORITY_LORA_TASKS, &loraTaskHandle);
 
     /**************
      * Start RTOS * 
@@ -174,7 +164,12 @@ static void _SYS_Tasks ( void)
         if(TIMEOUT_THREAD_0(10))
         {
             TIMEOUT_THREAD_0_START;
-            SYS_DEBUG(SYS_ERROR_INFO, "MON: SYS Stack size: %d\r\n",uxTaskGetStackHighWaterMark(NULL));
+            SYS_DEBUG(SYS_ERROR_INFO, "MON: SYS Stack size: %d\r\n",uxTaskGetStackHighWaterMark(sysTaskHandle));
+            SYS_DEBUG(SYS_ERROR_INFO, "MON: TCPIP Stack size: %d\r\n",uxTaskGetStackHighWaterMark(tcpipTaskHandle));
+            SYS_DEBUG(SYS_ERROR_INFO, "MON: APP Stack size: %d\r\n",uxTaskGetStackHighWaterMark(appTaskHandle));
+            SYS_DEBUG(SYS_ERROR_INFO, "MON: LoRa Stack size: %d\r\n",uxTaskGetStackHighWaterMark(loraTaskHandle));
+
+
             size_t libc_heap_usage_total = TrackHeap_TotalUsage();
             size_t libc_heap_usage_max = TrackHeap_MaxUsage();
             SYS_DEBUG(SYS_ERROR_INFO, "MON: heap usage: %dKB (%dKB), free: %dKB\r\n", libc_heap_usage_total / 1024, libc_heap_usage_max / 1024,xPortGetFreeHeapSize() / 1024);
@@ -205,16 +200,10 @@ void _TCPIP_Tasks(void)
 static void _APP_Tasks(void)
 {
     vTaskDelay(200 / portTICK_PERIOD_MS); // Poor mans solution to give the debug log time to print the boot header
-    TIMEOUT_THREAD_1_START;
     while(1)
     {        
         APP_Tasks();
         wdt_arm_thread_1(); 
-        if(TIMEOUT_THREAD_1(2))
-        {
-           TIMEOUT_THREAD_1_START;
-        //   SYS_DEBUG(SYS_ERROR_ERROR, "MON: APP Stack size: %d\r\n",uxTaskGetStackHighWaterMark(NULL));
-        }
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
@@ -230,16 +219,10 @@ static void _APP_Tasks(void)
 
 static void _LORA_Tasks(void)
 {
-    TIMEOUT_THREAD_2_START;
     while(1)
     { 
         LORA_Tasks();
         wdt_arm_thread_2();
-        if(TIMEOUT_THREAD_2(2))
-        {
-           TIMEOUT_THREAD_2_START;
-          // SYS_DEBUG(SYS_ERROR_ERROR, "MON: LORA Stack size: %d\r\n",uxTaskGetStackHighWaterMark(NULL));
-        }
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }

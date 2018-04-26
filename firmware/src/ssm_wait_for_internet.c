@@ -19,13 +19,12 @@ typedef enum
 } STATE_t;
 
 #define WIFI_CONNECT_TIMEOUT 10 // seconds before switching to AP mode
-#define PING_TIMEOUT 4          // seconds before retry a ping
+#define PING_TIMEOUT 60          // seconds before retry a ping
 #define PING_RETRIES 2          // retries before giving up
 #define WIFI_RETRY_TIMEOUT 120  // seconds before retrying INFRA mode again if WiFi data valid
 #define NTP_TIMEOUT 20          // seconds trying to receive NTP before waiting for network again
 
 static STATE_t  _state;
-static uint32_t wifiConnectStartTick = 0;
 static uint32_t settleStartTick      = 0;
 static uint32_t pingStartTick        = 0;
 static uint32_t wifiRetryStartTick   = 0;
@@ -79,7 +78,6 @@ static void _changeState(STATE_t newState)
     switch(newState)
     {
         case STATE_WAIT_FOR_NETWORK:
-            wifiConnectStartTick = SYS_TMR_TickCountGet();
             if(appWifiData.valid)
             {
                 APP_WIFI_INFRA_MODE();
@@ -213,13 +211,15 @@ void SSMWaitForInternet_Tasks(void)
                 if((SYS_TMR_TickCountGet() - pingStartTick) >=
                    (SYS_TMR_TickCounterFrequencyGet() * PING_TIMEOUT)) // REVIEW: Use isElapsed kind of function
                 {
-                    SYS_PRINT("INET: Ping Timeout\r\n");
+                    SYS_PRINT("INET: Ping Timeout of :%d seconds\r\n", PING_TIMEOUT);
                     pingStartTick             = SYS_TMR_TickCountGet();
                     ping_probe_sent           = false;
                     ping_probe_reply_received = false;
                     if(ping_retry >= PING_RETRIES)
                     {
-                        _changeState(STATE_WAIT_FOR_NETWORK);
+                        // TODO: find a proper recovery -> _changeState(STATE_WAIT_FOR_NETWORK);
+                        RebootWithMessage("Ping timeout %d retries, rebooting", PING_RETRIES);    
+                        
                     }
                     ping_retry++;
                 }
