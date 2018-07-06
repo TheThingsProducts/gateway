@@ -446,7 +446,10 @@ void APP_WIFI_Tasks(void)
             macAddress = TCPIP_STACK_NetAddressMac(netHandle);
             if(macAddress)
             {
-                _changeState(STATE_PRESCAN);
+                // In the past here was switched to STATE_PRESCAN. But that cause another thread (lora_task)
+                // to fail with a hard-fault. Go here ot STATE_WAIT_CONFIG instead such that for sure either
+                // the EVENT_SWITCH_TO_AP_MODE or EVENT_SWITCH_TO_INFO_MODE events has been proccessed.
+                _changeState(STATE_WAIT_CONFIG);
             }
             break;
 
