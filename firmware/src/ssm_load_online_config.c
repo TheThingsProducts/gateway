@@ -296,7 +296,7 @@ void SSMLoadOnlineConfig_Tasks(void)
 
         case STATE_START_LORA_MODULE:
             if(APP_LORA_GET_APP_STATE() ==
-               APP_LORA_POLL_UART) // REVIEW: don't check internal state, but via test function
+               APP_LORA_OPERATIONAL) // REVIEW: don't check internal state, but via test function
             {
                 _changeState(STATE_DONE);
             }

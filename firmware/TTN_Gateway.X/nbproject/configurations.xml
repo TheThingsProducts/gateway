@@ -56,6 +56,7 @@
         <itemPath>../src/ssm_button.h</itemPath>
         <itemPath>../src/error_messages.h</itemPath>
         <itemPath>../src/bootloader_version.h</itemPath>
+        <itemPath>../vendor/gateway-module-interface/lib/gateway-module-interface.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="framework" projectFiles="true">
         <logicalFolder name="f1" displayName="crypto" projectFiles="true">
@@ -715,6 +716,7 @@
         <itemPath>../src/http_print.c</itemPath>
         <itemPath>../src/custom_http_app.c</itemPath>
         <itemPath>../src/mpfs_img2.c</itemPath>
+        <itemPath>../vendor/gateway-module-interface/lib/gateway-module-interface.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="framework" projectFiles="true">
         <logicalFolder name="f1" displayName="crypto" projectFiles="true">
@@ -1067,6 +1069,7 @@
     <Elem>../vendor/harmony/framework/driver/spi_flash</Elem>
     <Elem>..\src</Elem>
     <Elem>../vendor/harmony/framework/driver/ethphy/src/dynamic</Elem>
+    <Elem>../vendor/gateway-module-interface/lib</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -1133,7 +1136,7 @@
         <property key="enable-unroll-loops" value="false"/>
         <property key="exclude-floating-point" value="false"/>
         <property key="extra-include-directories"
-                  value="../src;../vendor/harmony/framework;../vendor/jsmn;../vendor/json-builder;../vendor/GenericRecorderLibSrc/Include;../vendor/ttn-gateway-connector/src;../vendor/protobuf-c;../vendor/ttn-gateway-connector/src/github.com/TheThingsNetwork;../vendor/ttn-gateway-connector/src/github.com/gogo/protobuf/protobuf;../vendor/paho.mqtt.embedded-c/MQTTPacket/src;../vendor/paho.mqtt.embedded-c/MQTTClient-C/src;../vendor/mbedtls/include;../vendor/harmony/framework;../src/system_config/TTN_Gateway_v1;../src/TTN_Gateway_v1;../vendor/harmony/framework;../src/system_config/TTN_Gateway_v1/framework;../vendor/harmony/framework/driver/wifi/mrf24wn/include;../vendor/harmony/framework/driver/wifi/mrf24wn/wireless_driver/include;../vendor/harmony/framework/driver/wifi/mrf24wn/wireless_driver_extension;../vendor/harmony/third_party/rtos/FreeRTOS/Source/portable/MPLAB/PIC32MZ;../vendor/harmony/third_party/rtos/FreeRTOS/Source/include"/>
+                  value="../src;../vendor/harmony/framework;../vendor/jsmn;../vendor/json-builder;../vendor/GenericRecorderLibSrc/Include;../vendor/ttn-gateway-connector/src;../vendor/protobuf-c;../vendor/ttn-gateway-connector/src/github.com/TheThingsNetwork;../vendor/ttn-gateway-connector/src/github.com/gogo/protobuf/protobuf;../vendor/paho.mqtt.embedded-c/MQTTPacket/src;../vendor/paho.mqtt.embedded-c/MQTTClient-C/src;../vendor/mbedtls/include;../vendor/harmony/framework;../src/system_config/TTN_Gateway_v1;../src/TTN_Gateway_v1;../vendor/harmony/framework;../src/system_config/TTN_Gateway_v1/framework;../vendor/harmony/framework/driver/wifi/mrf24wn/include;../vendor/harmony/framework/driver/wifi/mrf24wn/wireless_driver/include;../vendor/harmony/framework/driver/wifi/mrf24wn/wireless_driver_extension;../vendor/harmony/third_party/rtos/FreeRTOS/Source/portable/MPLAB/PIC32MZ;../vendor/harmony/third_party/rtos/FreeRTOS/Source/include;../vendor/gateway-module-interface/lib"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="true"/>
@@ -1142,7 +1145,7 @@
         <property key="place-data-into-section" value="false"/>
         <property key="post-instruction-scheduling" value="default"/>
         <property key="pre-instruction-scheduling" value="default"/>
-        <property key="preprocessor-macros" value=";_FULL_SIGNAL_IMPLEMENTATION"/>
+        <property key="preprocessor-macros" value="_FULL_SIGNAL_IMPLEMENTATION"/>
         <property key="strict-ansi" value="false"/>
         <property key="support-ansi" value="false"/>
         <property key="toplevel-reordering" value=""/>
@@ -1159,9 +1162,9 @@
         <property key="enable-symbols" value="true"/>
         <property key="exclude-floating-point-library" value="false"/>
         <property key="expand-macros" value="false"/>
-        <property key="extra-include-directories-for-assembler" value=";"/>
+        <property key="extra-include-directories-for-assembler" value=""/>
         <property key="extra-include-directories-for-preprocessor"
-                  value="../vendor/harmony/third_party/rtos/FreeRTOS/Source/portable/MPLAB/PIC32MZ;../vendor/harmony/third_party/rtos/FreeRTOS/Source/include;../src/system_config/TTN_Gateway_v1;"/>
+                  value="../src;../vendor/harmony/framework;../vendor/jsmn;../vendor/json-builder;../vendor/GenericRecorderLibSrc/Include;../vendor/ttn-gateway-connector/src;../vendor/protobuf-c;../vendor/ttn-gateway-connector/src/github.com/TheThingsNetwork;../vendor/ttn-gateway-connector/src/github.com/gogo/protobuf/protobuf;../vendor/paho.mqtt.embedded-c/MQTTPacket/src;../vendor/paho.mqtt.embedded-c/MQTTClient-C/src;../vendor/mbedtls/include;../vendor/harmony/framework;../src/system_config/TTN_Gateway_v1;../src/TTN_Gateway_v1;../vendor/harmony/framework;../src/system_config/TTN_Gateway_v1/framework;../vendor/harmony/framework/driver/wifi/mrf24wn/include;../vendor/harmony/framework/driver/wifi/mrf24wn/wireless_driver/include;../vendor/harmony/framework/driver/wifi/mrf24wn/wireless_driver_extension;../vendor/harmony/third_party/rtos/FreeRTOS/Source/portable/MPLAB/PIC32MZ;../vendor/harmony/third_party/rtos/FreeRTOS/Source/include;../vendor/gateway-module-interface/lib"/>
         <property key="false-conditionals" value="false"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="generate-micro-compressed-code" value="false"/>

@@ -10,3 +10,6 @@
 [submodule "firmware/vendor/mbedtls"]
 	path = firmware/vendor/mbedtls
 	url = https://github.com/TheThingsProducts/mbedtls.git
+[submodule "firmware/vendor/gateway-module-interface"]
+	path = firmware/vendor/gateway-module-interface
+	url = https://github.com/TheThingsProducts/gateway-module-interface.git

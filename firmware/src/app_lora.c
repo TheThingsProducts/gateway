@@ -1,4 +1,4 @@
-// Copyright © 2016-2018 The Things Products
+// Copyright Â© 2016-2018 The Things Products
 // Use of this source code is governed by the MIT license that can be found in
 // the LICENSE file.
 
@@ -14,6 +14,7 @@
 #include "stdlib.h"
 #include "helper_wdt.h"
 #include "error_messages.h"
+#include "gateway-module-interface.h"
 
 /* ************************************************************************** */
 /* ************************************************************************** */
@@ -36,6 +37,15 @@
 #define UART_ERROR_BROKEN_DATA 3
 #define UART_NO_ERROR 4
 
+typedef struct {
+        uint8_t band;
+        uint8_t hwrev;
+        uint8_t serial_number[12];
+        uint8_t minor;
+        uint8_t major;
+} version_t;
+
+
 static bool                   allowed_to_start = false; // TODO: Can be part of APP_DATA_LORA when it made local
 static APP_DATA_LORA          appData          = {0};
 extern APP_GW_ACTIVATION_DATA appGWActivationData;
@@ -46,9 +56,9 @@ static TaskHandle_t   loraRxThreadHandle = NULL;
 static uint32_t last_rx_timestamp          = 0;
 static uint32_t lora_config_failed_counter = 0;
 static bool     freqplan_correct           = 0;
-static uint8_t  frequency_band             = 0;
+static version_t module_version_info       = {0};
 
-QueueHandle_t xRXQueue, xTXQueue, xUARTRXQueue;
+QueueHandle_t xRXQueue, xTXQueue;
 
 /* ************************************************************************** */
 /* ************************************************************************** */
@@ -56,36 +66,40 @@ QueueHandle_t xRXQueue, xTXQueue, xUARTRXQueue;
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-void    flushUart(DRV_HANDLE handle);
-bool    readUart(DRV_HANDLE handle, uint8_t* msg, uint16_t maxlen);
-uint8_t readUartBulk(DRV_HANDLE handle, uint8_t* msg, uint16_t maxlen);
-bool    initLora();
-bool    configLora();
-bool    setLeds(bool led0, bool led1, bool led2);
-uint8_t getStatus(uint8_t command);
-bool    startLora();
-bool    stopLora();
-uint8_t getVersion();
-bool    getBaudrate();
-bool    txAbort();
-bool    sendRXReply(bool ack);
-bool    getRXChain(uint8_t RFChain);
-bool    getIFChain(uint8_t IFChain);
-bool    configureRXChain(uint8_t RFChain, bool enable, uint32_t center_freq);
-bool    configureIFChainX(uint8_t IFChannel, bool enable, uint8_t RFChain, int32_t offset_freq);
-bool    configureIFChain8(bool enable, uint8_t RFChain, int32_t offset_freq, uint32_t bandwidth, uint8_t spread_factor);
-bool    configureIFChain9(bool enable, uint8_t RFChain, int32_t offset_freq, uint32_t bandwidth, uint32_t datarate);
-bool    sendPacket(loraTXPacket* pkt);
-bool    sendCommand(uint8_t command, uint8_t* payload, uint16_t len);
-bool    sendReply(uint8_t command, uint8_t* payload, uint16_t len);
-bool    parsePacket(uint8_t* buffer, loraRXPacket* pkt);
-bool    constructTXPacket(loraTXPacket* pkt, uint8_t* tx);
-void    printRXPacket(loraRXPacket* rxpkt);
-void    printTXPacket(loraTXPacket* txpkt);
+static bool initLora();
+static bool configLora();
+static bool setLeds(bool led0, bool led1, bool led2);
+static bool startLora();
+static bool stopLora();
+static bool getVersion(version_t *version);
+static void sendRXReply(bool ack);
+static bool configureRXChain(uint8_t RFChain, bool enable, uint32_t center_freq);
+static bool configureIFChainX(uint8_t IFChannel, bool enable, uint8_t RFChain, int32_t offset_freq);
+static bool configureIFChain8(bool enable, uint8_t RFChain, int32_t offset_freq, uint32_t bandwidth, uint8_t spread_factor);
+static bool configureIFChain9(bool enable, uint8_t RFChain, int32_t offset_freq, uint32_t bandwidth, uint32_t datarate);
+static bool sendPacket(loraTXPacket* pkt);
+static bool parseRXPacket(uint8_t* buffer, loraRXPacket* pkt, size_t size);
+static bool constructTXPacket(loraTXPacket* pkt, uint8_t* tx);
+static void printRXPacket(loraRXPacket* rxpkt);
+static void printTXPacket(loraTXPacket* txpkt);
 static bool getSync();
 static bool setSync(bool public);
 static void _setState(APP_STATES_LORA newState);
 static void restart_lora_configuration();
+
+/*
+ * Platform specific functions for gateway module interface library
+ */
+SemaphoreHandle_t g_gateway_module_interface_lock = NULL;
+SemaphoreHandle_t g_gateway_module_interface_log_lock = NULL;
+SemaphoreHandle_t g_gateway_module_interface_signal = NULL;
+static void lock_uart(bool lock);
+static bool write_uart(uint8_t *data, size_t size);
+static bool signal_wait(int timeout);
+static void signal_set(void);
+static void receive_callback(uint8_t *data, size_t size);
+static void dispatch_thread(void);
+static void GATEWAY_MODULE_INTERFACE_LOG (const char *__restrict __format, ...);
 
 static uint32_t timeout_timer = 0;
 static uint32_t lastAckTime   = 0;
@@ -97,150 +111,7 @@ static uint32_t lastAckTime   = 0;
 
 #include "Harmony/MQTTHarmony.h"
 
-// flushUart removes any pending bytes from the receive buffer.
-void flushUart(DRV_HANDLE handle)
-{
-    bool flushing = false;
-    uint8_t buffer[1];
-    while(DRV_USART_Read(handle, buffer, 1) > 0)
-    {
-        if(!flushing)
-        {
-            SYS_DEBUG(SYS_ERROR_DEBUG, "LORA: flushing: ");
-            flushing = true;
-        }
-        SYS_DEBUG(SYS_ERROR_DEBUG, "%02x ", buffer[0]);
-    }
-    if(flushing)
-        SYS_DEBUG(SYS_ERROR_DEBUG, "\r\n");
-}
-
-// readUart reads bytes into msg. It keeps track of the number of characters received.
-// If the number exceeds maxlen, then wraps around and begins to write to msg at
-// beginning. Returns TRUE (1) if the entire user message has been received, or FALSE (0)
-// if the end of the message has not been reached.
-bool readUart(DRV_HANDLE handle, uint8_t* msg, uint16_t maxlen)
-{
-    static size_t recv  = 0; // number of characters received
-    size_t        nread = 0; // number of bytes read
-    TIMEOUTSTART;
-    while((nread = DRV_USART_Read(handle, msg + recv, 1)) == 0)
-    {
-        if(TIMEOUT(2))
-            return 0;
-    }
-    if(nread)
-    { // if we have read one byte
-        if(msg[recv] == LORA_CR)
-        {             // check for carriage return
-            recv = 0; // prepare to receive another string
-            return 1; // indicate that the string is ready
-        }
-        else
-        {
-            recv += nread;
-            if(recv >= maxlen)
-            { // wrap around to the beginning
-                recv = 0;
-            }
-            return 0;
-        }
-    }
-    return 0;
-}
-
-uint8_t readUartBulk(DRV_HANDLE handle, uint8_t* msg, uint16_t maxlen)
-{
-    uint16_t nread = 0; // number of bytes read
-    uint16_t len   = 0;
-
-    nread = DRV_USART_Read(handle, msg, 1); // Read one byte to determine LORA_FRAME_START
-    if(!nread)
-        return UART_ERROR_NO_DATA;
-    if(msg[0] != LORA_FRAME_START)
-    {
-        msg[0] = 0;
-        return UART_ERROR_INCOMPLETE_DATA;
-    }
-
-    TIMEOUTSTART; // Start endless loop protection
-
-    do
-    {
-        nread += DRV_USART_Read(handle, msg + nread, (4 - nread)); // Read three more bytes to determine length
-        if(TIMEOUT(2))
-        {
-            msg[0] = 0;
-            return UART_ERROR_INCOMPLETE_DATA;
-        }
-
-    } while(nread < 4);
-
-    len = _SET_BYTES_16BIT(msg[2], msg[3]);
-    if(len > 300)
-        return UART_ERROR_REJECTED_DATA;
-
-    SYS_DEBUG(SYS_ERROR_DEBUG, "LENGTH: %d\r\n", len);
-
-    uint16_t brokentransmission = 0;
-    uint16_t oldnread           = nread;
-    TIMEOUTSTART;
-    do
-    {
-        if((int)(len + 6) - (int)(nread) <= 0)
-            break;
-        nread += DRV_USART_Read(handle, msg + nread, (len + 6) - nread);
-        if(nread == oldnread)
-        {
-            if(brokentransmission > 300 || TIMEOUT(2))
-                return UART_ERROR_INCOMPLETE_DATA;
-            else
-                brokentransmission++;
-            continue;
-        }
-        brokentransmission = 0;
-        oldnread           = nread;
-    } while(nread < (len + 6));
-
-    uint32_t checksum   = 0;
-    uint16_t checksum_i = 0;
-    for(checksum_i = 0; checksum_i < (nread - 2); checksum_i++)
-    {
-        checksum += msg[checksum_i];
-    }
-    checksum = checksum & 0xFF;
-    if(checksum == msg[nread - 2])
-    {
-        SYS_DEBUG(SYS_ERROR_DEBUG, "LORA: Checksum passed\r\n");
-        return UART_NO_ERROR;
-    }
-
-    SYS_DEBUG(SYS_ERROR_WARNING, "LORA: Checksum failed\r\n");
-    return UART_ERROR_BROKEN_DATA;
-}
-
-bool writeUart(DRV_HANDLE handle, uint8_t* msg, size_t pkt_len)
-{
-    size_t bytesProcessed = 0;
-    TIMEOUTSTART;
-    do
-    {
-        // Write data to the USART and use the return value to
-        // update the source data pointer and pending bytes number.
-        bytesProcessed += DRV_USART_Write(handle, (msg + bytesProcessed), (pkt_len - bytesProcessed));
-
-        if(TIMEOUT(2))
-            return false;
-    } while(bytesProcessed < pkt_len);
-
-    if(bytesProcessed == pkt_len)
-    {
-        return true;
-    }
-    return false;
-}
-
-bool initLora(void)
+static bool initLora(void)
 {
     bool init_complete = false;
 
@@ -251,8 +122,14 @@ bool initLora(void)
     PLIB_PORTS_PinSet(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_6);
 
     /* Open USART Driver instance 1 (USART1 in this case) and obtain a handle to it. */
-    appData.USARTHandle = DRV_USART_Open(DRV_USART_INDEX_1, DRV_IO_INTENT_READWRITE | DRV_IO_INTENT_NONBLOCKING);
+    appData.USARTHandle = DRV_USART_Open(DRV_USART_INDEX_1, DRV_IO_INTENT_READWRITE | DRV_IO_INTENT_BLOCKING);
 
+    uint16_t    usTaskStackSize = configMINIMAL_STACK_SIZE;
+    UBaseType_t uxTaskPriority  = TASK_PRIORITY_LORA_READ;
+
+    xTaskCreate((TaskFunction_t)dispatch_thread, "LORARX", usTaskStackSize, NULL, uxTaskPriority,
+                &loraRxThreadHandle); /* The task handle is not used. */
+    
     // RESET LOW
     PLIB_PORTS_PinClear(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_6);
     vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -267,19 +144,27 @@ bool initLora(void)
     return init_complete;
 }
 
-bool configLora(void)
+static bool configLora(void)
 {
-    bool    status = 1;
+    bool    status;
 
-    stopLora();
+    status = stopLora();
+    vTaskDelay(100 / portTICK_PERIOD_MS);
 
-    frequency_band = getVersion();
-    SYS_PRINT("LORA: version: %02X\r\n", frequency_band);
+    if (!status || !getVersion(&module_version_info))
+    {
+        return false;
+    }
+    SYS_PRINT("Version, hwrev: %d, major: %d, minor: %d, band: %d\r\n", module_version_info.hwrev, module_version_info.major, module_version_info.minor, module_version_info.band);
+    SYS_PRINT("Serial: %02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X\r\n",
+            module_version_info.serial_number[0], module_version_info.serial_number[1], module_version_info.serial_number[2], module_version_info.serial_number[3], module_version_info.serial_number[4], module_version_info.serial_number[5],
+            module_version_info.serial_number[6], module_version_info.serial_number[7], module_version_info.serial_number[8], module_version_info.serial_number[9], module_version_info.serial_number[10], module_version_info.serial_number[11]
+            );
     uint32_t config_freq_band = appGWActivationData.configuration_sx1301.rfchain[0].freq;
 
     // Do a check to find out if the configuration matches with the hardware
-    if(config_freq_band == 0 || (config_freq_band >= 900000000 && frequency_band == LORA_BAND_868) ||
-       (config_freq_band < 900000000 && frequency_band == LORA_BAND_915))
+    if(config_freq_band == 0 || (config_freq_band >= 900000000 && module_version_info.band == LORA_BAND_868) ||
+       (config_freq_band < 900000000 && module_version_info.band == LORA_BAND_915))
     {
         SYS_DEBUG(SYS_ERROR_ERROR, "LORA: ERROR: wrong frequency configuration, fallback on default\r\n");
         freqplan_correct = 0;
@@ -291,198 +176,152 @@ bool configLora(void)
     if(freqplan_correct == 0)
     {
         /* Static test configuration */
-        if(frequency_band == LORA_BAND_868)
+        if(module_version_info.band == LORA_BAND_868)
         {
             SYS_DEBUG(SYS_ERROR_WARNING, "LORA: use default EU config\r\n");
-            status *= configureRXChain(0, 1, 867500000);
-            status *= configureRXChain(1, 1, 868500000);
-            status *= configureIFChainX(0, 1, 1, -400000);
-            status *= configureIFChainX(1, 1, 1, -200000);
-            status *= configureIFChainX(2, 1, 1, 0);
-            status *= configureIFChainX(3, 1, 0, -400000);
-            status *= configureIFChainX(4, 1, 0, -200000);
-            status *= configureIFChainX(5, 1, 0, 0);
-            status *= configureIFChainX(6, 1, 0, 200000);
-            status *= configureIFChainX(7, 1, 0, 400000);
-            status *= configureIFChain8(1, 1, -200000, 250000, 7);
-            status *= configureIFChain9(1, 1, 300000, 125000, 50000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureRXChain(0, 1, 867500000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureRXChain(1, 1, 868500000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(0, 1, 1, -400000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(1, 1, 1, -200000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(2, 1, 1, 0);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(3, 1, 0, -400000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(4, 1, 0, -200000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(5, 1, 0, 0);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(6, 1, 0, 200000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(7, 1, 0, 400000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChain8(1, 1, -200000, 250000, 7);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChain9(1, 1, 300000, 125000, 50000);
         }
-        else if(frequency_band == LORA_BAND_915)
+        else if(module_version_info.band == LORA_BAND_915)
         {
             SYS_DEBUG(SYS_ERROR_WARNING, "LORA: use default US config\r\n");
-            status *= configureRXChain(0, 1, 904200000);
-            status *= configureRXChain(1, 1, 905000000);
-            status *= configureIFChainX(0, 1, 0, -300000);
-            status *= configureIFChainX(1, 1, 0, -100000);
-            status *= configureIFChainX(2, 1, 0, 100000);
-            status *= configureIFChainX(3, 1, 0, 300000);
-            status *= configureIFChainX(4, 1, 1, -300000);
-            status *= configureIFChainX(5, 1, 1, -100000);
-            status *= configureIFChainX(6, 1, 1, 100000);
-            status *= configureIFChainX(7, 1, 1, 300000);
-            status *= configureIFChain8(1, 0, 400000, 500000, 8);
-            status *= configureIFChain9(0, 0, 0, 0, 0);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureRXChain(0, 1, 904200000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureRXChain(1, 1, 905000000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(0, 1, 0, -300000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(1, 1, 0, -100000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(2, 1, 0, 100000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(3, 1, 0, 300000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(4, 1, 1, -300000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(5, 1, 1, -100000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(6, 1, 1, 100000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(7, 1, 1, 300000);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChain8(1, 0, 400000, 500000, 8);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChain9(0, 0, 0, 0, 0);
         }
     }
 
     else
     {
-        status *= configureRXChain(0, appGWActivationData.configuration_sx1301.rfchain[0].enable,
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        status = status && configureRXChain(0, appGWActivationData.configuration_sx1301.rfchain[0].enable,
                                    appGWActivationData.configuration_sx1301.rfchain[0].freq);
-        status *= configureRXChain(1, appGWActivationData.configuration_sx1301.rfchain[1].enable,
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        status = status && configureRXChain(1, appGWActivationData.configuration_sx1301.rfchain[1].enable,
                                    appGWActivationData.configuration_sx1301.rfchain[1].freq);
 
         int i = 0;
         for(i = 0; i <= 7; i++)
         {
-            status *= configureIFChainX(i, appGWActivationData.configuration_sx1301.ifchain[i].enable,
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            status = status && configureIFChainX(i, appGWActivationData.configuration_sx1301.ifchain[i].enable,
                                         appGWActivationData.configuration_sx1301.ifchain[i].radio,
                                         appGWActivationData.configuration_sx1301.ifchain[i].freqOffset);
         }
 
-        status *= configureIFChain8(appGWActivationData.configuration_sx1301.ifchain[8].enable,
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        status = status && configureIFChain8(appGWActivationData.configuration_sx1301.ifchain[8].enable,
                                     appGWActivationData.configuration_sx1301.ifchain[8].radio,
                                     appGWActivationData.configuration_sx1301.ifchain[8].freqOffset,
                                     appGWActivationData.configuration_sx1301.ifchain[8].bandwidth,
                                     appGWActivationData.configuration_sx1301.ifchain[8].spread_factor);
 
-        status *= configureIFChain9(appGWActivationData.configuration_sx1301.ifchain[9].enable,
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        status = status && configureIFChain9(appGWActivationData.configuration_sx1301.ifchain[9].enable,
                                     appGWActivationData.configuration_sx1301.ifchain[9].radio,
                                     appGWActivationData.configuration_sx1301.ifchain[9].freqOffset,
                                     appGWActivationData.configuration_sx1301.ifchain[9].bandwidth,
                                     appGWActivationData.configuration_sx1301.ifchain[9].datarate);
     }
 
-    setSync(appGWActivationData.configuration_sx1301.lorawan_public);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    status = status && setSync(appGWActivationData.configuration_sx1301.lorawan_public);
 
     // RF ENABLE HIGH
     PLIB_PORTS_PinSet(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_5);
 
     /* Reset command for module */
-    stopLora();
-    startLora();
-    SYS_DEBUG(SYS_ERROR_DEBUG, "LORA: configLora %s\r\n", status ? "OK" : "ERROR");
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    status = status && stopLora();
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    startLora(); // note that the ACK on start takes about 6 seconds
+    SYS_DEBUG(SYS_ERROR_INFO, "LORA: configLora %s\r\n", status ? "OK" : "ERROR");
     return status;
 }
 
-bool setLeds(bool led0, bool led1, bool led2)
+static bool setLeds(bool led0, bool led1, bool led2)
 {
     uint8_t payload = ((led2 << 2) | (led1 << 1) | (led0));
-    return sendCommand(LORA_COMMAND_SETLEDS, &payload, 1);
+    return GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_SETLEDS, &payload, 1);
 }
 
 static bool getSync()
 {
-    return sendCommand(LORA_COMMAND_GETSYNC, 0, 0);
+    uint8_t sync;
+    return GatewayModuleInterface_sendCommandWaitAnswer(GATEWAY_MODULE_CMD_GETSYNC, NULL, 0, &sync, 1);
 }
 
 static bool setSync(bool public)
 {
     uint8_t payload = public ? 0x34 : 0x12;
-    return sendCommand(LORA_COMMAND_SETSYNC, &payload, 1);
+    return GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_SETSYNC, &payload, 1);
 }
 
-uint8_t getStatus(uint8_t command)
+static bool startLora()
 {
-    uint8_t status = 0;
-    uint8_t pkt[6];
-    pkt[0]              = LORA_FRAME_START;
-    pkt[1]              = command;
-    pkt[2]              = 0;
-    pkt[3]              = 0;
-    uint32_t checksum   = 0;
-    uint8_t  checksum_i = 0;
-    for(checksum_i = 0; checksum_i < 4; checksum_i++)
-    {
-        checksum += pkt[checksum_i];
-    }
-    checksum = checksum & 0xFF;
-    pkt[4]   = (uint8_t)checksum;
-    pkt[5]   = LORA_CR;
-
-    if(!DRV_USART_Write(appData.USARTHandle, (uint8_t*)pkt, 6))
-    {
-        return 0;
-    }
-    TIMEOUTSTART;
-    while(readUart(appData.USARTHandle, appData.rx_uart_buffer, UART_BUFF_LENGTH) == 0)
-    {
-        if(TIMEOUT(2))
-            return 0;
-    }
-    if(appData.rx_uart_buffer[1] == command)
-    {
-        status = appData.rx_uart_buffer[4];
-    }
-#if 1
-    SYS_DEBUG(SYS_ERROR_INFO, "LORA: recv_status_rpl: ");
-    uint8_t j = 0;
-    while(j < UART_BUFF_LENGTH && appData.rx_uart_buffer[j] != LORA_CR)
-    {
-        SYS_DEBUG(SYS_ERROR_INFO, "%#x ", appData.rx_uart_buffer[j]);
-        j++;
-    }
-    SYS_DEBUG(SYS_ERROR_INFO, "%#x\r\n", appData.rx_uart_buffer[j]);
-#endif
-
-    return status;
+    return GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_START, NULL, 0);
 }
 
-bool startLora()
+static bool stopLora()
 {
-    uint8_t payload = 0;
-    return sendCommand(LORA_COMMAND_START, &payload, 1);
+    return GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_STOP, NULL, 0);
 }
 
-bool stopLora()
+static bool getVersion(version_t *version)
 {
-    uint8_t payload = 0;
-    return sendCommand(LORA_COMMAND_STOP, &payload, 1);
+    return GatewayModuleInterface_sendCommandWaitAnswer(GATEWAY_MODULE_CMD_VERSION, NULL, 0, (uint8_t*)version, sizeof(version_t));
 }
 
-uint8_t getVersion()
+static void sendRXReply(bool ack)
 {
-    uint8_t payload = 0;
-    if(sendCommand(LORA_COMMAND_VERSION, &payload, 1))
-    {
-        // Return freq band. 868MHz = 1, 915MHz = 2;
-        return appData.rx_uart_buffer[4];
-    }
-
-    return 0;
-}
-
-bool getBaudrate()
-{
-    return sendCommand(LORA_COMMAND_GETUART, 0, 0);
-}
-
-bool txAbort()
-{
-    uint8_t payload = 0;
-    return sendCommand(LORA_COMMAND_TXABORT, &payload, 1);
-}
-
-bool sendRXReply(bool ack)
-{
-    uint8_t payload = (uint8_t)ack;
     lastAckTime     = SYS_TMR_TickCountGet();
-    return sendReply(LORA_COMMAND_RECEIVE, &payload, 1);
+    GatewayModuleInterface_sendAck(GATEWAY_MODULE_CMD_RECEIVE, ack);
 }
 
-bool getRXChain(uint8_t RFChain)
-{
-    uint8_t packet = RFChain;
-    return sendCommand(LORA_COMMAND_RFCHAIN, &packet, 1);
-}
-
-bool getIFChain(uint8_t IFChain)
-{
-    uint8_t packet = IFChain;
-    return sendCommand(LORA_COMMAND_IFCHAIN, &packet, 1);
-}
-
-bool configureRXChain(uint8_t RFChain, bool enable, uint32_t center_freq)
+static bool configureRXChain(uint8_t RFChain, bool enable, uint32_t center_freq)
 {
     // SYS_CONSOLE_PRINT("\r\nRF: %d,%d,%d", RFChain, enable, center_freq);
 
@@ -493,10 +332,10 @@ bool configureRXChain(uint8_t RFChain, bool enable, uint32_t center_freq)
     payload[3]         = _GET_BYTE(center_freq, 1);
     payload[4]         = _GET_BYTE(center_freq, 2);
     payload[5]         = _GET_BYTE(center_freq, 3);
-    return sendCommand(LORA_COMMAND_RFCONFIG, payload, 6);
+    return GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_RFCONFIG, payload, sizeof(payload));
 }
 
-bool configureIFChainX(uint8_t IFChannel, bool enable, uint8_t RFChain, int32_t offset_freq)
+static bool configureIFChainX(uint8_t IFChannel, bool enable, uint8_t RFChain, int32_t offset_freq)
 {
     // SYS_CONSOLE_PRINT("\r\nIF: %d,%d,%d,%d", IFChannel, enable, RFChain, offset_freq);
 
@@ -509,10 +348,10 @@ bool configureIFChainX(uint8_t IFChannel, bool enable, uint8_t RFChain, int32_t 
     payload[5]         = _GET_BYTE(offset_freq, 2);
     payload[6]         = _GET_BYTE(offset_freq, 3);
 
-    return sendCommand(LORA_COMMAND_IFCONFIG, payload, 7);
+    return GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_IFCONFIG, payload, sizeof(payload));
 }
 
-bool configureIFChain8(bool enable, uint8_t RFChain, int32_t offset_freq, uint32_t bandwidth, uint8_t spread_factor)
+static bool configureIFChain8(bool enable, uint8_t RFChain, int32_t offset_freq, uint32_t bandwidth, uint8_t spread_factor)
 {
     // SYS_CONSOLE_PRINT("\r\nIF8: %d,%d,%d,%d,%d", enable, RFChain, offset_freq, bandwidth, spread_factor);
     uint8_t payload[8] = {0};
@@ -558,10 +397,10 @@ bool configureIFChain8(bool enable, uint8_t RFChain, int32_t offset_freq, uint32
     {
         memset(&payload[2], 0x00, 6);
     }
-    return sendCommand(LORA_COMMAND_IF8CONFIG, payload, 8);
+    return GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_IF8CONFIG, payload, sizeof(payload));
 }
 
-bool configureIFChain9(bool enable, uint8_t RFChain, int32_t offset_freq, uint32_t bandwidth, uint32_t datarate)
+static bool configureIFChain9(bool enable, uint8_t RFChain, int32_t offset_freq, uint32_t bandwidth, uint32_t datarate)
 {
     //  SYS_CONSOLE_PRINT("\r\nIF9: %d,%d,%d,%d,%d", enable, RFChain, offset_freq, bandwidth, datarate);
     uint8_t payload[11] = {0};
@@ -599,147 +438,30 @@ bool configureIFChain9(bool enable, uint8_t RFChain, int32_t offset_freq, uint32
     {
         memset(&payload[2], 0x00, 9);
     }
-    return sendCommand(LORA_COMMAND_IF9CONFIG, payload, 11);
+    return GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_IF9CONFIG, payload, sizeof(payload));
 }
 
-bool sendPacket(loraTXPacket* txpkt)
+/*
+ * This functions is called periodically and handles the LoRa module state machine.
+ * 
+ * This function is non-reentrant as it contains static data. It is used only from a single point only.
+ */
+static bool sendPacket(loraTXPacket* txpkt)
 {
-    // txAbort();
     bool    status = 1;
-    uint8_t data_payload[MAX_TXPACKET_LENGTH];
+    static uint8_t data_payload[MAX_TXPACKET_LENGTH];
 
-    status *= constructTXPacket(txpkt, data_payload);
+    status = status && constructTXPacket(txpkt, data_payload);
 
-    if(status == 1)
+    if(status)
     {
-        status *= sendCommand(LORA_COMMAND_SEND, data_payload, txpkt->payload_size + TXPACKET_HEADER_LENGTH);
+        status = status && GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_SEND, data_payload, txpkt->payload_size + TXPACKET_HEADER_LENGTH);
     }
 
     return status;
 }
 
-bool sendCommand(uint8_t command, uint8_t* payload, uint16_t len)
-{  
-    // flush Lora UART RX before sending any command
-    if (appData.state != APP_LORA_GO_ASYNC && appData.state != APP_LORA_POLL_UART)
-    {
-        // only flush when not in ASYNC mode
-        flushUart(appData.USARTHandle);
-    }
-
-    bool     gotresponse   = false;
-    uint16_t packet_length = len + 6;
-    uint8_t  pkt[packet_length + 1];
-    pkt[0]     = LORA_FRAME_START;
-    pkt[1]     = command;
-    pkt[2]     = _GET_BYTE(len, 0);
-    pkt[3]     = _GET_BYTE(len, 1);
-    uint16_t i = 0;
-    for(i = 0; i < len; i++)
-    {
-        pkt[4 + i] = payload[i];
-    }
-
-    uint32_t checksum   = 0;
-    uint16_t checksum_i = 0;
-    for(checksum_i = 0; checksum_i < (packet_length - 2); checksum_i++)
-    {
-        checksum += pkt[checksum_i];
-    }
-    checksum   = checksum & 0xFF;
-    pkt[4 + i] = (uint8_t)checksum;
-    pkt[5 + i] = LORA_CR;
-
-#if 0
-    SYS_DEBUG(SYS_ERROR_DEBUG, "\r\n\r\nLORA: send_cmd: ");
-    for(i = 0; i < packet_length; i++)
-    {
-        SYS_DEBUG(SYS_ERROR_DEBUG, "%#x ", pkt[i]);
-    }
-    SYS_DEBUG(SYS_ERROR_DEBUG, "\r\n");
-#endif
-
-    if(!writeUart(appData.USARTHandle, pkt, packet_length))
-    {
-        SYS_DEBUG(SYS_ERROR_WARNING, "LORA: UART WRITE ERROR!\r\n");
-        return false;
-    }
-    if(command != LORA_COMMAND_SEND)
-    { // REVIEW: Why this exception?
-        TIMEOUTSTART;
-        while(readUart(appData.USARTHandle, appData.rx_uart_buffer, UART_BUFF_LENGTH) == 0)
-        {
-            if(TIMEOUT(4)) 
-            {
-                SYS_DEBUG(SYS_ERROR_WARNING, "LORA: UART TIMEOUT\r\n");
-                return false;
-            }
-        }
-        if(appData.rx_uart_buffer[1] == command)
-        {
-            gotresponse = true;
-        }
-
-#if 1
-        SYS_DEBUG(SYS_ERROR_DEBUG, "LORA: recv_rpl: ");
-        uint8_t j = 0;
-        while(j < UART_BUFF_LENGTH && appData.rx_uart_buffer[j] != LORA_CR)
-        {
-            SYS_DEBUG(SYS_ERROR_DEBUG, "%#x ", appData.rx_uart_buffer[j]);
-            j++;
-        }
-        SYS_DEBUG(SYS_ERROR_DEBUG, "%#x\r\n", appData.rx_uart_buffer[j]);
-#endif
-    }
-    SYS_DEBUG(SYS_ERROR_DEBUG, "LORA: sendCommand %s\r\n", gotresponse ? "OK" : "ERROR");
-    return gotresponse;
-}
-
-bool sendReply(uint8_t command, uint8_t* payload, uint16_t len)
-{
-    size_t  packet_length = len + 6;
-    uint8_t pkt[packet_length];
-    pkt[0]    = LORA_FRAME_START;
-    pkt[1]    = command;
-    pkt[2]    = _GET_BYTE(len, 0);
-    pkt[3]    = _GET_BYTE(len, 1);
-    uint8_t i = 0;
-    for(i = 0; i < len; i++)
-    {
-        // if(payload[i] != NULL)
-        pkt[4 + i] = payload[i];
-        // else
-        //    pkt[4 + i] = 0x00;
-    }
-
-    uint32_t checksum   = 0;
-    uint8_t  checksum_i = 0;
-    for(checksum_i = 0; checksum_i < (packet_length - 2); checksum_i++)
-    {
-        checksum += pkt[checksum_i];
-    }
-    checksum = checksum & 0xFF;
-    // checksum = checksum % 0x100;
-    pkt[4 + i] = (uint8_t)checksum;
-    pkt[5 + i] = LORA_CR;
-
-#if 0
-    SYS_DEBUG(SYS_ERROR_DEBUG, "LORA: send_rpl: ");
-    for(i = 0; i < packet_length; i++)
-    {
-        SYS_DEBUG(SYS_ERROR_DEBUG, "%#x ", pkt[i]);
-    }
-    SYS_DEBUG(SYS_ERROR_DEBUG, "\r\n");
-#endif
-
-    if(writeUart(appData.USARTHandle, pkt, packet_length))
-    {
-        return true;
-    }
-    return false;
-}
-
-bool parseRXPacket(uint8_t* rx, loraRXPacket* pkt)
+static bool parseRXPacket(uint8_t* rx, loraRXPacket* pkt, size_t size)
 {
 
     pkt->rx_status    = rx[0];
@@ -758,14 +480,22 @@ bool parseRXPacket(uint8_t* rx, loraRXPacket* pkt)
     pkt->snr_maximum  = _SET_BYTES_32BIT(rx[31], rx[32], rx[33], rx[34]);
     pkt->crc          = _SET_BYTES_16BIT(rx[36], rx[35]);
     pkt->payload_size = _SET_BYTES_16BIT(rx[37], rx[38]);
+    
+    if (pkt->payload_size + 39 != size)
+    {
+        return false;
+    }
+    
     uint8_t i         = 0;
     for(i = 0; i < pkt->payload_size; i++)
     {
         pkt->payload[i] = rx[39 + i];
     }
+    
+    return true;
 }
 
-bool constructTXPacket(loraTXPacket* txpkt, uint8_t* tx)
+static bool constructTXPacket(loraTXPacket* txpkt, uint8_t* tx)
 {
     // uint32_t fchan = ((double)txpkt->frequency/32000000.00)*524288.00;
 
@@ -814,7 +544,7 @@ bool constructTXPacket(loraTXPacket* txpkt, uint8_t* tx)
     return true;
 }
 
-void printRXPacket(loraRXPacket* rxpkt)
+static void printRXPacket(loraRXPacket* rxpkt)
 {
     SYS_DEBUG(SYS_ERROR_INFO, "\r\n==== PACKET ====\r\n");
     SYS_DEBUG(SYS_ERROR_INFO, "rxst: %#x\r\n", rxpkt->rx_status);
@@ -841,7 +571,7 @@ void printRXPacket(loraRXPacket* rxpkt)
     SYS_DEBUG(SYS_ERROR_INFO, "==== /PACKET ===\r\n\n");
 }
 
-void printTXPacket(loraTXPacket* txpkt)
+static void printTXPacket(loraTXPacket* txpkt)
 {
     SYS_DEBUG(SYS_ERROR_INFO, "\r\n==== TX PKT ====\r\n");
     SYS_DEBUG(SYS_ERROR_INFO, "freq: %u\r\n", txpkt->frequency);
@@ -899,24 +629,20 @@ void enqueueLoRaTX(loraTXPacket* pkt)
 
 void APP_LORA_Initialize(void)
 {
+    g_gateway_module_interface_lock = xSemaphoreCreateMutex();
+    g_gateway_module_interface_log_lock = xSemaphoreCreateMutex();
+    g_gateway_module_interface_signal = xSemaphoreCreateBinary();
+    GatewayModuleInterface_init(&lock_uart, &write_uart, &signal_wait, &signal_set, &receive_callback, &GATEWAY_MODULE_INTERFACE_LOG);
     allowed_to_start = false;
     /* Place the App state machine in its initial state. */
     _setState(APP_LORA_INIT);
 
     xRXQueue = xQueueCreate(5, sizeof(loraRXPacket));
     xTXQueue = xQueueCreate(5, sizeof(loraTXPacket));
-
-    xUARTRXQueue = xQueueCreate(300, sizeof(uint8_t));
-    // appData.state = APP_LORA_IDLE;
-    //  LoraMutexInit();
 }
 
 void APP_LORA_SetStartEvent(void)
 {
-    if(loraRxThreadHandle != NULL)
-    { // sanity check
-        FATAL("LoRa can not be restarted when RX thread already exists");
-    }
     // Set event that the module can be started. Don't set state directly!!
     allowed_to_start = true;
 }
@@ -954,9 +680,13 @@ static void restart_lora_configuration(void)
     _setState(APP_LORA_INIT);
 }
 
+/*
+ * This functions is called periodically and handles the LoRa module state machine.
+ * 
+ * This function is non-reentrant as it contains static data and calls non-reentrant functions.
+ */
 void APP_LORA_Tasks(void)
 {
-    static loraRXPacket rxpkt = {0}, empty_rxpkt = {0};
     static loraTXPacket txpkt = {0}, empty_txpkt = {0};
 
     switch(appData.state)
@@ -1005,7 +735,7 @@ void APP_LORA_Tasks(void)
             {
                 SYS_PRINT("LORA: Configuration succeeded\r\n");
                 SYS_PRINT("LORA: Starting operation\r\n");
-                handle = SYS_TMR_DelayMS(6000);
+                handle = SYS_TMR_DelayMS(7000);
                 _setState(APP_LORA_WAIT_TTN_CONFIG_COMPLETE);
             }
             else
@@ -1027,39 +757,21 @@ void APP_LORA_Tasks(void)
         {
             if(SYS_TMR_DelayStatusGet(handle))
             {
-                _setState(APP_LORA_GO_ASYNC);
+                sendRXReply(true); // kickstart by acknowledging such that it will send next in queue
+                _setState(APP_LORA_OPERATIONAL);
             }
 
             break;
         }
-        case APP_LORA_GO_ASYNC:
+        case APP_LORA_OPERATIONAL:
         {
-            SYS_PRINT("LORA: GOING ASYNC\r\n");
-            _setState(APP_LORA_POLL_UART);
-
-            DRV_USART_Close(appData.USARTHandle);
-
-            appData.USARTHandle = DRV_USART_Open(DRV_USART_INDEX_1, DRV_IO_INTENT_READWRITE | DRV_IO_INTENT_BLOCKING);
-
-            uint16_t    usTaskStackSize = configMINIMAL_STACK_SIZE;
-            UBaseType_t uxTaskPriority  = TASK_PRIORITY_LORA_READ;
-
-            xTaskCreate((TaskFunction_t)lora_read, "LORARX", usTaskStackSize, NULL, uxTaskPriority,
-                        &loraRxThreadHandle); /* The task handle is not used. */
-
-            break;
-        }
-        case APP_LORA_POLL_UART:
-        {
-            rxpkt = empty_rxpkt;
-
             if(SYS_TMR_TickCountGet() - lastAckTime >=
                SYS_TMR_TickCounterFrequencyGet() * KICK_MODULE_AFTER_LAST_ACK_TIMEOUT)
             {
                 lastAckTime = SYS_TMR_TickCountGet();
                 SYS_PRINT("LORA: Kick LoRa module with ACK after not acked it for %ds\r\n",
                           KICK_MODULE_AFTER_LAST_ACK_TIMEOUT);
-                sendRXReply(LORA_ACK);
+                sendRXReply(true);
             }
 
             if(hasLoraTXPacketInQueue())
@@ -1086,179 +798,7 @@ void APP_LORA_Tasks(void)
                               last_rx_timestamp);
                     ErrorMessageWarning_Set(ERROR_MESSAGE_WARNING_LORA_TX_TOO_LATE);
                 }
-                break;
             }
-
-            if(!gotuartrx_packet && uxQueueMessagesWaiting(xUARTRXQueue) > 4)
-            {
-                uint8_t msg[1];
-                if(xQueueReceive(xUARTRXQueue, msg, 0) != pdTRUE)
-                    break;
-                if(msg[0] != LORA_FRAME_START)
-                    break;
-                uartrx[0] = LORA_FRAME_START;
-
-                if(xQueueReceive(xUARTRXQueue, msg, 0) != pdTRUE)
-                    break;
-                uartrx[1] = msg[0];
-
-                if(xQueueReceive(xUARTRXQueue, msg, 0) != pdTRUE)
-                    break;
-                uartrx[2] = msg[0];
-
-                if(xQueueReceive(xUARTRXQueue, msg, 0) != pdTRUE)
-                    break;
-                uartrx[3] = msg[0];
-
-                uint16_t len = _SET_BYTES_16BIT(uartrx[2], uartrx[3]);
-                if(len >= 295)
-                {
-                    sendRXReply(LORA_ACK);
-                    break;
-                }
-
-                gotuartrx_packet = true;
-                uartrx_len       = len;
-                //   SYS_CONSOLE_PRINT("LORA: PKTL:%d\r\n",len);
-            }
-
-            if(gotuartrx_packet &&
-               uxQueueMessagesWaiting(xUARTRXQueue) >= uartrx_len + 2) // +2 for checksum & frame end
-            {
-                uint16_t byte_counter = 0;
-                while(byte_counter < (uartrx_len + 2))
-                {
-                    uint8_t msg[1];
-                    if(xQueueReceive(xUARTRXQueue, msg, 0) != pdTRUE)
-                    {
-                        gotuartrx_packet = false;
-                        uartrx_len       = 0;
-                        sendRXReply(LORA_ACK);
-                        break;
-                    }
-                    uartrx[4 + byte_counter] = msg[0];
-                    byte_counter++;
-                }
-                //  SYS_CONSOLE_MESSAGE("LORA: PKT\r\n");
-                uint16_t pktit = 0;
-                for(pktit = 0; pktit < uartrx_len + 6; pktit++)
-                {
-                    //      SYS_CONSOLE_PRINT("%d\r\n",uartrx[pktit]);
-                }
-                uint32_t checksum   = 0;
-                uint16_t checksum_i = 0;
-
-                for(checksum_i = 0; checksum_i < (uartrx_len + 4); checksum_i++) // +4 for packet header type length
-                {
-                    checksum += uartrx[checksum_i];
-                }
-                checksum = checksum & 0xFF;
-                if(checksum == uartrx[uartrx_len + 4])
-                {
-
-                    if(uartrx[1] != LORA_COMMAND_RECEIVE)
-                    {
-                        gotuartrx_packet = false;
-                        memset(uartrx, 0, uartrx_len + 6);
-                        uartrx_len = 0;
-                        sendRXReply(LORA_ACK);
-                        //    SYS_CONSOLE_MESSAGE("LORA: REGLOR\r\n");
-                        //    SYS_CONSOLE_PRINT("LORA: INBUF:%d\r\n",uxQueueMessagesWaiting( xUARTRXQueue));
-                        break;
-                    }
-                    // SYS_CONSOLE_MESSAGE("LORA: LPKTOK\r\n");
-                    parseRXPacket(&uartrx[4], &rxpkt);
-                    if(rxpkt.pkt_status == 0x10 ||
-                       rxpkt.pkt_status == 0x01) // Place the packet in a queue such that app_mqtt can send it
-                    {
-                        //   SYS_CONSOLE_MESSAGE("LORA: PKTOUT\r\n");
-                        enqueueLoRaRX(&rxpkt);
-                        SYS_DEBUG(SYS_ERROR_INFO, "LORA: Accepted packet\r\n");
-                        // printRXPacket(&rxpkt);
-                        last_rx_timestamp = rxpkt.timestamp;
-                    }
-                    else
-                    {
-                        SYS_DEBUG(SYS_ERROR_INFO, "LORA: Packet dropped! Bad CRC\r\n");
-                    }
-                }
-                else
-                {
-                    SYS_CONSOLE_MESSAGE("LORA: PKT CHKFAIL\r\n");
-                }
-                gotuartrx_packet = false;
-                memset(uartrx, 0, uartrx_len + 6);
-                uartrx_len = 0;
-                sendRXReply(LORA_ACK);
-                // SYS_CONSOLE_MESSAGE("LORA: EMPTY PKT MEM\r\n");
-                // SYS_CONSOLE_PRINT("LORA: INBUF:%d\r\n",uxQueueMessagesWaiting( xUARTRXQueue));
-            }
-            break;
-        }
-
-        case APP_LORA_SEND:
-        {
-            // txStatus();
-            if(!SYS_TMR_DelayStatusGet(handle))
-                return;
-            txpkt.timestamp           = 0;
-            txpkt.tx_mode             = 0;
-            txpkt.tx_power            = 7;
-            txpkt.frequency           = 868500000ul; // 868300000;//
-            txpkt.rf_chain            = 0;           // rxpkt.rf_chain;
-            txpkt.modulation          = 0x10;
-            txpkt.bandwidth           = 3; // 3;
-            txpkt.coderate            = 1; // 1;
-            txpkt.datarate            = 2; // 16;
-            txpkt.invert_polarity     = 0;
-            txpkt.frequency_deviation = 0;
-            txpkt.preamble            = 8;
-            txpkt.no_crc              = 0;
-            txpkt.no_header           = 0;
-            txpkt.payload_size        = 8;
-            txpkt.payload[0]          = 0x11;
-            txpkt.payload[1]          = 0x22;
-            txpkt.payload[2]          = 0x33;
-            txpkt.payload[3]          = 0x44;
-            txpkt.payload[4]          = 0xAA;
-            txpkt.payload[5]          = 0xBB;
-            txpkt.payload[6]          = 0xCC;
-            txpkt.payload[7]          = 0xDD;
-            ndr++;
-            if(ndr > 5)
-                ndr = 0;
-            SYS_PRINT("ndr: %d\r\n", ndr);
-            // txpkt.payload_size = rxpkt.payload_size;
-            /* uint8_t i = 0;
-            for (i = 0; i <= txpkt.payload_size; i++)
-            {
-                txpkt.payload[i] = rxpkt.payload[i];
-            } */
-            sendPacket(&txpkt);
-            printTXPacket(&txpkt);
-
-            txpkt = empty_txpkt;
-
-            _setState(APP_LORA_WAIT_SEND_COMPLETE);
-
-            break;
-        }
-        case APP_LORA_WAIT_SEND_COMPLETE:
-        {
-            if(getStatus(LORA_COMMAND_TXSTATUS) == LORA_TX_STATUS_READY)
-            {
-                // SYS_DEBUG(SYS_ERROR_DEBUG, "LORA: TX STATUS %d\r\n", getStatus(LORA_COMMAND_TXSTATUS));
-                _setState(APP_LORA_RECEIVE);
-            }
-
-            break;
-        }
-
-        case APP_LORA_IDLE:
-        {
-            handle = SYS_TMR_DelayMS(10000);
-            _setState(APP_LORA_SEND);
-            Nop();
             break;
         }
     }
@@ -1270,22 +810,6 @@ static void _setState(APP_STATES_LORA newState)
     appData.state = newState;
 }
 
-void lora_read(void)
-{
-    SYS_CONSOLE_MESSAGE("LORA: Starting RX TASK (kickstart LoRa module by sending an ACK)\r\n");
-    sendRXReply(LORA_ACK); // Kickstart the LoRa module
-
-    while(1)
-    {
-        uint8_t msg[1];
-        uint8_t nread = DRV_USART_Read(appData.USARTHandle, msg, 1);
-        if(nread > 0)
-        {
-            xQueueSend(xUARTRXQueue, msg, 0U);
-        }
-    }
-}
-
 bool APP_LORA_HAS_CORRECT_FREQ_PLAN(void)
 {
     return (freqplan_correct == 1);
@@ -1293,5 +817,122 @@ bool APP_LORA_HAS_CORRECT_FREQ_PLAN(void)
 
 uint8_t APP_LORA_GW_CARD_VERSION(void)
 {
-    return frequency_band;
+    return module_version_info.band;
+}
+
+
+static void lock_uart(bool lock)
+{
+    if (lock)
+    {
+        BaseType_t ret = xSemaphoreTake(g_gateway_module_interface_lock, portMAX_DELAY);
+        ASSERT(ret == pdPASS, "Mutex should never fail")
+    }
+    else
+    {
+        xSemaphoreGive(g_gateway_module_interface_lock);
+    }
+}
+
+static bool write_uart(uint8_t *data, size_t size)
+{
+    if (size > 0)
+    {
+        size_t w = DRV_USART_Write(appData.USARTHandle, data, size);
+        ASSERT(w == size, "LORA Uart write should be blocking");
+        if (w != size)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool signal_wait(int timeout)
+{
+    return xSemaphoreTake(g_gateway_module_interface_signal, timeout / portTICK_PERIOD_MS) == pdPASS;
+}
+
+static void signal_set(void)
+{
+    xSemaphoreGive(g_gateway_module_interface_signal);
+}
+
+static void receive_callback(uint8_t *data, size_t size)
+{
+    static loraRXPacket rxpkt = {0}, empty_rxpkt = {0};
+    rxpkt = empty_rxpkt;
+
+    if (parseRXPacket(data, &rxpkt, size)) 
+    {
+        if(rxpkt.pkt_status == 0x10 || rxpkt.pkt_status == 0x01)
+        {
+            enqueueLoRaRX(&rxpkt); // package is copied in the queue
+            sendRXReply(true);
+            GATEWAY_MODULE_INTERFACE_LOG("LORA: Accepted packet\r\n");
+            // printRXPacket(&rxpkt);
+            last_rx_timestamp = rxpkt.timestamp;
+        }
+        else
+        {
+            GATEWAY_MODULE_INTERFACE_LOG("Rejected packet (0x%02X)\r\n", rxpkt.pkt_status);
+        }
+    }
+    else
+    {
+        GATEWAY_MODULE_INTERFACE_LOG("Unable to parse\r\n");
+    }
+    
+    sendRXReply(true); // request for next package
+}
+
+static void dispatch_thread(void)
+{
+    char c;
+    while (true)
+    {
+        size_t r = DRV_USART_Read(appData.USARTHandle, &c, 1);
+        //ASSERT(r == 1, "LORA Uart read should be blocking");
+        if (r != 1)
+        {
+            // ignore GATEWAY_MODULE_INTERFACE_LOG("Read returned code: %i", r);
+            // Due to instable clock (some versions using the internal oscillator) many 
+            // bit error may occur resulting in DRV_USART_Read returning -1. Missing or
+            // corrupt bytes are detected by higher layer using a checksum and retries.
+            ;
+        }
+        else
+        {
+            GatewayModuleInterface_dispatch(c);
+        }
+    }
+    
+    GATEWAY_MODULE_INTERFACE_LOG("Thread exit.");
+}
+
+static void GATEWAY_MODULE_INTERFACE_LOG(const char *__restrict __format, ...)
+{
+    static char str[128];
+    BaseType_t ret = xSemaphoreTake(g_gateway_module_interface_log_lock, portMAX_DELAY);
+    ASSERT(ret == pdPASS, "Mutex should never fail")
+
+    str[0] = 'L';
+    str[1] = 'G';
+    str[2] = 'M';
+    str[3] = 'D';
+    str[4] = ':';
+    
+    va_list args;
+    va_start (args, __format);
+    int len = vsnprintf(&str[5], sizeof(str) - 8, __format, args);
+    if (len > (sizeof(str) - 8))
+    {
+        len = sizeof(str) - 8;
+    }
+    str[5 + len] = '\r';
+    str[5 + len + 1] = '\n';
+    str[5 + len + 2] = '\0';
+    SYS_MESSAGE(str);
+    va_end (args);
+    xSemaphoreGive(g_gateway_module_interface_log_lock);
 }

@@ -156,7 +156,8 @@ SYS_MODULE_OBJ DRV_USART_Initialize
     SYS_INT_SourceStatusClear(dObj->errorInterruptSource);
 
     /* Enable the interrupt source in case of interrupt mode */
-    _DRV_USART_InterruptSourceEnable(dObj->errorInterruptSource);
+    // The current drivers blocks the UART on errors. Some gateways suffer from errors due to the clock differences (internal oscillator). Disabling the error handler here.
+    //_DRV_USART_InterruptSourceEnable(dObj->errorInterruptSource);
 
     _DRV_USART_ByteModelInterruptSourceEnable(dObj->rxInterruptSource);
 
