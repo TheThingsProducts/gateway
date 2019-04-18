@@ -67,9 +67,9 @@ void APP_Activation_Tasks(void)
             sprintf(request.urlheaders,
                     "PUT /%s/%s/activate HTTP/1.1\r\n"
                     "User-Agent: TTNGateway\r\n"
-                    "Host: %s\r\n"
+                    "Host: %s:%u\r\n"
                     "Connection: close\r\n\r\n",
-                    "api/v2/gateways", appGWActivationData.configuration.id, request.host);
+                    "api/v2/gateways", appGWActivationData.configuration.id, request.host, request.port);
 
             APP_HTTP_Request_Initialize();
             appActivationData.state = APP_ACTIVATION_BARE_REQUESTING;
