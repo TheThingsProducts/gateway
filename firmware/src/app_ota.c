@@ -137,9 +137,9 @@ void APP_OTA_Tasks(void)
             sprintf(request.urlheaders,
                     "GET /%s/%s HTTP/1.1\r\n"
                     "User-Agent: TTNGateway\r\n"
-                    "Host: %s\r\n"
+                    "Host: %s:%u\r\n"
                     "Connection: close\r\n\r\n",
-                    request.path, checksums_addr, request.host);
+                    request.path, checksums_addr, request.host, request.port);
 
             APP_HTTP_Request_Initialize();
 
@@ -157,9 +157,9 @@ void APP_OTA_Tasks(void)
             sprintf(request.urlheaders,
                     "GET /%s/%s HTTP/1.1\r\n"
                     "User-Agent: TTNGateway\r\n"
-                    "Host: %s\r\n"
+                    "Host: %s:%u\r\n"
                     "Connection: close\r\n\r\n",
-                    request.path, firmware_addr, request.host);
+                    request.path, firmware_addr, request.host, request.port);
             request.bulk_request = 1;
 
             APP_HTTP_Request_Initialize();

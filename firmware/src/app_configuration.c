@@ -70,10 +70,10 @@ void APP_Configuration_Tasks(void)
             sprintf(request.urlheaders,
                     "GET /%s/%s?filter=ttn HTTP/1.1\r\n"
                     "User-Agent: TTNGateway\r\n"
-                    "Host: %s\r\n"
+                    "Host: %s:%u\r\n"
                     "Authorization: Key %s\r\n"
                     "Connection: close\r\n\r\n",
-                    "api/v2/gateways", appGWActivationData.configuration.id, request.host,
+                    "api/v2/gateways", appGWActivationData.configuration.id, request.host, request.port,
                     appGWActivationData.configuration.key);
 
             SYS_DEBUG(SYS_ERROR_DEBUG, "CONF: URL HEADER: %s\r\n", request.urlheaders);
