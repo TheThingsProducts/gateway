@@ -23,13 +23,15 @@ extern APP_GW_ACTIVATION_DATA appGWActivationData;
 
 extern http_request request;
 
+SYS_FS_HANDLE fileHandle;
+
 void APP_Configuration_Initialize(void)
 {
     memset(request.url, 0, sizeof(request.url));
     memset(request.urlheaders, 0, sizeof(request.urlheaders));
     memset(request.response_buffer, 0, sizeof(request.response_buffer));
     memset(request.data_buffer, 0, sizeof(request.data_buffer));
-    appConfigurationData.state = APP_CONFIGURATION_CONNECTING;
+    appConfigurationData.state = APP_CONFIGURATION_OPEN_FILE;
 }
 
 int8_t APP_Configuration_State()
@@ -39,13 +41,47 @@ int8_t APP_Configuration_State()
 
 void APP_Configuration_Reset()
 {
-    appConfigurationData.state = APP_CONFIGURATION_CONNECTING;
+    appConfigurationData.state = APP_CONFIGURATION_OPEN_FILE;
 }
 
 void APP_Configuration_Tasks(void)
 {
     switch(appConfigurationData.state)
     {
+	case APP_CONFIGURATION_OPEN_FILE:
+	{
+	    fileHandle = SYS_FS_FileOpen("/mnt/myDrive1/config.json",(SYS_FS_FILE_OPEN_READ));
+	    if(fileHandle != SYS_FS_HANDLE_INVALID){ // File open is successful
+                appConfigurationData.state = APP_CONFIGURATION_READ_FILE;
+	    } else {
+                SYS_DEBUG(SYS_ERROR_INFO, "CONF: Could not open config.json from SD Card\r\n");
+                appConfigurationData.state = APP_CONFIGURATION_CONNECTING;
+	    }
+	}
+	break;
+	case APP_CONFIGURATION_READ_FILE:
+	{
+	    int buffLen = 4096;
+	    char buffer[buffLen];
+            int readBytes = SYS_FS_FileRead(fileHandle, (void *)buffer, buffLen);
+            if(readBytes == -1){
+                SYS_DEBUG(SYS_ERROR_INFO, "CONF: Could not read config.json from SD Card\r\n");
+                appConfigurationData.state = APP_CONFIGURATION_CONNECTING;
+            } else {
+                buffer[readBytes] = '\0';
+                SYS_DEBUG(SYS_ERROR_INFO, "CONF: config.json read, len %d\r\n", readBytes);
+                SYS_FS_FileClose(fileHandle);
+
+                SYS_DEBUG(SYS_ERROR_DEBUG, "CONF: Stack size 1: %d\r\n", uxTaskGetStackHighWaterMark(NULL));
+                int r = _parseSettings(buffer);
+                SYS_DEBUG(SYS_ERROR_DEBUG, "CONF: Stack size 2: %d\r\n", uxTaskGetStackHighWaterMark(NULL));
+                if(r == EXIT_SUCCESS)
+                    appConfigurationData.state = APP_CONFIGURATION_DONE;
+                else
+                    appConfigurationData.state = APP_CONFIGURATION_CONNECTING;
+            }
+	}
+	break;
         case APP_CONFIGURATION_CONNECTING:
         {
             strncpy(APP_URL_Buffer, appGWActivationData.configuration.account_server_url, sizeof(APP_URL_Buffer));
@@ -201,12 +237,10 @@ void APP_Configuration_Tasks(void)
         case APP_CONFIGURATION_DONE:
             break;
         case APP_CONFIGURATION_KEY_FAILURE:
-            break;
         case APP_CONFIGURATION_SERVER_BUSY:
-            break;
         case APP_CONFIGURATION_INCOMPLETE:
-            break;
         case APP_CONFIGURATION_ERROR:
+	    APP_Configuration_Initialize();
             break;
         default:
         {
