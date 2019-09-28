@@ -392,6 +392,10 @@ void APP_WIFI_Tasks(void)
             {
                 case STATE_WAIT_CONFIG:
                 case STATE_TRANSACT:
+                    if (_activeConfig == CNFG_INFRA_MODE){
+                        _event = EVENT_NONE;
+                        break;
+                    }
                     // Tear down WiFi interface
                     APP_WIFI_IFModules_Disable();
                     APP_WIFI_IF_Down();
