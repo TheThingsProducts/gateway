@@ -80,9 +80,9 @@ void APP_FreqPlan_Tasks(void)
                 sprintf(request.urlheaders,
                         "GET /%s?filter=ttn HTTP/1.1\r\n"
                         "User-Agent: TTNGateway\r\n"
-                        "Host: %s\r\n"
+                        "Host: %s:%u\r\n"
                         "Connection: close\r\n\r\n",
-                        request.path, request.host);
+                        request.path, request.host, request.port);
 
                 APP_HTTP_Request_Initialize();
                 appFreqPlanData.state = APP_FREQPLAN_REQUESTING;
