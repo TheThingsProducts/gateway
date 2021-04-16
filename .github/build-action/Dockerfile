@@ -40,6 +40,12 @@ RUN /tmp/xc32-v${xc32_version}-full-install-linux-installer.run -- --mode unatte
 
 RUN /tmp/harmony_v${harmony_version}_linux_installer.run -- --mode unattended
 
+## Install Java (for web UI)
+
+RUN apt-get update && \
+  apt-get install -y openjdk-8-jre && \
+  rm -rf /var/lib/apt/lists/*
+
 ## Add Entrypoint
 
 COPY entrypoint.sh /entrypoint.sh
