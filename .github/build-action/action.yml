@@ -1,0 +1,5 @@
+name: 'Build Firmware'
+description: 'Build The Things Kickstarter Gateway Firmware'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

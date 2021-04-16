@@ -1,0 +1,47 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+      - beta
+      - stable
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+env:
+  MICROCHIP_DOWNLOAD_LOCATION: https://thethingsproducts.blob.core.windows.net/the-things-gateway/ci
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Build
+        uses: ./.github/build-action
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: |
+            firmware/firmware.hex
+            firmware/firmware-with-bootloader.hex
+            firmware/checksums
+            firmware/disassembly.txt
+      - name: Extract the name
+        id: extract_name
+        run: echo ::set-output name=NAME::${GITHUB_REF#refs/*/}
+      - name: Upload to Azure Storage
+        env:
+          AZURE_STORAGE_ACCOUNT: '${{ secrets.AZURE_STORAGE_ACCOUNT }}'
+          AZURE_STORAGE_KEY: '${{ secrets.AZURE_STORAGE_KEY }}'
+        run: |
+          az storage blob upload --container-name the-things-gateway --name "v1/${{ steps.extract_name.outputs.NAME }}/firmware.hex" --file "./firmware/firmware.hex"
+          az storage blob upload --container-name the-things-gateway --name "v1/${{ steps.extract_name.outputs.NAME }}/firmware-with-bootloader.hex" --file "./firmware/firmware-with-bootloader.hex"
+          az storage blob upload --container-name the-things-gateway --name "v1/${{ steps.extract_name.outputs.NAME }}/checksums" --file "./firmware/checksums"
+          az storage blob upload --container-name the-things-gateway --name "v1/${{ steps.extract_name.outputs.NAME }}/disassembly.txt" --file "./firmware/disassembly.txt"
