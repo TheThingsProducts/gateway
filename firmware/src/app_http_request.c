@@ -162,6 +162,13 @@ void APP_HTTP_Request_Tasks(void)
             //  SYS_CONSOLE_MESSAGE("WAITING ON TCP SOCKET\r\n");
             if(!NET_PRES_SocketIsConnected(appHTTPRequestData.socket))
             {
+                if(SYS_TMR_TickCountGet() - tcpTimeout >= SYS_TMR_TickCounterFrequencyGet() * 5)
+                {
+                    tcpTimeout = SYS_TMR_TickCountGet();
+                    timeout    = true;
+                    APP_HTTP_Request_CloseIfNeeded();
+                    appHTTPRequestData.state = APP_HTTP_REQUEST_ERROR;
+                }
                 // SYS_CONSOLE_MESSAGE("Error: TCP/IP not connected\r\n");
                 break;
             }
