@@ -93,7 +93,7 @@ void APP_FreqPlan_Tasks(void)
                 appFreqPlanData.state = APP_FREQPLAN_ERROR;
             }
             break;
-            case APP_CONFIGURATION_REQUESTING:
+            case APP_FREQPLAN_REQUESTING:
             {
                 APP_HTTP_Request_Tasks();
                 if(APP_HTTP_Request_State() == APP_HTTP_REQUEST_HTTP_DONE)
