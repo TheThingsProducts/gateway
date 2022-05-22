@@ -601,7 +601,7 @@ void handleDownlink(Router__DownlinkMessage* message, void* arg)
     pkt.frequency_deviation = message->gateway_configuration->frequency_deviation;
 
     pkt.preamble  = 8;
-    pkt.no_crc    = false;
+    pkt.no_crc    = true;
     pkt.no_header = false;
 
     uint16_t it = 0;
