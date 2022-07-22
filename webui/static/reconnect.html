@@ -1,24 +1,10 @@
 ~inc:header.inc~
-		  <center>
-		  </center>
-        <h1>Reconnecting Gateway</h1>
-		<div id="content">
-
-		<p>Please connect your computer wifi to: ("~nextSSID~")</p>
-
-		<p>As a reminder, this is the network the gateway was on:</p>
-		<ul>
-		<li><b>SSID:</b> "~prevSSID~"</li>
-		<li><b>WLAN Type:</b> ~prevWLAN~</li>
-		</ul>
-
-		<p>This is the network that your gateway will be going to:</p>
-		<ul>
-		<li><b>SSID:</b> "~nextSSID~"</li>
-		<li><b>WLAN Type:</b> ~nextWLAN~</li>
-		</ul>
-		</div>
-      
-      </form>
-  </body>
+<div class="reconnect container">
+<p>The Things Kickstarter Gateway is now reconnecting to WiFi.</p>
+<p>
+<strong>Old network:</strong> ~prevSSID~ <br />
+<strong>New network:</strong> ~nextSSID~
+</p>
+</div>
+</body>
 </html>

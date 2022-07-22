@@ -1,8 +1,8 @@
 +inc:header.inc
 +nextSSID
 +prevSSID
-+prevWLAN
-+nextWLAN
+prevWLAN
+nextWLAN
 +scanresult
 +scan
 +gwsettings

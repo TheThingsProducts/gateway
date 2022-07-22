@@ -1,42 +1,47 @@
 ~inc:header.inc~
-<h1>Gateway Settings</h1>
-		  <label for="gwid">
-		    <div class="label">Gateway ID</div>
-		    <input type="text" name="gwid" id="gwid">
-		    <div id="gwiderror" style="color:#770105;margin-top:2px;margin-left:2px;display:none;">The length of your gateway ID needs to be over 6 characters.</div>
-		  </label>
-
-		   <label for="ssid">
-		    <div class="label">WiFi Access Point</div>
-		    <table style="margin-top:-8px;">
-			    <tr>
-				    <td>
-				    	<select style="width:150px;" name="ssid" id="ssid" onchange="if (typeof(this.selectedIndex-1) != 'undefined') selectFoundNetwork(this.selectedIndex-1)"></select></td>
-				    <td>
-				    	<img style="margin-top:3px;" src="./images/scan.png" onclick="rescanNetwork()" id="scanbtn" name="scanbtn">
-				    </td>
-			    </tr>
-		    </table>
-		  </label>
-		  <input type="hidden" name="sec" id="sec" value="wpa2">
-		  <label for="key">
-		    <div class="label">WiFi Password</div>
-		    <input type="password" name="key" id="key">
-    		    <div id="keyerror" style="color:#770105;margin-top:2px;margin-left:2px;display:none;"></div>
-		  </label>
-
-		  <input type="checkbox" id="a"><label for="a" class="inl">Show advanced options</label>
-		  <div id="adv">
-		    <label for="asrv">
-		      <div class="label">Account Server</div>
-		      <input type="text" name="asrv" id="asrv">
-		    </label>
-		    <label for="gwkey">
-		      <div class="label">Gateway Key</div>
-		      <input type="text" name="gwky" id="gwky">
-		    </label>
-		  </div>  
-		  <div class="buttons"><button type="submit" class="save">Save</button></div>
-		</form>
-	</body>
+<div class="index container">
+<form id="form" action="settings.cgi" method="POST">
+<div class="field">
+<label class="label" for="label">Account Server</label>
+<input class="input" type="text" name="asrv" id="asrv" />
+<div class="error" id="asrv_error"></div>
+</div>
+<div class="field">
+<label class="label" for="gwid">Gateway ID</label>
+<input class="input" type="text" name="gwid" id="gwid" />
+<div class="error" id="gwid_error"></div>
+</div>
+<div class="field">
+<label class="label" for="gwky">Gateway Key</label>
+<input class="input" type="text" name="gwky" id="gwky" />
+<div class="error" id="gwky_error"></div>
+</div>
+<input type="hidden" name="wlan" id="wlan" />
+<div class="field">
+<label class="label" for="ssid">
+WiFi SSID
+<a href="#" id="startScan" class="button">
+<img src="images/scan.svg" /> scan
+</a>
+</label>
+<div id="ssidList">
+<label class="radio">
+<input type="radio" name="ssid"/>
+<img/>
+<span class="name"></span>
+</label>
+</div>
+<div class="error" id="ssid_error"></div>
+</div>
+<input type="hidden" name="sec" id="sec" />
+<div class="field">
+<label class="label" for="key">WiFi Password</label>
+<input class="input" type="text" name="key" id="key" />
+<div class="error" id="key_error"></div>
+</div>
+<button class="button" type="submit" class="save">Save</button>
+</form>
+</div>
+<script src="index.js"></script>
+</body>
 </html>
