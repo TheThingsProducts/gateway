@@ -642,9 +642,10 @@ static int8_t _pumpDNS(const char* hostname, IPV4_ADDR* ipv4Addr)
         case TCPIP_DNS_RES_PENDING:
             return 0;
         case TCPIP_DNS_RES_SERVER_TMO:
+            return 0;
         case TCPIP_DNS_RES_NO_IP_ENTRY:
         default:
-            SYS_DEBUG(SYS_ERROR_FATAL, "HTTP: TCPIP_DNS_IsResolved returned failure code %d\r\n", result);
+            SYS_DEBUG(SYS_ERROR_FATAL, "MQTT: TCPIP_DNS_IsResolved returned failure code %d\r\n", result);
             // SYS_CONSOLE_PRINT("status: %i\r\n", result);
             return -1;
     }
