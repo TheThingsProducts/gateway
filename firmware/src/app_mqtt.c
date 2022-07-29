@@ -174,7 +174,7 @@ void APP_MQTT_Tasks(void)
             {
                 retryTick = SYS_TMR_TickCountGet();
                 NetworkDisconnect(network);
-                appData.state = APP_TTNGWC_SOCKET_SETUP;
+                appData.state = APP_TTNGWC_ERROR;
                 SYS_DEBUG(SYS_ERROR_INFO, "MQTT: Opening socket timed out, restarting\r\n");
 
                 /*if (socket_setup_retry >= 3)
