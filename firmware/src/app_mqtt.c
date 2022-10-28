@@ -174,7 +174,7 @@ void APP_MQTT_Tasks(void)
             {
                 retryTick = SYS_TMR_TickCountGet();
                 NetworkDisconnect(network);
-                appData.state = APP_TTNGWC_SOCKET_SETUP;
+                appData.state = APP_TTNGWC_ERROR;
                 SYS_DEBUG(SYS_ERROR_INFO, "MQTT: Opening socket timed out, restarting\r\n");
 
                 /*if (socket_setup_retry >= 3)
@@ -601,7 +601,7 @@ void handleDownlink(Router__DownlinkMessage* message, void* arg)
     pkt.frequency_deviation = message->gateway_configuration->frequency_deviation;
 
     pkt.preamble  = 8;
-    pkt.no_crc    = false;
+    pkt.no_crc    = true;
     pkt.no_header = false;
 
     uint16_t it = 0;
@@ -642,9 +642,10 @@ static int8_t _pumpDNS(const char* hostname, IPV4_ADDR* ipv4Addr)
         case TCPIP_DNS_RES_PENDING:
             return 0;
         case TCPIP_DNS_RES_SERVER_TMO:
+            return 0;
         case TCPIP_DNS_RES_NO_IP_ENTRY:
         default:
-            SYS_DEBUG(SYS_ERROR_FATAL, "HTTP: TCPIP_DNS_IsResolved returned failure code %d\r\n", result);
+            SYS_DEBUG(SYS_ERROR_FATAL, "MQTT: TCPIP_DNS_IsResolved returned failure code %d\r\n", result);
             // SYS_CONSOLE_PRINT("status: %i\r\n", result);
             return -1;
     }

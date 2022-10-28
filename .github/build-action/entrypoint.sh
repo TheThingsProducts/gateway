@@ -2,6 +2,7 @@
 
 pushd firmware
 
+./patch_network.sh
 ./generate_version_header.sh
 ./fix_mplab.sh
 ./compile.sh

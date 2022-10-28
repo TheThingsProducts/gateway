@@ -162,7 +162,13 @@ void APP_HTTP_Request_Tasks(void)
             //  SYS_CONSOLE_MESSAGE("WAITING ON TCP SOCKET\r\n");
             if(!NET_PRES_SocketIsConnected(appHTTPRequestData.socket))
             {
-                // SYS_CONSOLE_MESSAGE("Error: TCP/IP not connected\r\n");
+                if(SYS_TMR_TickCountGet() - tcpTimeout >= SYS_TMR_TickCounterFrequencyGet() * 5)
+                {
+                    tcpTimeout = SYS_TMR_TickCountGet();
+                    timeout    = true;
+                    APP_HTTP_Request_CloseIfNeeded();
+                    appHTTPRequestData.state = APP_HTTP_REQUEST_ERROR;
+                }
                 break;
             }
 
@@ -416,6 +422,7 @@ static int8_t _pumpDNS(const char* hostname, IPV4_ADDR* ipv4Addr)
         case TCPIP_DNS_RES_PENDING:
             return 0;
         case TCPIP_DNS_RES_SERVER_TMO:
+            return 0;
         case TCPIP_DNS_RES_NO_IP_ENTRY:
         default:
             SYS_DEBUG(SYS_ERROR_FATAL, "HTTP: TCPIP_DNS_IsResolved returned failure code %d\r\n", result);
