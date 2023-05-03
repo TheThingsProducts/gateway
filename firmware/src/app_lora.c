@@ -129,7 +129,7 @@ static bool initLora(void)
 
     xTaskCreate((TaskFunction_t)dispatch_thread, "LORARX", usTaskStackSize, NULL, uxTaskPriority,
                 &loraRxThreadHandle); /* The task handle is not used. */
-    
+
     // RESET LOW
     PLIB_PORTS_PinClear(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_6);
     vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -397,7 +397,14 @@ static bool configureIFChain8(bool enable, uint8_t RFChain, int32_t offset_freq,
     {
         memset(&payload[2], 0x00, 6);
     }
-    return GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_IF8CONFIG, payload, sizeof(payload));
+
+    // An extra undocumented byte is needed at the start of the command.
+    // The byte seems to be ignored, but is relevant for command alignment.
+    // This was discovered by checking the output of the GATEWAY_MODULE_CMD_IF8CHAIN command.
+    uint8_t extended_payload[sizeof(payload) + 1] = {0};
+    memcpy(&extended_payload[1], &payload[0], sizeof(payload));
+
+    return GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_IF8CONFIG, extended_payload, sizeof(extended_payload));
 }
 
 static bool configureIFChain9(bool enable, uint8_t RFChain, int32_t offset_freq, uint32_t bandwidth, uint32_t datarate)
@@ -443,7 +450,7 @@ static bool configureIFChain9(bool enable, uint8_t RFChain, int32_t offset_freq,
 
 /*
  * This functions is called periodically and handles the LoRa module state machine.
- * 
+ *
  * This function is non-reentrant as it contains static data. It is used only from a single point only.
  */
 static bool sendPacket(loraTXPacket* txpkt)
@@ -480,18 +487,18 @@ static bool parseRXPacket(uint8_t* rx, loraRXPacket* pkt, size_t size)
     pkt->snr_maximum  = _SET_BYTES_32BIT(rx[31], rx[32], rx[33], rx[34]);
     pkt->crc          = _SET_BYTES_16BIT(rx[36], rx[35]);
     pkt->payload_size = _SET_BYTES_16BIT(rx[37], rx[38]);
-    
+
     if (pkt->payload_size + 39 != size)
     {
         return false;
     }
-    
+
     uint8_t i         = 0;
     for(i = 0; i < pkt->payload_size; i++)
     {
         pkt->payload[i] = rx[39 + i];
     }
-    
+
     return true;
 }
 
@@ -682,7 +689,7 @@ static void restart_lora_configuration(void)
 
 /*
  * This functions is called periodically and handles the LoRa module state machine.
- * 
+ *
  * This function is non-reentrant as it contains static data and calls non-reentrant functions.
  */
 void APP_LORA_Tasks(void)
@@ -863,7 +870,7 @@ static void receive_callback(uint8_t *data, size_t size)
     static loraRXPacket rxpkt = {0}, empty_rxpkt = {0};
     rxpkt = empty_rxpkt;
 
-    if (parseRXPacket(data, &rxpkt, size)) 
+    if (parseRXPacket(data, &rxpkt, size))
     {
         if(rxpkt.pkt_status == 0x10 || rxpkt.pkt_status == 0x01)
         {
@@ -882,7 +889,7 @@ static void receive_callback(uint8_t *data, size_t size)
     {
         GATEWAY_MODULE_INTERFACE_LOG("Unable to parse\r\n");
     }
-    
+
     sendRXReply(true); // request for next package
 }
 
@@ -896,7 +903,7 @@ static void dispatch_thread(void)
         if (r != 1)
         {
             // ignore GATEWAY_MODULE_INTERFACE_LOG("Read returned code: %i", r);
-            // Due to instable clock (some versions using the internal oscillator) many 
+            // Due to instable clock (some versions using the internal oscillator) many
             // bit error may occur resulting in DRV_USART_Read returning -1. Missing or
             // corrupt bytes are detected by higher layer using a checksum and retries.
             ;
@@ -906,7 +913,7 @@ static void dispatch_thread(void)
             GatewayModuleInterface_dispatch(c);
         }
     }
-    
+
     GATEWAY_MODULE_INTERFACE_LOG("Thread exit.");
 }
 
@@ -921,7 +928,7 @@ static void GATEWAY_MODULE_INTERFACE_LOG(const char *__restrict __format, ...)
     str[2] = 'M';
     str[3] = 'D';
     str[4] = ':';
-    
+
     va_list args;
     va_start (args, __format);
     int len = vsnprintf(&str[5], sizeof(str) - 8, __format, args);
