@@ -513,8 +513,11 @@ int sendUplink()
     gateway.has_rssi = 1;
     memcpy(&gateway.rssi, &recv_packet.rssi, 4);
 
-    gateway.has_snr = 1;
-    memcpy(&gateway.snr, &recv_packet.snr_average, 4);
+    if(recv_packet.modulation == LORA_MOD_LORA)
+    {
+        gateway.has_snr = 1;
+        memcpy(&gateway.snr, &recv_packet.snr_average, 4);
+    }
 
     up.gateway_metadata = &gateway;
 
