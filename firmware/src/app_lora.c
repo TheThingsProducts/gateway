@@ -445,7 +445,14 @@ static bool configureIFChain9(bool enable, uint8_t RFChain, int32_t offset_freq,
     {
         memset(&payload[2], 0x00, 9);
     }
-    return GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_IF9CONFIG, payload, sizeof(payload));
+
+    // An extra undocumented byte is needed at the start of the command.
+    // The byte seems to be ignored, but is relevant for command alignment.
+    // This was discovered by checking the output of the GATEWAY_MODULE_CMD_IF9CHAIN command.
+    uint8_t extended_payload[sizeof(payload) + 1] = {0};
+    memcpy(&extended_payload[1], &payload[0], sizeof(payload));
+
+    return GatewayModuleInterface_sendCommandWaitAck(GATEWAY_MODULE_CMD_IF9CONFIG, extended_payload, sizeof(extended_payload));
 }
 
 /*
