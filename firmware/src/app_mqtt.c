@@ -407,69 +407,77 @@ int sendUplink()
     protocol.protocol_case        = PROTOCOL__RX_METADATA__PROTOCOL_LORAWAN;
     Lorawan__Metadata lorawan     = LORAWAN__METADATA__INIT;
     lorawan.has_modulation        = 1;
-    lorawan.modulation            = LORAWAN__MODULATION__LORA;
-
-    char    datarate[9];
-    uint8_t offset = 3;
-    datarate[0]    = 'S';
-    datarate[1]    = 'F';
-
-    if(recv_packet.datarate == 0x02)
-        datarate[2] = '7';
-    else if(recv_packet.datarate == 0x04)
-        datarate[2] = '8';
-    else if(recv_packet.datarate == 0x08)
-        datarate[2] = '9';
-    else if(recv_packet.datarate == 0x10)
+    char datarate[9]              = {0};
+    char coderate[4]              = {0};
+    if(recv_packet.modulation == LORA_MOD_LORA)
     {
-        datarate[2] = '1';
-        datarate[3] = '0';
+        lorawan.modulation = LORAWAN__MODULATION__LORA;
+
+        uint8_t offset = 3;
+        datarate[0]    = 'S';
+        datarate[1]    = 'F';
+
+        if(recv_packet.datarate == 0x02)
+            datarate[2] = '7';
+        else if(recv_packet.datarate == 0x04)
+            datarate[2] = '8';
+        else if(recv_packet.datarate == 0x08)
+            datarate[2] = '9';
+        else if(recv_packet.datarate == 0x10)
+        {
+            datarate[2] = '1';
+            datarate[3] = '0';
+            offset++;
+        }
+        else if(recv_packet.datarate == 0x20)
+        {
+            datarate[2] = '1';
+            datarate[3] = '1';
+            offset++;
+        }
+        else
+        {
+            datarate[2] = '1';
+            datarate[3] = '2';
+            offset++;
+        }
+        datarate[offset] = 'B';
         offset++;
-    }
-    else if(recv_packet.datarate == 0x20)
-    {
-        datarate[2] = '1';
-        datarate[3] = '1';
+        datarate[offset] = 'W';
         offset++;
-    }
-    else
-    {
-        datarate[2] = '1';
-        datarate[3] = '2';
-        offset++;
-    }
-    datarate[offset] = 'B';
-    offset++;
-    datarate[offset] = 'W';
-    offset++;
-    if(recv_packet.bandwidth == 0x01)
-    {
-        datarate[offset]     = '5';
-        datarate[offset + 1] = '0';
-        datarate[offset + 2] = '0';
-    }
-    else if(recv_packet.bandwidth == 0x02)
-    {
-        datarate[offset]     = '2';
-        datarate[offset + 1] = '5';
-        datarate[offset + 2] = '0';
-    }
-    else
-    {
-        datarate[offset]     = '1';
-        datarate[offset + 1] = '2';
-        datarate[offset + 2] = '5';
-    }
-    datarate[offset + 3] = '\0';
-    lorawan.data_rate    = datarate;
+        if(recv_packet.bandwidth == 0x01)
+        {
+            datarate[offset]     = '5';
+            datarate[offset + 1] = '0';
+            datarate[offset + 2] = '0';
+        }
+        else if(recv_packet.bandwidth == 0x02)
+        {
+            datarate[offset]     = '2';
+            datarate[offset + 1] = '5';
+            datarate[offset + 2] = '0';
+        }
+        else
+        {
+            datarate[offset]     = '1';
+            datarate[offset + 1] = '2';
+            datarate[offset + 2] = '5';
+        }
+        datarate[offset + 3] = '\0';
+        lorawan.data_rate    = datarate;
 
-    char coderate[4];
-    coderate[0] = '4';
-    coderate[1] = '/';
-    coderate[2] = '4' + recv_packet.coderate;
-    coderate[3] = '\0';
+        coderate[0] = '4';
+        coderate[1] = '/';
+        coderate[2] = '4' + recv_packet.coderate;
+        coderate[3] = '\0';
 
-    lorawan.coding_rate  = coderate;
+        lorawan.coding_rate  = coderate;
+    } else {
+        lorawan.modulation   = LORAWAN__MODULATION__FSK;
+        lorawan.has_bit_rate = 1;
+        lorawan.bit_rate     = 50000; // This corresponds to data rate 0x50.
+    }
+
     protocol.lorawan     = &lorawan;
     up.protocol_metadata = &protocol;
 
@@ -543,65 +551,74 @@ void handleDownlink(Router__DownlinkMessage* message, void* arg)
     pkt.tx_power = message->gateway_configuration->power;
 
     Lorawan__Modulation modu = message->protocol_configuration->lorawan->modulation;
-    pkt.modulation           = LORA_MOD_LORA;
-
-    uint8_t  spreadingfactor = 7;
-    uint16_t bandwidth       = 0;
-
-    char* sfbw = message->protocol_configuration->lorawan->data_rate;
-    if(sfbw[2] == '1')
+    if(modu == LORAWAN__MODULATION__LORA)
     {
-        char sf[3];
-        sf[0]           = sfbw[2];
-        sf[1]           = sfbw[3];
-        sf[2]           = '\0';
-        spreadingfactor = atoi(sf);
+        pkt.modulation           = LORA_MOD_LORA;
 
-        char bw[4];
-        bw[0]     = sfbw[6];
-        bw[1]     = sfbw[7];
-        bw[2]     = sfbw[8];
-        bw[3]     = '\0';
-        bandwidth = atoi(bw);
+        uint8_t  spreadingfactor = 7;
+        uint16_t bandwidth       = 0;
+
+        char* sfbw = message->protocol_configuration->lorawan->data_rate;
+        if(sfbw[2] == '1')
+        {
+            char sf[3];
+            sf[0]           = sfbw[2];
+            sf[1]           = sfbw[3];
+            sf[2]           = '\0';
+            spreadingfactor = atoi(sf);
+
+            char bw[4];
+            bw[0]     = sfbw[6];
+            bw[1]     = sfbw[7];
+            bw[2]     = sfbw[8];
+            bw[3]     = '\0';
+            bandwidth = atoi(bw);
+        }
+        else
+        {
+            char sf[2];
+            sf[0]           = sfbw[2];
+            sf[1]           = '\0';
+            spreadingfactor = atoi(sf);
+
+            char bw[4];
+            bw[0]     = sfbw[5];
+            bw[1]     = sfbw[6];
+            bw[2]     = sfbw[7];
+            bw[3]     = '\0';
+            bandwidth = atoi(bw);
+        }
+        pkt.datarate = 0x02 << (spreadingfactor - 7);
+
+        if(bandwidth == 500)
+            pkt.bandwidth = LORA_BW_500K;
+        else if(bandwidth == 250)
+            pkt.bandwidth = LORA_BW_250K;
+        else if(bandwidth == 125)
+            pkt.bandwidth = LORA_BW_125K;
+        else
+            pkt.bandwidth = LORA_BW_250K;
+
+        char*   cr       = message->protocol_configuration->lorawan->coding_rate;
+        uint8_t coderate = ((cr[2] - 4) - 0x30);
+        pkt.coderate     = coderate;
+
+        if(message->gateway_configuration->has_polarization_inversion)
+        {
+            pkt.invert_polarity = message->gateway_configuration->polarization_inversion;
+        }
+
+        pkt.preamble  = 8;
+        pkt.no_crc    = true;
+    } else {
+        pkt.modulation          = LORA_MOD_FSK;
+        pkt.bandwidth           = LORA_BW_125K;
+        pkt.datarate            = 50000;
+        pkt.frequency_deviation = 25;
+        pkt.preamble            = 5;
+        pkt.no_crc              = false;
     }
-    else
-    {
-        char sf[2];
-        sf[0]           = sfbw[2];
-        sf[1]           = '\0';
-        spreadingfactor = atoi(sf);
 
-        char bw[4];
-        bw[0]     = sfbw[5];
-        bw[1]     = sfbw[6];
-        bw[2]     = sfbw[7];
-        bw[3]     = '\0';
-        bandwidth = atoi(bw);
-    }
-    pkt.datarate = 0x02 << (spreadingfactor - 7);
-
-    if(bandwidth == 500)
-        pkt.bandwidth = LORA_BW_500K;
-    else if(bandwidth == 250)
-        pkt.bandwidth = LORA_BW_250K;
-    else if(bandwidth == 125)
-        pkt.bandwidth = LORA_BW_125K;
-    else
-        pkt.bandwidth = LORA_BW_250K;
-
-    char*   cr       = message->protocol_configuration->lorawan->coding_rate;
-    uint8_t coderate = ((cr[2] - 4) - 0x30);
-    pkt.coderate     = coderate;
-
-    if(message->gateway_configuration->has_polarization_inversion)
-    {
-        pkt.invert_polarity = message->gateway_configuration->polarization_inversion;
-    }
-
-    pkt.frequency_deviation = message->gateway_configuration->frequency_deviation;
-
-    pkt.preamble  = 8;
-    pkt.no_crc    = true;
     pkt.no_header = false;
 
     uint16_t it = 0;
