@@ -44,7 +44,7 @@ jobs:
             firmware/disassembly.txt
       - name: Extract the name
         id: extract_name
-        run: echo ::set-output name=NAME::${GITHUB_REF#refs/*/}
+        run: echo "NAME=${GITHUB_REF#refs/*/}" >> $GITHUB_STATE
       - name: Upload to Azure Storage
         env:
           AZURE_STORAGE_ACCOUNT: '${{ secrets.AZURE_STORAGE_ACCOUNT }}'
