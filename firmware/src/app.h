@@ -182,7 +182,7 @@ extern "C"
         uint8_t  rf_chain;
         uint8_t  modulation;
         uint8_t  bandwidth;
-        uint8_t  datarate;
+        uint32_t datarate;
         uint8_t  coderate;
         int32_t  rssi;
         int32_t  snr_average;

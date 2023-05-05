@@ -475,7 +475,7 @@ int sendUplink()
     } else {
         lorawan.modulation   = LORAWAN__MODULATION__FSK;
         lorawan.has_bit_rate = 1;
-        lorawan.bit_rate     = 50000; // This corresponds to data rate 0x50.
+        lorawan.bit_rate     = recv_packet.datarate;
     }
 
     protocol.lorawan     = &lorawan;
@@ -542,26 +542,28 @@ void handleDownlink(Router__DownlinkMessage* message, void* arg)
     tx_pkt_cnt++;
     loraTXPacket pkt = {0};
 
-    pkt.frequency = message->gateway_configuration->frequency;
-    pkt.tx_mode   = message->gateway_configuration->has_timestamp;
+    Gateway__TxConfiguration *gateway_configuration = message->gateway_configuration;
+    Lorawan__TxConfiguration *lorawan               = message->protocol_configuration->lorawan;
 
-    if(message->gateway_configuration->has_timestamp)
+    pkt.frequency = gateway_configuration->frequency;
+    pkt.tx_mode   = gateway_configuration->has_timestamp;
+
+    if(gateway_configuration->has_timestamp)
     {
-        pkt.timestamp = message->gateway_configuration->timestamp;
+        pkt.timestamp = gateway_configuration->timestamp;
     }
 
     pkt.rf_chain = 0;
-    pkt.tx_power = message->gateway_configuration->power;
+    pkt.tx_power = gateway_configuration->power;
 
-    Lorawan__Modulation modu = message->protocol_configuration->lorawan->modulation;
-    if(modu == LORAWAN__MODULATION__LORA)
+    if(lorawan->modulation == LORAWAN__MODULATION__LORA)
     {
-        pkt.modulation           = LORA_MOD_LORA;
+        pkt.modulation = LORA_MOD_LORA;
 
         uint8_t  spreadingfactor = 7;
         uint16_t bandwidth       = 0;
 
-        char* sfbw = message->protocol_configuration->lorawan->data_rate;
+        char* sfbw = lorawan->data_rate;
         if(sfbw[2] == '1')
         {
             char sf[3];
@@ -602,22 +604,30 @@ void handleDownlink(Router__DownlinkMessage* message, void* arg)
         else
             pkt.bandwidth = LORA_BW_250K;
 
-        char*   cr       = message->protocol_configuration->lorawan->coding_rate;
+        char*   cr       = lorawan->coding_rate;
         uint8_t coderate = ((cr[2] - 4) - 0x30);
         pkt.coderate     = coderate;
 
-        if(message->gateway_configuration->has_polarization_inversion)
+        if(gateway_configuration->has_polarization_inversion)
         {
-            pkt.invert_polarity = message->gateway_configuration->polarization_inversion;
+            pkt.invert_polarity = gateway_configuration->polarization_inversion;
         }
 
         pkt.preamble  = 8;
         pkt.no_crc    = true;
     } else {
+        uint32_t bit_rate            = lorawan->bit_rate;
+        uint32_t frequency_deviation = bit_rate / 2;
+
+        if(gateway_configuration->has_frequency_deviation)
+        {
+            frequency_deviation = gateway_configuration->frequency_deviation;
+        }
+
         pkt.modulation          = LORA_MOD_FSK;
         pkt.bandwidth           = LORA_BW_125K;
-        pkt.datarate            = 50000;
-        pkt.frequency_deviation = 25;
+        pkt.datarate            = bit_rate;
+        pkt.frequency_deviation = frequency_deviation / 1000;
         pkt.preamble            = 5;
         pkt.no_crc              = false;
     }
