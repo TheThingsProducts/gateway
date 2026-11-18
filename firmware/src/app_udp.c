@@ -194,6 +194,8 @@ static int jsmn_streq(const char* json, jsmntok_t* t, const char* s)
                  strlen(s) == (size_t)(t->end - t->start));
 }
 
+static uint32_t parse_freq_mhz(const char* s);
+
 /* ── PULL_RESP parser ─────────────────────────────────────────────────── */
 static bool parse_pull_resp(const uint8_t* buf, uint16_t len, loraTXPacket* pkt)
 {
@@ -250,7 +252,7 @@ static bool parse_pull_resp(const uint8_t* buf, uint16_t len, loraTXPacket* pkt)
         }
         else if(jsmn_streq(json, &tok[i], "freq"))
         {
-            pkt->frequency = (uint32_t)(atof(val) * 1e6);
+            pkt->frequency = parse_freq_mhz(val);
         }
         else if(jsmn_streq(json, &tok[i], "rfch"))
         {
@@ -307,6 +309,38 @@ static bool parse_pull_resp(const uint8_t* buf, uint16_t len, loraTXPacket* pkt)
     return true;
 }
 
+/* ── frequency as exact "MHz" string ──────────────────────────────────── */
+/* XC32 builds this firmware with 32-bit doubles, so "(double)hz / 1e6" with
+ * "%.6f" prints values like 868.300048 instead of 868.300000. ChirpStack matches
+ * "freq" exactly against the region's channel list and drops anything else
+ * ("Unknown channel for frequency"); TTN tolerates it. Format with integer
+ * arithmetic instead. The module value is rounded to 500 Hz as a safety net
+ * (all LoRaWAN channel frequencies are multiples of 500 Hz). */
+static void freq_mhz_str(uint32_t hz, char* out, size_t outsz)
+{
+    hz = ((hz + 250u) / 500u) * 500u;
+    snprintf(out, outsz, "%lu.%06lu", (unsigned long)(hz / 1000000u),
+             (unsigned long)(hz % 1000000u));
+}
+
+/* Parse "868.1" / "868.100000" to Hz without floating point. */
+static uint32_t parse_freq_mhz(const char* s)
+{
+    uint32_t mhz = 0, frac = 0, digits = 0;
+    while(*s >= '0' && *s <= '9') mhz = mhz * 10u + (uint32_t)(*s++ - '0');
+    if(*s == '.')
+    {
+        s++;
+        while(*s >= '0' && *s <= '9' && digits < 6)
+        {
+            frac = frac * 10u + (uint32_t)(*s++ - '0');
+            digits++;
+        }
+        while(digits++ < 6) frac *= 10u;
+    }
+    return mhz * 1000000u + frac;
+}
+
 /* ── PUSH_DATA builder ────────────────────────────────────────────────── */
 static uint16_t build_push_data(const loraRXPacket* pkt, uint8_t* buf, uint16_t bufsz)
 {
@@ -344,6 +378,9 @@ static uint16_t build_push_data(const loraRXPacket* pkt, uint8_t* buf, uint16_t 
     else
         snprintf(datr, sizeof(datr), "%u", (unsigned)pkt->datarate);
 
+    char freq_str[16];
+    freq_mhz_str(pkt->frequency, freq_str, sizeof(freq_str));
+
     float rssi_f, snr_f;
     memcpy(&rssi_f, &pkt->rssi,        sizeof(float));
     memcpy(&snr_f,  &pkt->snr_average, sizeof(float));
@@ -374,7 +411,7 @@ static uint16_t build_push_data(const loraRXPacket* pkt, uint8_t* buf, uint16_t 
             "{\"rxpk\":[{"
             "%s"
             "\"tmst\":%lu,"
-            "\"freq\":%.6f,"
+            "\"freq\":%s,"
             "\"chan\":%u,"
             "\"rfch\":%u,"
             "\"stat\":%d,"
@@ -388,7 +425,7 @@ static uint16_t build_push_data(const loraRXPacket* pkt, uint8_t* buf, uint16_t 
             "}]}",
             time_field,
             (unsigned long)pkt->timestamp,
-            (double)pkt->frequency / 1e6,
+            freq_str,
             (unsigned)pkt->if_chain,
             (unsigned)pkt->rf_chain,
             (int)crc_stat,
@@ -406,7 +443,7 @@ static uint16_t build_push_data(const loraRXPacket* pkt, uint8_t* buf, uint16_t 
             "{\"rxpk\":[{"
             "%s"
             "\"tmst\":%lu,"
-            "\"freq\":%.6f,"
+            "\"freq\":%s,"
             "\"chan\":%u,"
             "\"rfch\":%u,"
             "\"stat\":%d,"
@@ -418,7 +455,7 @@ static uint16_t build_push_data(const loraRXPacket* pkt, uint8_t* buf, uint16_t 
             "}]}",
             time_field,
             (unsigned long)pkt->timestamp,
-            (double)pkt->frequency / 1e6,
+            freq_str,
             (unsigned)pkt->if_chain,
             (unsigned)pkt->rf_chain,
             (int)crc_stat,
@@ -832,9 +869,13 @@ void APP_UDP_Tasks(void)
             break;
         }
 
-        /* ── DISABLED: no-op ─────────────────────────────────────────── */
+        /* ── DISABLED: discard queued RX packets so they are not sent stale later ── */
         case APP_UDP_DISABLED:
+        {
+            loraRXPacket drop;
+            while(dequeueUDPRX(&drop)) {}
             break;
+        }
 
         default:
             s_state = APP_UDP_INIT;
