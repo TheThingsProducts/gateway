@@ -18,6 +18,11 @@
 
 #define FATAL_ERROR_REBOOT_TIMEOUT 10      // seconds till reboot after entering the error state
 #define FIRMWARE_CHECK_TIMEOUT (24 * 3600) // one day before recheck if new firmware is available
+/* Issue #2: consecutive MQTT failures tolerated with an MQTT-only reconnect before the
+   whole network stack is torn down and re-initialised (which used to happen on every
+   single publish timeout and forced a fresh TLS session on a fragmented heap). */
+#define MQTT_ERRORS_BEFORE_NETWORK_RESET 3
+static uint8_t mqttErrorCount = 0;
 #define BLINK_FREQ_FAST 10
 #define BLINK_FREQ_SLOW 2
 
@@ -594,13 +599,26 @@ void APP_Tasks(void)
             }
             else if(APP_MQTT_GET_STATE() == APP_TTNGWC_ERROR)
             {
-                SYS_PRINT("\r\nMAIN: MQTT error\r\n");
                 ErrorMessageWarning_Set(ERROR_MESSAGE_WARNING_MQTT_COMMUNICATION_FAILURE);
-                _changeState(APP_STATE_WAIT_FOR_INTERNET_WHILE_OPERATIONAL);
+                mqttErrorCount++;
+                if(mqttErrorCount < MQTT_ERRORS_BEFORE_NETWORK_RESET)
+                {
+                    SYS_PRINT("\r\nMAIN: MQTT error, reconnecting MQTT only (%u)\r\n", (unsigned)mqttErrorCount);
+                    appData.mqtt_connection_state = false;
+                    _statSet(LED_MQTT, OFF);
+                    APP_MQTT_Reset();
+                }
+                else
+                {
+                    SYS_PRINT("\r\nMAIN: MQTT error, re-initialising network\r\n");
+                    mqttErrorCount = 0;
+                    _changeState(APP_STATE_WAIT_FOR_INTERNET_WHILE_OPERATIONAL);
+                }
             }
             else if(!appData.mqtt_connection_state && APP_MQTT_GET_STATE() == APP_TTNGWC_IDLE)
             {
                 appData.mqtt_connection_state = true;
+                mqttErrorCount                = 0;
                 _statSet(LED_MQTT, ON);
                 SYS_PRINT("\r\n*************************");
                 SYS_PRINT("\r\nMAIN: Gateway bridging");
