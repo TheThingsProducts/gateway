@@ -135,6 +135,7 @@ const HEAD_MAGIC_t _HEAD_MAGIC = {'h', 'e', 'a', 'p', 's', 't', 'r', 't'};
 const HEAD_MAGIC_t _VOID_MAGIC = {'h', 'e', 'a', 'p', 'v', 'o', 'i', 'd'};
 const TAIL_MAGIC_t _TAIL_MAGIC = {'h', 'e', 'a', 'p', 'f', 'i', 'n', 'i'};
 
+volatile size_t g_track_heap_last_request = 0; /* size of the most recent allocation request */
 static size_t _total = 0;
 static size_t _max   = 0;
 
@@ -162,6 +163,7 @@ void* malloc(size_t xWantedSize)
         // increase buffer size to hold the size value
         xWantedSize += _OVERHEAD_SIZE;
         // actual allocation
+        g_track_heap_last_request = xWantedSize;
         pvReturn = pvPortMalloc_orig(xWantedSize);
         if(pvReturn != NULL)
         {
@@ -195,6 +197,7 @@ void* calloc(size_t nmemb, size_t xSize)
         // increase buffer size to hold the size value
         size_t xWantedSize = _OVERHEAD_SIZE + nmemb * xSize;
         // actual allocation (used malloc in stead of calloc as it starts with size value)
+        g_track_heap_last_request = xWantedSize;
         pvReturn = pvPortMalloc_orig(xWantedSize);
         if(pvReturn != NULL)
         {
@@ -229,6 +232,7 @@ void* realloc(void* pv, size_t xWantedSize)
         // increase buffer size to hold the size value
         xWantedSize += _OVERHEAD_SIZE;
         // actual allocation
+        g_track_heap_last_request = xWantedSize;
         pvReturn = pvPortMalloc_orig(xWantedSize);
         if(pvReturn != NULL)
         {

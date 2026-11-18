@@ -101,8 +101,11 @@ void ErrorMessageFatal_StoreInvalidPointer(uint32_t epc, uint32_t nested_epc)
 
 void ErrorMessageFatal_StoreAssert(char* file, uint16_t line)
 {
-    REBOOT_ERROR_INFO.magic = ERROR_MESSAGES_MAGIC;
-    REBOOT_ERROR_INFO.type  = ERROR_MESSAGES_TYPE_ASSERT;
+    /* Write through the uncached alias: the cached write was lost on the soft reset
+       that follows, so assert records never showed up at the next boot (issue #2). */
+    volatile reboot_t* p = (volatile reboot_t*)ERROR_MESSAGES_ADDRESS_UNCACHED;
+    p->magic = ERROR_MESSAGES_MAGIC;
+    p->type  = ERROR_MESSAGES_TYPE_ASSERT;
 
     // Store last characters of the file name before the extension
     char* f = strrchr(file, '.'); // find extension
@@ -112,18 +115,19 @@ void ErrorMessageFatal_StoreAssert(char* file, uint16_t line)
     for(i = sizeof(REBOOT_ERROR_INFO.payload.assert.file) - 1; i >= 0; i--)
     {
         f--;
-        REBOOT_ERROR_INFO.payload.assert.file[i] =
+        p->payload.assert.file[i] =
             f >= file ? *f : ' '; // copy last characters, if filename is short prefix it with spaces
     }
 
-    REBOOT_ERROR_INFO.payload.assert.line = line;
+    p->payload.assert.line = line;
 }
 
 void ErrorMessageFatal_StoreApplicationError(uint32_t error)
 {
-    REBOOT_ERROR_INFO.magic                           = ERROR_MESSAGES_MAGIC;
-    REBOOT_ERROR_INFO.type                            = ERROR_MESSAGES_TYPE_INVALID_POINTER;
-    REBOOT_ERROR_INFO.payload.application_error.error = error;
+    volatile reboot_t* p               = (volatile reboot_t*)ERROR_MESSAGES_ADDRESS_UNCACHED;
+    p->magic                           = ERROR_MESSAGES_MAGIC;
+    p->type                            = ERROR_MESSAGES_TYPE_INVALID_POINTER;
+    p->payload.application_error.error = error;
 }
 
 static bool _RetrieveFatalError(ERROR_MESSAGES_TYPES_t* type, uint8_t payload[ERROR_MESSAGES_PAYLOAD_SIZE])

@@ -33,6 +33,10 @@ size_t TrackHeap_MaxUsage();
 void   TrackHeap_ClearList(void);
 void   TrackHeap_PrintList(void);
 
+/* Diagnostics (issue #2): implemented in heap_2.c / set in track_heap.c */
+size_t xPortGetLargestFreeBlock(size_t* pxFreeBlocks);
+extern volatile size_t g_track_heap_last_request;
+
 #endif /* _TRACK_HEAP_H */
 
 /* *****************************************************************************

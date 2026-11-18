@@ -172,7 +172,12 @@ static void _SYS_Tasks ( void)
 
             size_t libc_heap_usage_total = TrackHeap_TotalUsage();
             size_t libc_heap_usage_max = TrackHeap_MaxUsage();
-            SYS_DEBUG(SYS_ERROR_INFO, "MON: heap usage: %dKB (%dKB), free: %dKB\r\n", libc_heap_usage_total / 1024, libc_heap_usage_max / 1024,xPortGetFreeHeapSize() / 1024);
+            size_t mon_blocks  = 0;
+            size_t mon_largest = xPortGetLargestFreeBlock(&mon_blocks);
+            SYS_DEBUG(SYS_ERROR_INFO, "MON: heap usage: %dKB (%dKB), free: %dKB, largest free: %u B in %u blocks, up: %lu s\r\n",
+                      libc_heap_usage_total / 1024, libc_heap_usage_max / 1024, xPortGetFreeHeapSize() / 1024,
+                      (unsigned)mon_largest, (unsigned)mon_blocks,
+                      (unsigned long)(SYS_TMR_TickCountGet() / SYS_TMR_TickCounterFrequencyGet()));
         }
         /* Task Delay */
         vTaskDelay(1 / portTICK_PERIOD_MS);
