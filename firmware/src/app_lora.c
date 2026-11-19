@@ -121,8 +121,14 @@ static bool initLora(void)
     // RESET HIGH
     PLIB_PORTS_PinSet(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_6);
 
-    /* Open USART Driver instance 1 (USART1 in this case) and obtain a handle to it. */
-    appData.USARTHandle = DRV_USART_Open(DRV_USART_INDEX_1, DRV_IO_INTENT_READWRITE | DRV_IO_INTENT_BLOCKING);
+    /* Open USART Driver instance 1 (USART1 in this case) twice: one client for reading and one for
+     * writing. A Harmony USART client has a single buffer object that blocking DRV_USART_Read and
+     * DRV_USART_Write both use. With one shared handle the write of the LoRa task overwrote the
+     * buffer object the dispatch thread was pending on, and the writer could spin forever in
+     * `while(bufferObj->inUse)` once the dispatch thread had re-armed its read (watchdog reset
+     * during module configuration, issue #3). */
+    appData.USARTHandle      = DRV_USART_Open(DRV_USART_INDEX_1, DRV_IO_INTENT_READ | DRV_IO_INTENT_BLOCKING);
+    appData.USARTWriteHandle = DRV_USART_Open(DRV_USART_INDEX_1, DRV_IO_INTENT_WRITE | DRV_IO_INTENT_BLOCKING);
 
     uint16_t    usTaskStackSize = configMINIMAL_STACK_SIZE;
     UBaseType_t uxTaskPriority  = TASK_PRIORITY_LORA_READ;
@@ -136,7 +142,7 @@ static bool initLora(void)
     // RESET HIGH
     PLIB_PORTS_PinSet(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_6);
 
-    if(appData.USARTHandle != DRV_HANDLE_INVALID)
+    if(appData.USARTHandle != DRV_HANDLE_INVALID && appData.USARTWriteHandle != DRV_HANDLE_INVALID)
     {
         init_complete = true;
     }
@@ -697,6 +703,7 @@ static void restart_lora_configuration(void)
 {
     SYS_DEBUG(SYS_ERROR_FATAL, "LORA: RESET MODULE\r\n");
     DRV_USART_Close(appData.USARTHandle);
+    DRV_USART_Close(appData.USARTWriteHandle);
     // TODO Verify untested fix. Here we power cycle the module as resetting (done in loraInit) the module was not
     // enough.
     loraSet(false);
@@ -863,7 +870,7 @@ static bool write_uart(uint8_t *data, size_t size)
 {
     if (size > 0)
     {
-        size_t w = DRV_USART_Write(appData.USARTHandle, data, size);
+        size_t w = DRV_USART_Write(appData.USARTWriteHandle, data, size);
         ASSERT(w == size, "LORA Uart write should be blocking");
         if (w != size)
         {

@@ -399,7 +399,8 @@ extern "C"
     typedef struct
     {
         APP_STATES_LORA state;
-        DRV_HANDLE      USARTHandle;
+        DRV_HANDLE      USARTHandle;      // read handle, used by the LORARX dispatch thread only
+        DRV_HANDLE      USARTWriteHandle; // write handle, serialised by g_gateway_module_interface_lock
         // SX1301_CONF     LORAconf;
 
         uint8_t rx_uart_buffer[UART_BUFF_LENGTH]; // data received
