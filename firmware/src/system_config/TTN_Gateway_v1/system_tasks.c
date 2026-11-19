@@ -142,23 +142,32 @@ static void _SYS_Tasks ( void)
     while(1)
     {
         /* Maintain system services */
+        wdt_sys_stage = 1;
         SYS_DEVCON_Tasks(sysObj.sysDevcon);
         /* Maintain the file system state machine. */
+        wdt_sys_stage = 2;
         SYS_FS_Tasks();
+        wdt_sys_stage = 3;
         SYS_CONSOLE_Tasks(sysObj.sysConsole0);
         /* SYS_COMMAND layer tasks routine */ 
+        wdt_sys_stage = 4;
         SYS_CMD_Tasks();
         /* SYS_TMR Device layer tasks routine */ 
+        wdt_sys_stage = 5;
         SYS_TMR_Tasks(sysObj.sysTmr);
 
         /* Maintain Device Drivers */
+        wdt_sys_stage = 6;
         DRV_SST25VF064C_Tasks(sysObj.drvSst25vf064c0);
+        wdt_sys_stage = 7;
         DRV_SDCARD_Tasks(sysObj.drvSDCard);
 
         /* Maintain Middleware */
+        wdt_sys_stage = 8;
         NET_PRES_Tasks(sysObj.netPres);
         /* Maintain the TCP/IP Stack*/
 
+        wdt_sys_stage = 9;
         wdt_arm_thread_0();
         wdt_kick();
         if(TIMEOUT_THREAD_0(10))

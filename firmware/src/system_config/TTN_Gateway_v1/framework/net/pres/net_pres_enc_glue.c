@@ -42,6 +42,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "crypto/src/random.h"
 
 #include "app.h"
+#include "helper_wdt.h"
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
@@ -295,13 +296,22 @@ NET_PRES_EncSessionStatus NET_PRES_EncProviderClientConnect0(void * providerData
         _sni_hostname[0] = '\0';
     }
 
+    /* One handshake step per call. This function is called from NET_PRES_Tasks() in the SYS task;
+     * it used to loop here until the handshake was complete, which kept the SYS task from
+     * clearing the watchdog and starved the APP and LoRa tasks whenever the peer's data was late
+     * (watchdog reset after 8 s, issue #5). NET_PRES_Tasks() calls again while the socket status
+     * is NET_PRES_ENC_SS_CLIENT_NEGOTIATING; the callers time out the wait. */
     NPEG_DEBUG_PRINT("  . Performing the SSL/TLS handshake...");
-    while ((ret = mbedtls_ssl_handshake(&mbed_ctx.ssl)) != 0) {
-        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-            NPEG_DEBUG_PRINT(" failed\n\r  ! mbedtls_ssl_handshake returned -0x%x\r\n", -ret);
-            NET_PRES_EncProviderStreamClientDeinit0();
-            return ret;
+    ret = mbedtls_ssl_handshake(&mbed_ctx.ssl);
+    if (ret != 0) {
+        wdt_tls_loops++;
+        wdt_tls_last = ret;
+        if (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
+            return NET_PRES_ENC_SS_CLIENT_NEGOTIATING;
         }
+        NPEG_DEBUG_PRINT(" failed\n\r  ! mbedtls_ssl_handshake returned -0x%x\r\n", -ret);
+        NET_PRES_EncProviderStreamClientDeinit0();
+        return ret;
     }
 
     NPEG_DEBUG_PRINT("  . Verifying peer X.509 certificate...");

@@ -22,6 +22,12 @@ extern "C"
 
     void wdt_kick();
 
+    /* Watchdog diagnostics (issue #5) */
+    extern volatile uint8_t  wdt_sys_stage;
+    extern volatile uint32_t wdt_tls_loops;
+    extern volatile int32_t  wdt_tls_last;
+    void wdt_tick_check(void);
+
 #ifdef __cplusplus
 }
 #endif

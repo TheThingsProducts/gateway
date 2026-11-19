@@ -117,6 +117,13 @@ void vApplicationMallocFailedHook( void )
           (unsigned)largest, (unsigned)blocks);
 }
 
+/* Called from the tick interrupt (configUSE_TICK_HOOK): watchdog diagnostics, see helper_wdt.c */
+extern void wdt_tick_check(void);
+void vApplicationTickHook( void )
+{
+    wdt_tick_check();
+}
+
 
 
 /*******************************************************************************

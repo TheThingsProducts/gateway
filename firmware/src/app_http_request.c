@@ -13,6 +13,8 @@ APP_HTTP_REQUEST_DATA appHTTPRequestData;
 
 http_request request = {0};
 
+#define TLS_CONNECT_TIMEOUT_S 10 // a normal handshake takes 0.6 - 1.7 s
+
 uint32_t tcpTimeout   = 0;
 bool     timeout      = false;
 bool     timeout_wait = false;
@@ -202,6 +204,7 @@ void APP_HTTP_Request_Tasks(void)
                 else
                 {
                     SYS_DEBUG(SYS_ERROR_INFO, "HTTP: Wait for TLS Connect\r\n");
+                    tcpTimeout               = SYS_TMR_TickCountGet();
                     appHTTPRequestData.state = APP_HTTP_REQUEST_WAIT_FOR_TLS_CONNECT;
                 }
             }
@@ -217,6 +220,14 @@ void APP_HTTP_Request_Tasks(void)
         {
             if(NET_PRES_SocketIsNegotiatingEncryption(appHTTPRequestData.socket))
             {
+                if(SYS_TMR_TickCountGet() - tcpTimeout >= SYS_TMR_TickCounterFrequencyGet() * TLS_CONNECT_TIMEOUT_S)
+                {
+                    SYS_DEBUG(SYS_ERROR_INFO, "HTTP: TLS Connect timed out - Aborting\r\n");
+                    tcpTimeout = SYS_TMR_TickCountGet();
+                    timeout    = true;
+                    APP_HTTP_Request_CloseIfNeeded();
+                    appHTTPRequestData.state = APP_HTTP_REQUEST_ERROR;
+                }
                 break;
             }
             if(!NET_PRES_SocketIsSecure(appHTTPRequestData.socket))
