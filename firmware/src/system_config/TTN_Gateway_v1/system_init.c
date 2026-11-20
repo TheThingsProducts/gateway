@@ -854,6 +854,30 @@ SYS_MODULE_OBJ TCPIP_STACK_Init()
     See prototype in system/common/sys_module.h.
  */
 
+/* Seed the C library pseudo-random generator from the hardware true random number generator.
+ * Harmony seeds it with the constant 0, so every boot produced the same sequence. The TCP/IP
+ * stack takes its ephemeral TCP ports and initial sequence numbers (and DHCP/DNS transaction
+ * ids) from this generator: after a reboot the gateway reused the same source port and sequence
+ * number towards the same server as in the previous boot (issue #6). */
+static unsigned _prng_seed_bits = 0;
+
+static void _seed_pseudo_random(void)
+{
+    uint32_t start = _CP0_GET_COUNT();
+    uint32_t seed;
+
+    RNGCONbits.TRNGEN = 1;
+    // wait for 64 random bits, at most 50 ms (core timer counts at SYS_CLK / 2)
+    while((RNGCNT & 0x7F) < 64 && (_CP0_GET_COUNT() - start) < (SYS_CLK_FREQ / 2 / 20))
+    {
+    }
+    _prng_seed_bits = RNGCNT & 0x7F;
+    seed            = RNGSEED1 ^ RNGSEED2 ^ _CP0_GET_COUNT();
+    RNGCONbits.TRNGEN = 0;
+
+    SYS_RANDOM_PseudoSeedSet(seed);
+}
+
 void SYS_Initialize ( void* data )
 {
     /* Core Processor Initialization */
@@ -968,6 +992,7 @@ void SYS_Initialize ( void* data )
 
     /*** Random Service Initialization Code ***/
     SYS_RANDOM_Initialize(0, 0);
+    _seed_pseudo_random();
 
     /*** TMR Service Initialization Code ***/
     sysObj.sysTmr  = SYS_TMR_Initialize(SYS_TMR_INDEX_0, (const SYS_MODULE_INIT  * const)&sysTmrInitData);
@@ -995,6 +1020,7 @@ void SYS_Initialize ( void* data )
     SYS_PRINT("Bootloader revision: %d, commit: %08x, timestamp: %d\r\n", pBootloaderVersion->revision, pBootloaderVersion->commit, pBootloaderVersion->timestamp);
     SYS_PRINT("Build time: %s %s\r\n",__DATE__,__TIME__);
     SYS_PRINT("Reboot reason: 0x%02X\r\n", wdt_get_reboot_reason());
+    SYS_PRINT("PRNG seed: %u hardware random bits\r\n", _prng_seed_bits);
     ErrorMessage_Initialize();
     SYS_PRINT("\r\n\r\n\r\n\r\n");
     
