@@ -16,3 +16,7 @@ firmware/firmware.hex
 firmware/checksums
 firmware/cppcheck.xml
 firmware/log.0
+
+# Built images are published as GitHub release assets, not committed (issue #8)
+releases/*/firmware.hex
+releases/*/checksums
