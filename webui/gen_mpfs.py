@@ -63,6 +63,7 @@ TOKEN_TO_ID = {
     'gwsettings':     7,
     'gwstatus':       8,
     'gwudp':          9,
+    'gwfooter':       10,
 }
 
 def name_hash(name: str) -> int:

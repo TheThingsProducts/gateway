@@ -1465,6 +1465,39 @@ void TCPIP_HTTP_Print_gwstatus(HTTP_CONN_HANDLE connHandle)
     TCPIP_HTTP_CurrentConnectionCallbackPosSet(connHandle, callbackPos);
 }
 
+#define FOOTER_STR_(x) #x
+#define FOOTER_STR(x) FOOTER_STR_(x)
+
+/*
+ * Page footer (dynamic variable ~gwfooter~): firmware version and a link to the source
+ * repository. The text exists once, here in program memory, and every page calls it, so the
+ * pages do not each carry a copy. The version comes from version.h at build time. No separator
+ * line and the small grey style of the pages (header.inc), so it reads as part of the page.
+ */
+void TCPIP_HTTP_Print_gwfooter(HTTP_CONN_HANDLE connHandle)
+{
+    static const char footer[] =
+        "<center style=\"margin-top:2em;font-size:.8em;color:#999\">Firmware "
+        FOOTER_STR(VERSION_MAJOR) "." FOOTER_STR(VERSION_MINOR) "." FOOTER_STR(VERSION_PATCH)
+        " &middot; <a href=\"https://github.com/pe1mew/gateway/\" target=\"_blank\" rel=\"noopener\">"
+        "github.com/pe1mew/gateway</a></center>";
+    uint32_t callbackPos = TCPIP_HTTP_CurrentConnectionCallbackPosGet(connHandle);
+
+    if(callbackPos == 0x00u)
+    {
+        callbackPos = (uint32_t)footer;
+    }
+    // StringPut returns where it stopped when the TCP buffer is full; the HTTP server calls
+    // again with that position until the terminator is reached
+    callbackPos =
+        (uint32_t)TCPIP_TCP_StringPut(TCPIP_HTTP_CurrentConnectionSocketGet(connHandle), (uint8_t*)callbackPos);
+    if(*(uint8_t*)callbackPos == '\0')
+    {
+        callbackPos = 0x00;
+    }
+    TCPIP_HTTP_CurrentConnectionCallbackPosSet(connHandle, callbackPos);
+}
+
 void TCPIP_HTTP_Print_gwudp(HTTP_CONN_HANDLE connHandle)
 {
     uint32_t callbackPos;
