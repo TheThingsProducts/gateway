@@ -48,6 +48,12 @@ uint8_t hasLoraTXPacketInQueue(void);
 uint8_t APP_LORA_GET_APP_STATE(void);
 void    lora_read(void);
 bool    APP_LORA_HAS_CORRECT_FREQ_PLAN(void);
+
+// Frequency plan the LoRa module was configured with
+#define LORA_FREQ_PLAN_NONE       0 // module not configured yet
+#define LORA_FREQ_PLAN_DOWNLOADED 1 // plan downloaded from the network
+#define LORA_FREQ_PLAN_BUILTIN    2 // built-in plan: no plan downloaded, or it does not fit the card
+uint8_t APP_LORA_FREQ_PLAN_SOURCE(void);
 uint8_t APP_LORA_GW_CARD_VERSION(void);
 
 #endif /* _EXAMPLE_FILE_NAME_H */

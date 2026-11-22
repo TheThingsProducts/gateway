@@ -66,7 +66,7 @@ FOOTER_RE = re.compile(
 STATUS_FIELDS = {
     'gateway': bool, 'hwversion': str, 'blversion': str, 'fwversion': str, 'uptime': int,
     'connected': bool, 'interface': str, 'ssid': str, 'activation_locked': bool,
-    'configured': bool, 'region': str, 'gwcard': str, 'connbroker': bool, 'connudp': bool,
+    'configured': bool, 'freqplan': str, 'region': str, 'gwcard': str, 'connbroker': bool, 'connudp': bool,
     'pup': int, 'pdown': int, 'udpup': int, 'udpdown': int, 'estor': bool,
 }
 SETTINGS_FIELDS = {'ssid': str, 'gwid': str, 'gwkey': str, 'asrv': str, 'locked': bool,
@@ -441,6 +441,10 @@ def live_readonly(r, gw, version, any_version, rounds):
             'udp.cgi gateway_eui is 16 hex digits', udp.get('gateway_eui', ''))
     for k in ('portup', 'portdn'):
         r.check(isinstance(udp.get(k), int) and 1 <= udp.get(k) <= 65535, f'udp.cgi {k} is a valid port')
+    r.check(status.get('freqplan') in ('none', 'downloaded', 'builtin'),
+            'status.cgi freqplan is none, downloaded or builtin', str(status.get('freqplan')))
+    r.check(status.get('configured') is (status.get('freqplan') == 'downloaded'),
+            'status.cgi configured is true exactly when freqplan is downloaded')
     r.check(status.get('connudp') is False or udp.get('enabled') is True,
             'status.cgi connudp is only true when the forwarder is enabled')
     st, hd, raw = gw.get('/ssids.cgi')
@@ -588,7 +592,7 @@ def make_mock(version, fault=None):
                 'gateway': True, 'hwversion': 'v1', 'blversion': 'r1-00000000 (x)',
                 'fwversion': 'v%s-0123abcd (2026-01-01T00:00:00Z)' % version,
                 'uptime': int(time.time() - state['boot']) + 100, 'connected': True, 'interface': 'Ethernet',
-                'ssid': '', 'activation_locked': True, 'configured': True, 'region': 'EU868',
+                'ssid': '', 'activation_locked': True, 'configured': True, 'freqplan': 'downloaded', 'region': 'EU868',
                 'gwcard': '868Mhz', 'connbroker': True, 'connudp': False, 'pup': 1, 'pdown': 0, 'udpup': 0, 'udpdown': 0,
                 'estor': False}).encode()
         if tok == 'gwsettings':

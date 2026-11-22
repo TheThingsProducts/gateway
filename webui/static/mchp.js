@@ -784,6 +784,12 @@ function getStatus(xmlData)
     document.getElementById('ssid').innerHTML = data.ssid;
     document.getElementById('activation_locked').innerHTML = data.activation_locked;
     document.getElementById('configured').innerHTML = data.configured;
+    var freqplanText = {
+        'none': 'LoRa module not configured yet',
+        'downloaded': 'Downloaded',
+        'builtin': 'Built-in (no plan downloaded, or it does not fit the gateway card)'
+    };
+    document.getElementById('freqplan').innerHTML = freqplanText[data.freqplan] || data.freqplan;
     document.getElementById('region').innerHTML = data.region;
     document.getElementById('connbroker').innerHTML = data.connbroker;
     document.getElementById('connudp').innerHTML = data.connudp;

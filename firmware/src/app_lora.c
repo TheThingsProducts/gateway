@@ -56,6 +56,7 @@ static TaskHandle_t   loraRxThreadHandle = NULL;
 static uint32_t last_rx_timestamp          = 0;
 static uint32_t lora_config_failed_counter = 0;
 static bool     freqplan_correct           = 0;
+static uint8_t  freqplan_source            = LORA_FREQ_PLAN_NONE;
 static version_t module_version_info       = {0};
 
 QueueHandle_t xRXQueue, xTXQueue, xUDPRXQueue;
@@ -178,6 +179,7 @@ static bool configLora(void)
     }
     else
         freqplan_correct = 1;
+    freqplan_source = freqplan_correct ? LORA_FREQ_PLAN_DOWNLOADED : LORA_FREQ_PLAN_BUILTIN;
 
     if(freqplan_correct == 0)
     {
@@ -850,6 +852,11 @@ static void _setState(APP_STATES_LORA newState)
 bool APP_LORA_HAS_CORRECT_FREQ_PLAN(void)
 {
     return (freqplan_correct == 1);
+}
+
+uint8_t APP_LORA_FREQ_PLAN_SOURCE(void)
+{
+    return freqplan_source;
 }
 
 uint8_t APP_LORA_GW_CARD_VERSION(void)

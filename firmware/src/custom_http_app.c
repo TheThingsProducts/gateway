@@ -53,6 +53,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "json-builder.h"
 
 #include "app_activation.h"
+#include "app_lora.h"
 #include "app_mqtt.h"
 #include "app_udp.h"
 #include "app_serialflash.h"
@@ -1431,6 +1432,19 @@ void TCPIP_HTTP_Print_gwstatus(HTTP_CONN_HANDLE connHandle)
 
         json_object_push(obj, "activation_locked", json_boolean_new(appGWActivationData.locked));
         json_object_push(obj, "configured", json_boolean_new(APP_LORA_HAS_CORRECT_FREQ_PLAN()));
+        // Why "configured" is false: not configured yet, or running on the built-in plan
+        switch(APP_LORA_FREQ_PLAN_SOURCE())
+        {
+            case LORA_FREQ_PLAN_DOWNLOADED:
+                json_object_push(obj, "freqplan", json_string_new("downloaded"));
+                break;
+            case LORA_FREQ_PLAN_BUILTIN:
+                json_object_push(obj, "freqplan", json_string_new("builtin"));
+                break;
+            default:
+                json_object_push(obj, "freqplan", json_string_new("none"));
+                break;
+        }
         json_object_push(obj, "region", json_string_new(appGWActivationData.configuration.frequency_plan));
         if(APP_LORA_GW_CARD_VERSION() == LORA_BAND_868)
             json_object_push(obj, "gwcard", json_string_new("868Mhz"));
