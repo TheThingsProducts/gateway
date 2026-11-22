@@ -121,6 +121,10 @@ bool           g_config_changed   = false;
 bool           g_udp_conf_changed = false;
 bool           g_redirect_signal  = false;
 
+// State to return to after APP_STATE_STORE_UDP_CONFIG, and whether a store request is waiting
+static STATE_t udpStoreReturnState = APP_STATE_OPERATIONAL;
+static bool    udpStoreDeferred    = false;
+
 void APP_Initialize(void)
 {
     if(jumperPlaced())
@@ -364,8 +368,27 @@ void APP_Tasks(void)
         }
         if(g_udp_conf_changed)
         {
-            _changeState(APP_STATE_STORE_UDP_CONFIG);
-            g_udp_conf_changed = false;
+            // The UDP settings are stored from the operational state and from the two wait states
+            // only. In every other state the request stays pending until one of these is reached:
+            // leaving the online configuration or the firmware download half way would skip the
+            // rest of the boot sequence (LoRa module not started, no router address).
+            switch(_state)
+            {
+                case APP_STATE_WAIT_FOR_INTERNET:
+                case APP_STATE_OPERATIONAL:
+                case APP_STATE_WAIT_FOR_INTERNET_WHILE_OPERATIONAL:
+                    g_udp_conf_changed  = false;
+                    udpStoreReturnState = _state;
+                    _changeState(APP_STATE_STORE_UDP_CONFIG);
+                    break;
+                default:
+                    if(!udpStoreDeferred)
+                    {
+                        udpStoreDeferred = true;
+                        SYS_PRINT("\r\nMAIN: UDP config changed in state %d, storing it later\r\n", _state);
+                    }
+                    break;
+            }
         }
         if(SSMButton_IsPressed())
         {
@@ -760,8 +783,21 @@ void APP_Tasks(void)
             }
             else if(udp_save_sub == 2 && APP_SERIALFLASH_IsReady())
             {
-                udp_save_sub = 0;
-                _changeState(APP_STATE_OPERATIONAL);
+                udp_save_sub     = 0;
+                udpStoreDeferred = false;
+                SYS_PRINT("\r\nMAIN: UDP config stored\r\n");
+                if(udpStoreReturnState == APP_STATE_OPERATIONAL)
+                {
+                    _changeState(APP_STATE_OPERATIONAL);
+                }
+                else
+                {
+                    // The wait states have no leave handler and their sub state machine was only
+                    // paused: continue where it was instead of entering the state again (that
+                    // would restart the network selection and drop an access point client).
+                    SYS_PRINT("MAIN: Resuming state %d\r\n", udpStoreReturnState);
+                    _state = udpStoreReturnState;
+                }
             }
             break;
         }

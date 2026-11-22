@@ -8,9 +8,9 @@ Versions up to 1.0.10 are the original firmware of The Things Products; their hi
 
 ---
 
-## [1.2.38] — Unreleased  (web UI footer with the firmware version)
+## [1.2.38] — Unreleased  (web UI footer with the firmware version, UDP settings can be saved during start-up)
 
-Web UI change. No setting change.
+Web UI change and a bug fix. No setting change.
 
 **Added:**
 
@@ -20,6 +20,7 @@ Web UI change. No setting change.
 **Fixed:**
 
 - **UDP forwarder page: "Save failed" alert** when the gateway does not accept the settings. The alert was in the page source since the page was added, but the web image compiled into the firmware had not been regenerated.
+- **Saving the UDP forwarder settings during start-up no longer breaks the connection to The Things Network** (#10). The save moved the gateway to the operational state from any state; when that happened while it was still loading its configuration, the rest of the start-up was skipped and the gateway reconnected endlessly until it was rebooted. The settings are now stored only while the gateway is operational or waiting for a network connection; in any other state the save waits until start-up has passed that point (console line `MAIN: UDP config changed in state N, storing it later`). A save that is still waiting is lost if the gateway reboots first.
 
 ---
 
