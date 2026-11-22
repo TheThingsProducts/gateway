@@ -27,7 +27,8 @@ Thank you for considering contributing to this project! Please follow the guidel
   GitHub release.
 - Pages in `webui/static/` are compiled into the firmware. After changing them, regenerate the image with
   `python3 webui/gen_mpfs.py` and commit `firmware/src/mpfs_img2.c` with the change; see
-  [`webui/README.md`](webui/README.md).
+  [`webui/README.md`](webui/README.md). Run `python3 webui/test_webui.py` (source checks) before committing and
+  `python3 webui/test_webui.py --gateway <ip>` against a gateway that runs the build.
 - Things that have caused faults before:
   - `double` is 32 bits wide in XC32 v1.42. Do not use floating point where the digits matter (for
     example a frequency in Hz); use integer arithmetic.

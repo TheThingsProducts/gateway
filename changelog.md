@@ -8,6 +8,21 @@ Versions up to 1.0.10 are the original firmware of The Things Products; their hi
 
 ---
 
+## [1.2.38] — Unreleased  (web UI footer with the firmware version)
+
+Web UI change. No setting change.
+
+**Added:**
+
+- **Footer on every web UI page** (#7) with the firmware version (`x.y.z`) and a link to this repository. The text comes from one place in the firmware (`~gwfooter~`), so the version always matches the running image.
+- **Acceptance test for the web UI**, `webui/test_webui.py`: checks the page sources, and with `--gateway <ip>` the pages and JSON interfaces of a running gateway; see [`webui/README.md`](webui/README.md).
+
+**Fixed:**
+
+- **UDP forwarder page: "Save failed" alert** when the gateway does not accept the settings. The alert was in the page source since the page was added, but the web image compiled into the firmware had not been regenerated.
+
+---
+
 ## [1.2.37] — 2026-11-22  (random TCP source ports, no more stalled TLS handshakes after a reboot)
 
 Bug fix. No setting or web UI change. Details: [`releases/1.2.37/README.md`](releases/1.2.37/README.md). This is the first release without a firmware image in the repository; the image is attached to the GitHub release.
