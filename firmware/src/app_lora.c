@@ -273,8 +273,13 @@ static bool configLora(void)
                                     appGWActivationData.configuration_sx1301.ifchain[9].datarate);
     }
 
+    // The built-in plans are public LoRaWAN plans. The sync word of the downloaded plan is only valid
+    // together with that plan: without a plan the field is false (private sync word, most public
+    // LoRaWAN traffic is not received) and a plan for the wrong band may carry either value.
+    bool sync_public = (freqplan_correct == 0) ? true : appGWActivationData.configuration_sx1301.lorawan_public;
+    SYS_PRINT("LORA: sync word: %s\r\n", sync_public ? "public (0x34)" : "private (0x12)");
     vTaskDelay(100 / portTICK_PERIOD_MS);
-    status = status && setSync(appGWActivationData.configuration_sx1301.lorawan_public);
+    status = status && setSync(sync_public);
 
     // RF ENABLE HIGH
     PLIB_PORTS_PinSet(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_5);
