@@ -17,7 +17,7 @@ The work is done with the assistance of Large Language Models (Claude Code), on 
 | 1.2.32 | No more reboots caused by heap fragmentation |
 | 1.2.35 | No more watchdog resets during start-up |
 | 1.2.37 | Random TCP source ports, no more stalled TLS handshakes after a reboot |
-| 1.2.38 | Web UI footer with the firmware version |
+| 1.2.38 | Web UI footer with the firmware version; UDP settings can be saved during start-up; public sync word with the built-in frequency plan |
 
 All changes per version are in the [changelog](changelog.md). Each release has detailed notes in [`releases/`](./releases).
 
