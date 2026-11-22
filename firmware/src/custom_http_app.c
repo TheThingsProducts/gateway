@@ -1439,12 +1439,16 @@ void TCPIP_HTTP_Print_gwstatus(HTTP_CONN_HANDLE connHandle)
         else
             json_object_push(obj, "gwcard", json_string_new("ND"));
 
-        json_object_push(obj, "connbroker", json_boolean_new(GatewayIsOperational()));
+        json_object_push(obj, "connbroker", json_boolean_new(GatewayIsBrokerConnected()));
         json_object_push(obj, "connudp", json_boolean_new(APP_UDP_IsConnected()));
         uint32_t pup = 0, pdown = 0;
         getPacketCount(&pup, &pdown);
         json_object_push(obj, "pup", json_integer_new(pup));
         json_object_push(obj, "pdown", json_integer_new(pdown));
+        uint32_t udpup = 0, udpdown = 0;
+        APP_UDP_GetPacketCount(&udpup, &udpdown);
+        json_object_push(obj, "udpup", json_integer_new(udpup));
+        json_object_push(obj, "udpdown", json_integer_new(udpdown));
 
         json_object_push(obj, "estor", json_boolean_new(APP_SDCARD_IsMounted()));
 

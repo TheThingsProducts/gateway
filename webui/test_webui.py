@@ -67,7 +67,7 @@ STATUS_FIELDS = {
     'gateway': bool, 'hwversion': str, 'blversion': str, 'fwversion': str, 'uptime': int,
     'connected': bool, 'interface': str, 'ssid': str, 'activation_locked': bool,
     'configured': bool, 'region': str, 'gwcard': str, 'connbroker': bool, 'connudp': bool,
-    'pup': int, 'pdown': int, 'estor': bool,
+    'pup': int, 'pdown': int, 'udpup': int, 'udpdown': int, 'estor': bool,
 }
 SETTINGS_FIELDS = {'ssid': str, 'gwid': str, 'gwkey': str, 'asrv': str, 'locked': bool,
                    'fotaen': bool, 'fotaul': str}
@@ -589,7 +589,7 @@ def make_mock(version, fault=None):
                 'fwversion': 'v%s-0123abcd (2026-01-01T00:00:00Z)' % version,
                 'uptime': int(time.time() - state['boot']) + 100, 'connected': True, 'interface': 'Ethernet',
                 'ssid': '', 'activation_locked': True, 'configured': True, 'region': 'EU868',
-                'gwcard': '868Mhz', 'connbroker': True, 'connudp': False, 'pup': 1, 'pdown': 0,
+                'gwcard': '868Mhz', 'connbroker': True, 'connudp': False, 'pup': 1, 'pdown': 0, 'udpup': 0, 'udpdown': 0,
                 'estor': False}).encode()
         if tok == 'gwsettings':
             return json.dumps({'ssid': '', 'gwid': 'gw', 'gwkey': '[...]tail', 'asrv': 'https://a',

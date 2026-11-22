@@ -790,6 +790,8 @@ function getStatus(xmlData)
     document.getElementById('gwcard').innerHTML = data.gwcard;
     document.getElementById('pup').innerHTML = data.pup;
     document.getElementById('pdown').innerHTML = data.pdown;
+    document.getElementById('udpup').innerHTML = data.udpup;
+    document.getElementById('udpdown').innerHTML = data.udpdown;
     document.getElementById('estor').innerHTML = data.estor;
     setTimeout("newAJAXCommand(baseURL+'status.cgi', getStatus, false)",2000);
 }

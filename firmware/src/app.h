@@ -608,6 +608,7 @@ extern "C"
     void APP_SELFTEST_Tasks(void);
 
     bool    GatewayIsOperational(void);
+    bool    GatewayIsBrokerConnected(void);
     uint8_t APP_MQTT_GET_STATE();
     bool    APP_WIFI_Has_LinkAP(void);
     bool    APP_WIFI_Has_LinkINFRA(void);

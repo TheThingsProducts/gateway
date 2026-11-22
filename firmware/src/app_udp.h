@@ -16,6 +16,7 @@ void APP_UDP_Initialize(void);
 void APP_UDP_Tasks(void);
 void APP_UDP_Reset(void);
 bool APP_UDP_IsConnected(void);
+void APP_UDP_GetPacketCount(uint32_t* pup, uint32_t* pdown);
 void APP_UDP_GetEUI64String(char out[17]);
 
 #ifdef __cplusplus

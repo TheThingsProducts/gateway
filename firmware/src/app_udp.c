@@ -631,6 +631,13 @@ bool APP_UDP_IsConnected(void)
     return s_connected;
 }
 
+// Uplinks sent to the UDP server and downlinks accepted from it, since boot
+void APP_UDP_GetPacketCount(uint32_t* pup, uint32_t* pdown)
+{
+    *pup   = s_rxfw;
+    *pdown = s_txnb;
+}
+
 static void handle_pull_resp(uint8_t* buf, uint16_t rlen, uint8_t* txbuf, uint16_t txbufsz)
 {
     if(g_udp_gw_conf.uplink_only) return;

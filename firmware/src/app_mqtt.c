@@ -542,7 +542,11 @@ int sendUplink()
         enqueueLoRaRX(&recv_packet);
         return err;
     }
-    rx_pkt_cnt++;
+    // Count delivered uplinks only, not the ones given up after the retries
+    if(err == 0)
+    {
+        rx_pkt_cnt++;
+    }
     return err;
 }
 

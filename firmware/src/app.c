@@ -838,6 +838,14 @@ bool GatewayIsOperational(void)
     return _state == APP_STATE_OPERATIONAL;
 }
 
+// True while the MQTT connection to the broker is established: the same flag that drives the
+// MQTT LED and the "Gateway bridging" console line. The operational state alone is not enough,
+// it is also held while the connection is being set up or reconnected.
+bool GatewayIsBrokerConnected(void)
+{
+    return _state == APP_STATE_OPERATIONAL && appData.mqtt_connection_state;
+}
+
 bool jumperPlaced()
 {
     return (PORTEbits.RE4 == 1);
