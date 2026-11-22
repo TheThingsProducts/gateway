@@ -1,30 +1,31 @@
 # The Things Gateway
 
-## Software Modernization Effort
-
-This repository represents an ongoing effort to modify and update the original gateway software with the assistance of Large Language Models (LLMs). The complete toolchain is currently running on a dedicated Ubuntu deployment, with development facilitated by Claude-code. This approach allows for systematic analysis, refactoring, and enhancement of the legacy codebase while maintaining compatibility with the existing hardware platform.
-
-Currently, direct flashing via PICkit4 is not possible due to a defective programmer. However, firmware deployment using the SD-card method works reliably and is being used for testing and updates.
-
-### Key Modifications
-
-**Version 1.1.3 - WiFi Access Point Management:** The original firmware exhibited problematic behavior where the WiFi Access Point remained active even when an Ethernet connection was established and no WiFi credentials were configured. This resulted in unnecessary pollution of the 2.4 GHz WiFi band and user confusion. The modification implements intelligent AP management that automatically disables the Access Point when Ethernet connectivity is available, while ensuring the AP remains accessible for configuration when needed. Modified files include [app_wifi.c](firmware/src/app_wifi.c), [app_wifi.h](firmware/src/app_wifi.h), and [ssm_wait_for_internet.c](firmware/src/ssm_wait_for_internet.c). **Status: Implemented and tested.**
-
-**Version 1.1.6 - Certificate Updates:** Critical security certificates embedded in the firmware have been updated to prevent TLS handshake failures with The Things Industries servers. The original certificates (Baltimore CyberTrust Root expired May 12, 2025, and Amazon Root CA 1 expired October 19, 2025) have been replaced with renewed certificates valid until 2037-2038. The Baltimore CyberTrust Root was removed entirely as DigiCert Global Root G2 (valid to 2028) provides equivalent coverage. Modified files include [AMAZON_ROOT_CA_1.c](firmware/AMAZON_ROOT_CA_1.c), [AMAZON_ROOT_CA_1.h](firmware/AMAZON_ROOT_CA_1.h), [STARFIELD_SERVICES_ROOT_CA_G2.c](firmware/STARFIELD_SERVICES_ROOT_CA_G2.c), and [STARFIELD_SERVICES_ROOT_CA_G2.h](firmware/STARFIELD_SERVICES_ROOT_CA_G2.h). **Status: Implemented and verified with TLS handshake testing.**
-
-**Version 1.2.28 - Semtech UDP Packet Forwarder:** Added a Semtech-protocol UDP packet forwarder alongside the existing MQTT forwarder. The UDP forwarder provides compatibility with standard LoRaWAN network servers that use the Semtech UDP protocol (port 1700 by default). Configuration is persisted to serial flash and exposed via a new web UI settings page at `/udp`. The implementation supports concurrent operation with MQTT, configurable uplink-only mode, and graceful handling of downlink conflicts between protocols. Modified files include [app_udp.c](firmware/src/app_udp.c), [app_udp.h](firmware/src/app_udp.h), [app_serialflash.c](firmware/src/app_serialflash.c), [custom_http_app.c](firmware/src/custom_http_app.c), and web UI templates. **Status: Implemented and integrated.**
-
-**Version 1.2.30 - UDP Forwarder ChirpStack Compatibility:** Uplinks forwarded over the Semtech UDP protocol were accepted by The Things Network but silently dropped by ChirpStack. The forwarder formatted the `freq` field as `(double)hz / 1e6` with `%.6f`; XC32 compiles `double` as 32-bit, so 868300000 Hz was printed as 868.300048 MHz. ChirpStack matches `freq` exactly against the region's channel list and rejects the frame with "Unknown channel for frequency", while TTN tolerates the deviation. The frequency is now formatted with integer arithmetic (rounded to 500 Hz as a safety net) and the downlink `txpk.freq` is parsed without floating point as well. The forwarder also discards queued uplinks while it is disabled so that stale packets are no longer flushed when it is re-enabled. Modified file: [app_udp.c](firmware/src/app_udp.c). **Status: Implemented, verified with a UDP capture (issue #1).**
-
-**Version 1.2.32 - Heap Fragmentation Reboots (issue #2):** Gateways rebooted when the web UI was used after days of uptime, and an HTTPS FOTA URL could make a gateway boot-loop. The firmware used FreeRTOS `heap_2`, which never merges freed blocks; web UI requests and TLS sessions fragmented the heap, and the fresh TLS session opened after any MQTT publish timeout (about 75 KB in four large blocks) could no longer be allocated, so `vApplicationMallocFailedHook` reset the gateway. The allocator is now FreeRTOS `heap_4` (coalescing), an MQTT error reconnects MQTT only instead of tearing down the whole network stack (full re-init only after three consecutive failures), and the console `MON:` line reports the largest free block and the minimum free heap. Modified files include [heap_4.c](firmware/vendor/harmony/third_party/rtos/FreeRTOS/Source/portable/MemMang/heap_4.c), [app.c](firmware/src/app.c), [system_tasks.c](firmware/src/system_config/TTN_Gateway_v1/system_tasks.c), [rtos_hooks.c](firmware/src/system_config/TTN_Gateway_v1/rtos_hooks.c) and [track_heap.c](firmware/src/track_heap.c). **Status: Implemented, validated with HTTP stress, HTTPS FOTA boot and a forced MQTT reconnect; a gateway on 1.2.30 reset under the same forced reconnect.**
-
-**Version 1.2.35 - Watchdog Resets at Boot (issues #3 and #5):** Gateways regularly needed two or three boots in a row because the watchdog reset them during start-up. Two causes were found. (1) The LoRa module UART was used through one driver handle for the blocking read of the receive thread and the blocking writes of the LoRa task; a Harmony USART client has a single buffer object for both, so the LoRa task could spin forever in the driver after a command (issue #3). The UART now has separate read and write handles. (2) The TLS handshake ran as a busy loop in the system task, which stopped the watchdog from being cleared whenever the server's data was late (issue #5). The handshake now does one step per call, and the HTTP and MQTT clients time out a TLS connect after 10 seconds and retry. In addition RAM was completely in use, leaving about 700 bytes of startup stack: the FreeRTOS heap is reduced from 350000 to 346000 bytes and the linker reserves at least 4096 bytes of startup stack. A tick hook prints `*** WDT pending` diagnostics on the console when the watchdog has not been cleared for 6 seconds. Modified files include [app_lora.c](firmware/src/app_lora.c), [net_pres_enc_glue.c](firmware/src/system_config/TTN_Gateway_v1/framework/net/pres/net_pres_enc_glue.c), [app_http_request.c](firmware/src/app_http_request.c), [app_mqtt.c](firmware/src/app_mqtt.c), [helper_wdt.c](firmware/src/helper_wdt.c), [FreeRTOSConfig.h](firmware/src/system_config/TTN_Gateway_v1/FreeRTOSConfig.h) and [app_mz.ld](firmware/src/system_config/TTN_Gateway_v1/app_mz.ld). **Status: Implemented; in a test of 30 consecutive reboots 1.2.32 had 10 watchdog resets and 1.2.35 none. Versions 1.2.33 and 1.2.34 were test builds only.**
-
-**Version 1.2.28 - FOTA URL Override:** Added the ability to configure a custom firmware update server URL through the gateway web UI, enabling firmware updates from alternative sources without requiring a connection to The Things Network. The custom FOTA URL can be configured at Settings → FOTA in the web UI. Supports both HTTP and HTTPS protocols. The setting persists independently of other configuration parameters, allowing use of custom FOTA servers such as [https://github.com/pe1mew/ttksgfotasrv](https://github.com/pe1mew/ttksgfotasrv). **Status: Implemented and integrated.**
-
-**FOTA Server:** A custom Firmware-Over-The-Air (FOTA) server implementation has been created to support firmware updates for The Things Gateway. The server implements the HTTP/HTTPS interface required by the gateway's FOTA client, serving firmware checksums and binary files. The FOTA server specification and implementation can be found at [https://github.com/pe1mew/ttksgfotasrv](https://github.com/pe1mew/ttksgfotasrv). This enables independent firmware distribution without reliance on The Things Industries' infrastructure.
-
 ![The Things Gateway](doc/header.png)
+
+This is a community fork of the firmware of The Things Gateway (the "Kickstarter gateway") by [The Things Products](https://github.com/TheThingsProducts/gateway). The original repository has not been updated since May 2023. This fork keeps the gateway working: it repairs faults that stopped it from connecting or made it reboot, and adds what is needed to use it with other network servers than The Things Network.
+
+The work is done with the assistance of Large Language Models (Claude Code), on a dedicated Ubuntu machine with the original toolchain.
+
+## What this fork changes
+
+| Since | Change |
+|---|---|
+| 1.1.3 | WiFi access point is switched off when the gateway is connected; expired CA certificates replaced |
+| 1.1.6 | Firmware updates over TLS work again (server name indication) |
+| 1.2.28 | Semtech UDP packet forwarder (ChirpStack and other network servers), next to The Things Network |
+| 1.2.28 | FOTA URL override: firmware updates from a server of your own |
+| 1.2.32 | No more reboots caused by heap fragmentation |
+| 1.2.35 | No more watchdog resets during start-up |
+| 1.2.37 | Random TCP source ports, no more stalled TLS handshakes after a reboot |
+
+All changes per version are in the [changelog](changelog.md). Each release has detailed notes in [`releases/`](./releases).
+
+## Installing
+
+Firmware images (`firmware.hex` and `checksums`) are attached to the [GitHub releases](https://github.com/pe1mew/gateway/releases). Images of versions before 1.2.32 are in [`releases/<version>/`](./releases).
+
+- **SD card:** copy both files to a folder `update` on a FAT32 formatted SD card, insert it in the gateway and power cycle. See [firmware/README.md](firmware/README.md).
+- **Over the air:** a gateway that already runs this firmware (1.2.28 or later) updates itself from the server set as FOTA URL override on its Settings page. A server for this is [pe1mew/ttksgfotasrv](https://github.com/pe1mew/ttksgfotasrv).
 
 ## Where to buy
 
@@ -44,6 +45,6 @@ Firmware source code is located in the [firmware](./firmware) directory. Firmwar
 
 ## Feature Requests, Bug Reports and Support
 
-- For feature requests and bug reports, create an [issue on Github](https://github.com/TheThingsProducts/gateway/issues)
-- Community support on our [forum](https://www.thethingsnetwork.org/forum/c/gateways/the-things-gateway)
-- Commercial support by [e-mail](mailto:support@thethingsproducts.com)
+- For feature requests and bug reports on this firmware, create an [issue on GitHub](https://github.com/pe1mew/gateway/issues). See [contributing.md](contributing.md) for what to include and for how to contribute changes; the [code of conduct](code_of_conduct.md) applies.
+- Community support on the [forum of The Things Network](https://www.thethingsnetwork.org/forum/c/gateways/the-things-gateway)
+- The original firmware and hardware: [TheThingsProducts/gateway](https://github.com/TheThingsProducts/gateway)
