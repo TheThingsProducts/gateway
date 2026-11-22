@@ -2,7 +2,7 @@
 
 All notable changes to the firmware in this repository are documented in this file, newest first.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/). Versions are numbered `major.minor.patch`. Version numbers that are missing from this list were test or diagnostic builds and were never released. Each release has its full notes, with the measurements, in `releases/<version>/README.md`; the firmware images are attached to the [GitHub releases](https://github.com/pe1mew/gateway/releases) (versions before 1.2.32: in `releases/<version>/`).
+The format is based on [Keep a Changelog](https://keepachangelog.com/). Versions are numbered `major.minor.patch`. Version numbers that are missing from this list were test or diagnostic builds and were never released. Each release has its full notes, with the measurements, in `releases/<version>/README.md`; the firmware images are attached to the [GitHub releases](https://github.com/pe1mew/gateway/releases) and are not stored in the repository.
 
 Versions up to 1.0.10 are the original firmware of The Things Products; their history is in the commit log of [TheThingsProducts/gateway](https://github.com/TheThingsProducts/gateway).
 

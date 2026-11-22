@@ -10,6 +10,9 @@
 
 ## Files
 
+The firmware image is not stored in the repository. Download both files from the GitHub release
+[v1.2.30](https://github.com/pe1mew/gateway/releases/tag/v1.2.30):
+
 | File           | Description                                                |
 |----------------|------------------------------------------------------------|
 | `firmware.hex` | Intel HEX firmware image for SD card, PICkit 4 or FOTA     |
@@ -68,5 +71,5 @@ Insert SD card into gateway and power cycle.
 
 ```bash
 IPECMD=/opt/microchip/mplabx/v6.25/mplab_platform/mplab_ipe/ipecmd.sh
-$IPECMD -TPPK4 -P32MZ2048EFM144 -F releases/1.2.30/firmware.hex -M
+$IPECMD -TPPK4 -P32MZ2048EFM144 -F firmware.hex -M
 ```

@@ -23,7 +23,7 @@ All changes per version are in the [changelog](changelog.md). Each release has d
 
 ## Installing
 
-Firmware images (`firmware.hex` and `checksums`) are attached to the [GitHub releases](https://github.com/pe1mew/gateway/releases). Images of versions before 1.2.32 are in [`releases/<version>/`](./releases).
+Firmware images (`firmware.hex` and `checksums`) are attached to the [GitHub releases](https://github.com/pe1mew/gateway/releases); they are not stored in the repository.
 
 - **SD card:** copy both files to a folder `update` on a FAT32 formatted SD card, insert it in the gateway and power cycle. See [firmware/README.md](firmware/README.md).
 - **Over the air:** a gateway that already runs this firmware (1.2.28 or later) updates itself from the server set as FOTA URL override on its Settings page. A server for this is [pe1mew/ttksgfotasrv](https://github.com/pe1mew/ttksgfotasrv).

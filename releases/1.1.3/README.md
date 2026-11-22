@@ -10,6 +10,9 @@
 
 ## Files
 
+The firmware image is not stored in the repository. Download both files from the GitHub release
+[v1.1.3](https://github.com/pe1mew/gateway/releases/tag/v1.1.3):
+
 | File          | Description                                      |
 |---------------|--------------------------------------------------|
 | `firmware.hex` | Intel HEX firmware image for SD card or PICkit 4 flashing |
@@ -96,7 +99,7 @@ Amazon trust anchor.
 
 ```bash
 IPECMD=/opt/microchip/mplabx/v6.25/mplab_platform/mplab_ipe/ipecmd.sh
-$IPECMD -TPPK4 -P32MZ2048EFM144 -F releases/1.1.3/firmware.hex -M
+$IPECMD -TPPK4 -P32MZ2048EFM144 -F firmware.hex -M
 ```
 
 ---
