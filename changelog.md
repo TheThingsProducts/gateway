@@ -8,6 +8,27 @@ Versions up to 1.0.10 are the original firmware of The Things Products; their hi
 
 ---
 
+## [1.2.39] — Unreleased  (status page: real broker connection, UDP packet counters, frequency plan in use, readable uptime)
+
+Web UI and `status.cgi` change. No setting change.
+
+**Added:**
+
+- **UDP packet counters** (#12): `status.cgi` fields `udpup` (uplinks sent to the UDP server) and `udpdown` (downlinks accepted from it), shown on the Info page as "UDP packets up/down". The existing rows are now labelled "Broker packets up/down".
+- **Frequency plan in use** (#14): `status.cgi` field `freqplan` with the value `none` (LoRa module not configured yet), `downloaded` (the plan from The Things Network) or `builtin` (the built-in fallback plan), shown on the Info page as "Frequency plan". Until now the built-in plan was only visible as `Config correct: false`, the same value as during start-up.
+- **Console line for a downlink from the UDP server:** `UDP: PULL_RESP accepted` or `UDP: PULL_RESP rejected (LATE)`. Until now a UDP downlink left no line of its own on the console.
+
+**Changed:**
+
+- **Uptime on the Info page as `hh:mm:ss`** (#15), with the days in front when there are any (`1 d 00:00:05`), instead of a number of seconds. A line under it says that the gateway restarts every 24 hours to check for a firmware update. `status.cgi` still gives `uptime` in seconds.
+
+**Fixed:**
+
+- **`connbroker` shows the MQTT connection** (#12). It was true whenever the gateway was in the operational state, also while the connection to the broker was being rebuilt (about 5 s after a UDP settings save on the test gateway). It is now true only while the MQTT connection is up.
+- **`pup` counts only uplinks that were delivered to the broker** (#12). Uplinks whose MQTT send failed were counted too. The same counter is reported in the status message to The Things Network.
+
+---
+
 ## [1.2.38] — 2026-11-22  (web UI footer with the firmware version, UDP settings can be saved during start-up)
 
 Web UI change and two bug fixes. No setting change. Details: [`releases/1.2.38/README.md`](releases/1.2.38/README.md).

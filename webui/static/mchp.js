@@ -772,13 +772,24 @@ function selectFoundNetwork(id)
     document.getElementById("wlan").value = networks[id].type;
 }
 
+// Seconds since boot as hh:mm:ss, with the days in front when there are any ("1 d 00:00:05").
+function formatUptime(seconds)
+{
+    var s = Math.floor(Number(seconds));
+    if(isNaN(s) || s < 0) return seconds;
+    function two(n) { return (n < 10 ? '0' : '') + n; }
+    var days = Math.floor(s / 86400);
+    var text = two(Math.floor(s % 86400 / 3600)) + ':' + two(Math.floor(s % 3600 / 60)) + ':' + two(s % 60);
+    return days > 0 ? days + ' d ' + text : text;
+}
+
 function getStatus(xmlData)
 {
     var data = JSON.parse(xmlData.trim());
     document.getElementById('hwversion').innerHTML = data.hwversion;
     document.getElementById('blversion').innerHTML = data.blversion;
     document.getElementById('fwversion').innerHTML = data.fwversion;    
-    document.getElementById('uptime').innerHTML = data.uptime;
+    document.getElementById('uptime').innerHTML = formatUptime(data.uptime);
     document.getElementById('connected').innerHTML = data.connected;
     document.getElementById('interface').innerHTML = data.interface;
     document.getElementById('ssid').innerHTML = data.ssid;

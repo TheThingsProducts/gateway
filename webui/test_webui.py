@@ -270,6 +270,10 @@ def source_checks(r):
             continue
         r.check(i in ids_html or i in ids_made, f'element id "{i}" used by the scripts exists in a page')
 
+    js = files.get('mchp.js', b'')
+    r.check(b"getElementById('uptime').innerHTML = formatUptime(data.uptime)" in js and b'function formatUptime(' in js,
+            'Info page shows the uptime through formatUptime() (hh:mm:ss, not seconds)')
+
     r.section('Sources: generated image mpfs_img2.c is up to date')
     img, in_image = decode_image()
     r.check(img[:6] == b'MPFS\x02\x01', 'image has the MPFS2 signature')

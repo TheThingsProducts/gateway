@@ -645,6 +645,7 @@ static void handle_pull_resp(uint8_t* buf, uint16_t rlen, uint8_t* txbuf, uint16
     uint16_t pull_token = (uint16_t)(buf[1] | ((uint16_t)buf[2] << 8));
     const char* err = parse_pull_resp(buf, rlen, &txpkt) ? "NONE" : "LATE";
     if(err[0] == 'N') { s_dwnb++; enqueueLoRaTX(&txpkt); s_txnb++; }
+    SYS_PRINT("UDP: PULL_RESP %s\r\n", (err[0] == 'N') ? "accepted" : "rejected (LATE)");
     uint16_t acklen = build_tx_ack(pull_token, err, txbuf, txbufsz);
     if(acklen > 0 && TCPIP_UDP_PutIsReady(s_sock) >= acklen)
     { TCPIP_UDP_ArrayPut(s_sock, txbuf, acklen); TCPIP_UDP_Flush(s_sock); }
