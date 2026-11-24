@@ -8,6 +8,16 @@ Versions up to 1.0.10 are the original firmware of The Things Products; their hi
 
 ---
 
+## [1.2.40] — Unreleased  (Info page: "TTN" instead of "Broker")
+
+Web UI wording only. No change in behaviour, in `status.cgi` or in the settings.
+
+**Changed:**
+
+- **"TTN connection", "TTN packets up" and "TTN packets down" on the Info page** (#16), instead of "Broker connection", "Broker packets up" and "Broker packets down". The MQTT broker connection of this gateway is only used for The Things Network, so the page now names it. The `status.cgi` fields keep their names (`connbroker`, `pup`, `pdown`).
+
+---
+
 ## [1.2.39] — 2026-11-25  (status page: real broker connection, UDP packet counters, frequency plan in use, readable uptime, no reset after a network re-initialisation)
 
 Web UI and `status.cgi` change and one bug fix. No setting change. Details: [`releases/1.2.39/README.md`](releases/1.2.39/README.md).

@@ -19,6 +19,7 @@ The work is done with the assistance of Large Language Models (Claude Code), on 
 | 1.2.37 | Random TCP source ports, no more stalled TLS handshakes after a reboot |
 | 1.2.38 | Web UI footer with the firmware version; UDP settings can be saved during start-up; public sync word with the built-in frequency plan |
 | 1.2.39 | Status page: broker connection from the MQTT state, UDP packet counters, frequency plan in use, uptime as hh:mm:ss, smaller MQTT task stack (no reset after a network re-initialisation) |
+| 1.2.40 | Info page names the connection to The Things Network "TTN" instead of "Broker" |
 
 All changes per version are in the [changelog](changelog.md). Each release has detailed notes in [`releases/`](./releases).
 
