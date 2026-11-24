@@ -542,7 +542,7 @@
                          projectFiles="true">
             <logicalFolder name="src" displayName="src" projectFiles="true">
               <logicalFolder name="Harmony" displayName="Harmony" projectFiles="true">
-                <itemPath>../vendor/paho.mqtt.embedded-c/MQTTClient-C/src/Harmony/MQTTHarmony.c</itemPath>
+                <itemPath>../src/MQTTHarmony.c</itemPath>
                 <itemPath>../vendor/paho.mqtt.embedded-c/MQTTClient-C/src/Harmony/MQTTHarmony.h</itemPath>
               </logicalFolder>
               <itemPath>../vendor/paho.mqtt.embedded-c/MQTTClient-C/src/MQTTClient.c</itemPath>

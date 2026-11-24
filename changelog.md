@@ -8,9 +8,9 @@ Versions up to 1.0.10 are the original firmware of The Things Products; their hi
 
 ---
 
-## [1.2.39] — Unreleased  (status page: real broker connection, UDP packet counters, frequency plan in use, readable uptime)
+## [1.2.39] — Unreleased  (status page: real broker connection, UDP packet counters, frequency plan in use, readable uptime, no reset after a network re-initialisation)
 
-Web UI and `status.cgi` change. No setting change.
+Web UI and `status.cgi` change and one bug fix. No setting change.
 
 **Added:**
 
@@ -26,6 +26,7 @@ Web UI and `status.cgi` change. No setting change.
 
 - **`connbroker` shows the MQTT connection** (#12). It was true whenever the gateway was in the operational state, also while the connection to the broker was being rebuilt (about 5 s after a UDP settings save on the test gateway). It is now true only while the MQTT connection is up.
 - **`pup` counts only uplinks that were delivered to the broker** (#12). Uplinks whose MQTT send failed were counted too. The same counter is reported in the status message to The Things Network.
+- **Reset on a failed allocation after a network re-initialisation** (#17). Every MQTT connect allocated a 16 KB stack for the MQTT read task. After the network had been re-initialised (an outage of more than a few seconds) the free heap could be laid out so that no free block of that size was left, although 58 KB was free; the failed allocation reset the gateway (`vApplicationMallocFailedHook`, seen once in a 24 h test of this version, 35 s without bridging). The task used 2.3 KB of that stack; it now gets 4 KB (`MQTT_TASK_STACK_WORDS` in `firmware/src/MQTTHarmony.c`, a copy of the file from the `paho.mqtt.embedded-c` submodule that is built in its place). This also leaves 12 KB more heap free while the gateway is connected.
 
 ---
 
