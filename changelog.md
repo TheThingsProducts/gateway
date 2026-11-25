@@ -8,9 +8,9 @@ Versions up to 1.0.10 are the original firmware of The Things Products; their hi
 
 ---
 
-## [1.2.39] — Unreleased  (status page: real broker connection, UDP packet counters, frequency plan in use, readable uptime, no reset after a network re-initialisation)
+## [1.2.39] — 2026-11-25  (status page: real broker connection, UDP packet counters, frequency plan in use, readable uptime, no reset after a network re-initialisation)
 
-Web UI and `status.cgi` change and one bug fix. No setting change.
+Web UI and `status.cgi` change and one bug fix. No setting change. Details: [`releases/1.2.39/README.md`](releases/1.2.39/README.md).
 
 **Added:**
 
