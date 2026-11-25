@@ -8,9 +8,9 @@ Versions up to 1.0.10 are the original firmware of The Things Products; their hi
 
 ---
 
-## [1.2.40] — Unreleased  (Info page: "TTN" instead of "Broker")
+## [1.2.40] — 2026-11-25  (Info page: "TTN" instead of "Broker")
 
-Web UI wording only. No change in behaviour, in `status.cgi` or in the settings.
+Web UI wording only. No change in behaviour, in `status.cgi` or in the settings. Details: [`releases/1.2.40/README.md`](releases/1.2.40/README.md).
 
 **Changed:**
 
