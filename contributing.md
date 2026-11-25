@@ -10,10 +10,10 @@ Thank you for considering contributing to this project! Please follow the guidel
    ```
 3. **Set up the toolchain**: the firmware builds with Microchip XC32 v1.42 and MPLAB X v3.45 only; see
    [`firmware/README.md`](firmware/README.md). Build with `firmware/compile.sh`.
-4. **Create a Branch** from `upd-only`, the branch that holds the current development. Use a descriptive
+4. **Create a Branch** from `develop`, the branch that holds the current development. Use a descriptive
    branch name for your changes:
    ```sh
-   git checkout -b feature/your-feature-name upd-only
+   git checkout -b feature/your-feature-name develop
    ```
 
 ## Making Changes
@@ -46,13 +46,13 @@ Thank you for considering contributing to this project! Please follow the guidel
 2. **Open a Pull Request**:
    - Navigate to the original repository.
    - Click on "New Pull Request".
-   - Select `upd-only` as the base branch, select your branch and provide a clear description of your
+   - Select `develop` as the base branch, select your branch and provide a clear description of your
      changes: what was wrong or missing, what the change does and how it was tested on a gateway.
 
 ## Code Review Process
 - PRs will be reviewed by maintainers.
 - Be open to feedback and make necessary changes.
-- Keep your branch up to date with `upd-only`.
+- Keep your branch up to date with `develop`.
 
 ## Reporting Issues
 - Check if the issue has already been reported in the [issues](https://github.com/pe1mew/gateway/issues).
