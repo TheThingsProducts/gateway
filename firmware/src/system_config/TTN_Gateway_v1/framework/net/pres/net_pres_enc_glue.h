@@ -55,6 +55,7 @@ uint16_t  NET_PRES_EncProviderWriteReady0(void * providerData, uint16_t reqSize,
 int32_t NET_PRES_EncProviderRead0(void * providerData, uint8_t * buffer, uint16_t size);
 int32_t NET_PRES_EncProviderReadReady0(void * providerData);
 int32_t NET_PRES_EncProviderPeek0(void * providerData, uint8_t * buffer, uint16_t size);
+void NET_PRES_EncGlue_SetSNIHostname(const char * hostname);
 #ifdef __CPLUSPLUS
 }
 #endif

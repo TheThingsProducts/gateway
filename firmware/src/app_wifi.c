@@ -77,7 +77,8 @@ typedef enum
 {
     EVENT_NONE,
     EVENT_SWITCH_TO_AP_MODE,
-    EVENT_SWITCH_TO_INFRA_MODE
+    EVENT_SWITCH_TO_INFRA_MODE,
+    EVENT_DISABLE_WIFI
 } EVENT_t;
 
 typedef enum
@@ -421,6 +422,37 @@ void APP_WIFI_Tasks(void)
             }
             break;
 
+        case EVENT_DISABLE_WIFI:
+            switch(_state)
+            {
+                case STATE_WAIT_CONFIG:
+                case STATE_TRANSACT:
+                    APP_WIFI_IFModules_Disable();
+                    APP_WIFI_IF_Down();
+
+                    // Reconfigure radio for INFRA mode to stop AP broadcast.
+                    // APP_WIFI_IF_Down() only drops the TCP/IP layer; the MRF24WN
+                    // chip keeps transmitting the AP SSID until the driver is
+                    // switched out of soft-AP mode.
+                    WDRV_CONFIG_LoadInfra(appWifiData.ssid, appWifiData.key,
+                                          appWifiData.sec_type, appWifiData.conn_type);
+                    ap_infra_set_data.config.data = &wf_configData;
+                    iwpriv_set(CONFIG_SET, &ap_infra_set_data);
+                    s_app_set_param.conn.initConnAllowed = false;
+                    iwpriv_set(INITCONN_OPTION_SET, &s_app_set_param);
+                    s_app_set_param.scan.prescanAllowed = false;
+                    iwpriv_set(PRESCAN_OPTION_SET, &s_app_set_param);
+                    APP_WIFI_IF_Up();
+
+                    _changeState(STATE_WAIT_CONFIG);
+                    _activeConfig = CNFG_NONE;
+                    _event        = EVENT_NONE;
+                    break;
+                default:
+                    break;
+            }
+            break;
+
         case EVENT_NONE:
             break;
     }
@@ -673,6 +705,11 @@ void APP_WIFI_AP_MODE(void)
 void APP_WIFI_INFRA_MODE(void)
 {
     _event = EVENT_SWITCH_TO_INFRA_MODE;
+}
+
+void APP_WIFI_DISABLE(void)
+{
+    _event = EVENT_DISABLE_WIFI;
 }
 
 bool APP_WIFI_Has_LinkAP(void)

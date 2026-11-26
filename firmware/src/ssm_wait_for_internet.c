@@ -28,6 +28,7 @@ static STATE_t  _state;
 static uint32_t settleStartTick      = 0;
 static uint32_t pingStartTick        = 0;
 static uint32_t wifiRetryStartTick   = 0;
+static uint32_t wifiConnectStartTick = 0;
 static bool     firstTimeAPReconnectTimeout;
 static uint32_t ntpStartTick        = 0;
 static bool     ntpEverSynchronized = false;
@@ -78,9 +79,14 @@ static void _changeState(STATE_t newState)
     switch(newState)
     {
         case STATE_WAIT_FOR_NETWORK:
-            if(appWifiData.valid)
+            wifiConnectStartTick = SYS_TMR_TickCountGet();
+            if(appWifiData.valid && !APP_ETH_Has_Link())
             {
                 APP_WIFI_INFRA_MODE();
+            }
+            else if(APP_ETH_Has_Link())
+            {
+                APP_WIFI_DISABLE();
             }
             break;
 
@@ -127,10 +133,15 @@ void SSMWaitForInternet_Tasks(void)
                 SYS_PRINT("INET: No Ethernet and no WiFi config\r\n");
                 _changeState(STATE_AP_ONLY);
             }
-            if(APP_WIFI_Has_LinkINFRA())
+            else if(APP_WIFI_Has_LinkINFRA())
             {
                 SYS_PRINT("INET: Gateway has WiFi\r\n");
                 _changeState(STATE_SETTLE);
+            }
+            else if((SYS_TMR_TickCountGet() - wifiConnectStartTick) >=
+                    (SYS_TMR_TickCounterFrequencyGet() * WIFI_CONNECT_TIMEOUT))
+            {
+                _changeState(STATE_AP_ONLY);
             }
             break;
 
@@ -140,7 +151,7 @@ void SSMWaitForInternet_Tasks(void)
                 _changeState(STATE_WAIT_FOR_NETWORK);
             }
             else if(appWifiData.valid && ((SYS_TMR_TickCountGet() - wifiRetryStartTick) >=
-                                          (SYS_TMR_TickCounterFrequencyGet() * WIFI_RETRY_TIMEOUT)))
+                                          (SYS_TMR_TickCounterFrequencyGet() * WIFI_CONNECT_TIMEOUT)))
             { // REVIEW: Use isElapsed kind of function
                 if(APP_WIFI_Has_LinkAP())
                 {

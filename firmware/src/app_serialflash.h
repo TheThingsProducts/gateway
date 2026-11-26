@@ -11,8 +11,9 @@
 /* ************************************************************************** */
 /* ************************************************************************** */
 
-#include "app.h"
 #include "crypto/crypto.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 /* Provide C++ Compatibility */
 #ifdef __cplusplus
@@ -94,11 +95,40 @@ extern "C"
 
 #define FLASH_ADDRESS_FOTA_IMAGE (FLASH_SECTOR_FOTA_IMAGE * FLASH_SECTOR_SIZE)
 
+#define FLASH_LENGTH_UDP_GW_DATA_MAGIC    4
+#define FLASH_ADDRESS_UDP_GW_DATA         0x7F0000UL
+#define FLASH_ADDRESS_UDP_GW_DATA_MAGIC   FLASH_ADDRESS_UDP_GW_DATA
+#define FLASH_ADDRESS_UDP_GW_DATA_BODY    (FLASH_ADDRESS_UDP_GW_DATA + FLASH_LENGTH_UDP_GW_DATA_MAGIC)
+
+#define FLASH_LENGTH_FOTA_OVR_DATA_MAGIC  4
+#define FLASH_ADDRESS_FOTA_OVR_DATA       0x7E0000UL
+#define FLASH_ADDRESS_FOTA_OVR_DATA_MAGIC FLASH_ADDRESS_FOTA_OVR_DATA
+#define FLASH_ADDRESS_FOTA_OVR_DATA_BODY  (FLASH_ADDRESS_FOTA_OVR_DATA + FLASH_LENGTH_FOTA_OVR_DATA_MAGIC)
+
+#define FLASH_ADDRESS_USER_CONFIG_BASE    FLASH_ADDRESS_FOTA_OVR_DATA
+
     // *****************************************************************************
     // *****************************************************************************
     // Section: Data Types
     // *****************************************************************************
     // *****************************************************************************
+
+    typedef struct
+    {
+        bool     enabled;
+        char     server_address[256];
+        uint16_t port_up;
+        uint16_t port_down;
+        bool     uplink_only;
+        uint8_t  _reserved[16];
+    } UDP_GW_CONF;
+
+    typedef struct
+    {
+        bool    override_enabled;
+        char    fota_url[256];
+        uint8_t _reserved[16];
+    } FOTA_OVERRIDE_CONF;
 
     // *****************************************************************************
     // *****************************************************************************
@@ -144,6 +174,18 @@ extern "C"
     void APP_SERIALFLASH_FinalizeFOTA(void);
     void APP_SERIALFLASH_EraseFOTAData(void);
     void APP_SERIALFLASH_EraseFOTA(void);
+
+    bool APP_SERIALFLASH_HasUDPConfig(void);
+    void APP_SERIALFLASH_LoadUDPConfig(void);
+    void APP_SERIALFLASH_EraseUDPConfig(void);
+    void APP_SERIALFLASH_SaveUDPConfig(UDP_GW_CONF* conf);
+    void APP_SERIALFLASH_GetUDPConfig(UDP_GW_CONF* conf);
+
+    bool APP_SERIALFLASH_HasFOTAOverride(void);
+    void APP_SERIALFLASH_LoadFOTAOverride(void);
+    void APP_SERIALFLASH_EraseFOTAOverride(void);
+    void APP_SERIALFLASH_SaveFOTAOverride(FOTA_OVERRIDE_CONF* conf);
+    void APP_SERIALFLASH_GetFOTAOverride(FOTA_OVERRIDE_CONF* conf);
 
     void APP_SERIALFLASH_EraseChip(void);
 

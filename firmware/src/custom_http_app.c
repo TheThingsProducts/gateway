@@ -53,12 +53,18 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "json-builder.h"
 
 #include "app_activation.h"
+#include "app_lora.h"
 #include "app_mqtt.h"
+#include "app_udp.h"
+#include "app_serialflash.h"
 #include "bootloader_version.h"
 #include "version.h"
 #include "time.h"
 
 extern APP_GW_ACTIVATION_DATA appGWActivationData;
+extern UDP_GW_CONF            g_udp_gw_conf;
+extern FOTA_OVERRIDE_CONF     g_fota_override_conf;
+extern bool                   g_udp_conf_changed;
 
 /****************************************************************************
   Section:
@@ -82,6 +88,7 @@ extern APP_GW_ACTIVATION_DATA appGWActivationData;
     Function Prototypes
  ****************************************************************************/
 static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool fromsettings);
+static HTTP_IO_RESULT HTTPPostUDPConfig(HTTP_CONN_HANDLE connHandle);
 
 /****************************************************************************
   Section:
@@ -480,6 +487,10 @@ HTTP_IO_RESULT TCPIP_HTTP_PostExecute(HTTP_CONN_HANDLE connHandle)
     // Make sure uint8_t filename[] above is large enough for your longest name
     SYS_FS_FileNameGet(TCPIP_HTTP_CurrentConnectionFileGet(connHandle), filename, sizeof(filename));
 
+    if(!strcmp((char*)filename, "udp.cgi"))
+    {
+        return HTTPPostUDPConfig(connHandle);
+    }
     if(!strcmp((char*)filename, "settings.cgi"))
     {
         return HTTPPostWIFIConfig(connHandle, true);
@@ -547,6 +558,11 @@ static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool froms
     uint8_t gwkey[255];
     uint8_t activationurl[255];
 
+    bool staging_fotaen       = false;
+    char staging_fotaul[94]   = {0};
+    bool staging_fota_seen_en = false;
+    bool staging_fota_seen_ul = false;
+
     byteCount = TCPIP_HTTP_CurrentConnectionByteCountGet(connHandle);
     sktHTTP   = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
     if(byteCount > TCPIP_TCP_GetIsReady(sktHTTP) + TCPIP_TCP_FifoRxFreeGet(sktHTTP))
@@ -564,11 +580,11 @@ static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool froms
     while(TCPIP_HTTP_CurrentConnectionByteCountGet(connHandle))
     {
         // Read a form field name.
-        if(TCPIP_HTTP_PostNameRead(connHandle, httpDataBuff, 6) != HTTP_READ_OK)
+        if(TCPIP_HTTP_PostNameRead(connHandle, httpDataBuff, 8) != HTTP_READ_OK)
             return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
 
         // Read a form field value.
-        if(TCPIP_HTTP_PostValueRead(connHandle, httpDataBuff + 6, 152 - 6 - 2) !=
+        if(TCPIP_HTTP_PostValueRead(connHandle, httpDataBuff + 7, 152 - 7 - 2) !=
            HTTP_READ_OK) // TCPIP_HTTP_MAX_DATA_LEN
             return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
 
@@ -577,15 +593,15 @@ static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool froms
         {
             // Get the network type: Ad-Hoc or Infrastructure.
             char networkType[6];
-            if(strlen((char*)(httpDataBuff + 6)) > 5) /* Sanity check. */
+            if(strlen((char*)(httpDataBuff + 7)) > 5) /* Sanity check. */
             {
                 gotWLAN = false;
                 continue;
             }
             // return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
 
-            memcpy(networkType, (void*)(httpDataBuff + 6), strlen((char*)(httpDataBuff + 6)));
-            networkType[strlen((char*)(httpDataBuff + 6))] = 0; /* Terminate string. */
+            memcpy(networkType, (void*)(httpDataBuff + 7), strlen((char*)(httpDataBuff + 7)));
+            networkType[strlen((char*)(httpDataBuff + 7))] = 0; /* Terminate string. */
             if(!strcmp((char*)networkType, (const char*)"infra"))
             {
                 gotWLAN                         = true;
@@ -620,10 +636,10 @@ static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool froms
         else if(strcmp((char*)httpDataBuff, "ssid") == 0)
         {
             // Get new SSID and make sure it is valid.
-            if(strlen((char*)(httpDataBuff + 6)) < 33u)
+            if(strlen((char*)(httpDataBuff + 7)) < 33u)
             {
-                memcpy(g_redirectionConfig.ssid, (void*)(httpDataBuff + 6), strlen((char*)(httpDataBuff + 6)));
-                g_redirectionConfig.ssid[strlen((char*)(httpDataBuff + 6))] = 0; /* Terminate string. */
+                memcpy(g_redirectionConfig.ssid, (void*)(httpDataBuff + 7), strlen((char*)(httpDataBuff + 7)));
+                g_redirectionConfig.ssid[strlen((char*)(httpDataBuff + 7))] = 0; /* Terminate string. */
 
                 /* Save current profile SSID for displaying later. */
                 s_httpapp_get_param.ssid.ssid = g_redirectionConfig.prevSSID;
@@ -644,14 +660,14 @@ static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool froms
         {
             char securityMode[7]; // Read security mode.
 
-            if(strlen((char*)(httpDataBuff + 6)) > 6) /* Sanity check. */
+            if(strlen((char*)(httpDataBuff + 7)) > 6) /* Sanity check. */
             {
                 continue;
                 // return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
             }
 
-            memcpy(securityMode, (void*)(httpDataBuff + 6), strlen((char*)(httpDataBuff + 6)));
-            securityMode[strlen((char*)(httpDataBuff + 6))] = 0; /* Terminate string. */
+            memcpy(securityMode, (void*)(httpDataBuff + 7), strlen((char*)(httpDataBuff + 7)));
+            securityMode[strlen((char*)(httpDataBuff + 7))] = 0; /* Terminate string. */
 
             if(strcmp((char*)securityMode, (const char*)"no") == 0)
             {
@@ -703,13 +719,13 @@ static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool froms
                 if(!fromsettings) return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
             }
             */
-            if(strlen((char*)(httpDataBuff + 6)) > 63) /* Sanity check. */
+            if(strlen((char*)(httpDataBuff + 7)) > 63) /* Sanity check. */
             {
                 continue;
             }
-            g_redirectionConfig.securityKeyLen = strlen((char*)(httpDataBuff + 6));
-            memcpy(g_redirectionConfig.securityKey, (void*)(httpDataBuff + 6), strlen((char*)(httpDataBuff + 6)));
-            g_redirectionConfig.securityKey[strlen((char*)(httpDataBuff + 6))] = 0; /* Terminate string. */
+            g_redirectionConfig.securityKeyLen = strlen((char*)(httpDataBuff + 7));
+            memcpy(g_redirectionConfig.securityKey, (void*)(httpDataBuff + 7), strlen((char*)(httpDataBuff + 7)));
+            g_redirectionConfig.securityKey[strlen((char*)(httpDataBuff + 7))] = 0; /* Terminate string. */
             gotKEY                                                             = true;
         }
 
@@ -727,11 +743,11 @@ static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool froms
                 //                    SYS_PRINT(gwid);
                 //                    gotGWID=true;
                 //                }
-                if(strlen((char*)(httpDataBuff + 6)) <
+                if(strlen((char*)(httpDataBuff + 7)) <
                    33u) // REVIEW: remove magic number by using sizeof destination array
                 {
-                    memcpy(gwid, (void*)(httpDataBuff + 6), strlen((char*)(httpDataBuff + 6)));
-                    gwid[strlen((char*)(httpDataBuff + 6))] = 0; /* Terminate string. */
+                    memcpy(gwid, (void*)(httpDataBuff + 7), strlen((char*)(httpDataBuff + 7)));
+                    gwid[strlen((char*)(httpDataBuff + 7))] = 0; /* Terminate string. */
                     SYS_PRINT("\r\nGOT GWID via post: ");
                     SYS_PRINT(gwid);
                     gotGWID = true;
@@ -746,11 +762,11 @@ static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool froms
             else if(strcmp((char*)httpDataBuff, "asrv") == 0 && !appGWActivationData.locked)
             {
                 // Get new SSID and make sure it is valid.
-                if(strlen((char*)(httpDataBuff + 6)) <
+                if(strlen((char*)(httpDataBuff + 7)) <
                    255u) // REVIEW: remove magic number by using sizeof destination array
                 {
-                    memcpy(activationurl, (void*)(httpDataBuff + 6), strlen((char*)(httpDataBuff + 6)));
-                    activationurl[strlen((char*)(httpDataBuff + 6))] = 0; /* Terminate string. */
+                    memcpy(activationurl, (void*)(httpDataBuff + 7), strlen((char*)(httpDataBuff + 7)));
+                    activationurl[strlen((char*)(httpDataBuff + 7))] = 0; /* Terminate string. */
 
                     SYS_PRINT("\r\nGOT ASRV via post: ");
                     SYS_PRINT(activationurl);
@@ -767,14 +783,34 @@ static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool froms
             {
                 fromapp = true;
             }
+            else if(strcmp((char*)httpDataBuff, "fotaen") == 0)
+            {
+                if(strlen((char*)(httpDataBuff + 7)) == 1)
+                {
+                    staging_fotaen    = (httpDataBuff[7] == '1');
+                    staging_fota_seen_en = true;
+                }
+            }
+            else if(strcmp((char*)httpDataBuff, "fotaul") == 0)
+            {
+                uint16_t vlen = (uint16_t)strlen((char*)(httpDataBuff + 7));
+                if(vlen >= sizeof(staging_fotaul))
+                {
+                    SYS_CONSOLE_MESSAGE("\r\nExiting Via fotaul\r\n");
+                    return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
+                }
+                strncpy(staging_fotaul, (char*)(httpDataBuff + 7), sizeof(staging_fotaul) - 1);
+                staging_fotaul[sizeof(staging_fotaul) - 1] = '\0';
+                staging_fota_seen_ul = true;
+            }
             else if(strcmp((char*)httpDataBuff, "gwky") == 0 && !appGWActivationData.locked)
             {
                 // Get new SSID and make sure it is valid.
-                if(strlen((char*)(httpDataBuff + 6)) <
+                if(strlen((char*)(httpDataBuff + 7)) <
                    255u) // REVIEW: remove magic number by using sizeof destination array
                 {
-                    memcpy(gwkey, (void*)(httpDataBuff + 6), strlen((char*)(httpDataBuff + 6)));
-                    gwkey[strlen((char*)(httpDataBuff + 6))] = 0; /* Terminate string. */
+                    memcpy(gwkey, (void*)(httpDataBuff + 7), strlen((char*)(httpDataBuff + 7)));
+                    gwkey[strlen((char*)(httpDataBuff + 7))] = 0; /* Terminate string. */
 
                     SYS_PRINT("\r\nGOT gateway-key via post: ");
                     SYS_PRINT(gwkey);
@@ -788,6 +824,13 @@ static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool froms
                 }
             }
         }
+    }
+
+    if(staging_fota_seen_en && staging_fota_seen_ul)
+    {
+        g_fota_override_conf.override_enabled = staging_fotaen;
+        strncpy(g_fota_override_conf.fota_url, staging_fotaul, sizeof(g_fota_override_conf.fota_url) - 1);
+        g_fota_override_conf.fota_url[sizeof(g_fota_override_conf.fota_url) - 1] = '\0';
     }
 
     if(appGWActivationData.locked)
@@ -812,7 +855,13 @@ static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool froms
 
     if(!gotGWID && !gotSSID)
     {
-        // if we don't get a new id and no ssid then do nothing
+        if(staging_fota_seen_en && staging_fota_seen_ul)
+        {
+            // FOTA-only change: trigger full save+reboot sequence
+            uint16_t redirection_delay = SYS_TMR_TickCounterFrequencyGet() * HTTP_APP_REDIRECTION_DELAY_TIME;
+            SYS_TMR_CallbackSingle(redirection_delay, 0, Helper_APP_RedirectionFlagSet);
+            g_config_changed = true;
+        }
         strcpy((char*)httpDataBuff, "/");
         TCPIP_HTTP_CurrentConnectionStatusSet(connHandle, HTTP_REDIRECT);
         return HTTP_IO_DONE;
@@ -943,6 +992,115 @@ static HTTP_IO_RESULT HTTPPostWIFIConfig(HTTP_CONN_HANDLE connHandle, bool froms
     return HTTP_IO_DONE;
 }
 #endif // defined(HTTP_APP_USE_WIFI)
+
+static HTTP_IO_RESULT HTTPPostUDPConfig(HTTP_CONN_HANDLE connHandle)
+{
+    uint32_t   byteCount;
+    TCP_SOCKET sktHTTP;
+    uint8_t*   httpDataBuff = 0;
+
+    bool gotServer = false, gotPortUp = false, gotPortDn = false;
+    bool gotUpOnly = false, gotUdpEn  = false;
+
+    char     server[95]  = {0};
+    uint16_t port_up     = 1700;
+    uint16_t port_dn     = 1700;
+    bool     uplink_only = false;
+    bool     enabled     = false;
+
+    byteCount = TCPIP_HTTP_CurrentConnectionByteCountGet(connHandle);
+    sktHTTP   = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
+    if(byteCount > TCPIP_TCP_GetIsReady(sktHTTP) + TCPIP_TCP_FifoRxFreeGet(sktHTTP))
+        return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
+    if(TCPIP_TCP_GetIsReady(sktHTTP) < byteCount)
+        return HTTP_IO_NEED_DATA;
+
+    httpDataBuff = TCPIP_HTTP_CurrentConnectionDataBufferGet(connHandle);
+
+    while(TCPIP_HTTP_CurrentConnectionByteCountGet(connHandle))
+    {
+        if(TCPIP_HTTP_PostNameRead(connHandle, httpDataBuff, 8) != HTTP_READ_OK)
+            return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
+        if(TCPIP_HTTP_PostValueRead(connHandle, httpDataBuff + 7, 93) != HTTP_READ_OK)
+            return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
+
+        if(strcmp((char*)httpDataBuff, "server") == 0)
+        {
+            if(strlen((char*)(httpDataBuff + 7)) >= sizeof(server))
+            {
+                SYS_CONSOLE_MESSAGE("\r\nExiting Via UDP server\r\n");
+                return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
+            }
+            memcpy(server, (void*)(httpDataBuff + 7), strlen((char*)(httpDataBuff + 7)));
+            server[strlen((char*)(httpDataBuff + 7))] = '\0';
+            gotServer = true;
+        }
+        else if(strcmp((char*)httpDataBuff, "portup") == 0)
+        {
+            char*    end;
+            uint32_t val = strtoul((char*)(httpDataBuff + 7), &end, 10);
+            if(end == (char*)(httpDataBuff + 7) || val < 1 || val > 65535)
+            {
+                SYS_CONSOLE_MESSAGE("\r\nExiting Via UDP portup\r\n");
+                return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
+            }
+            port_up   = (uint16_t)val;
+            gotPortUp = true;
+        }
+        else if(strcmp((char*)httpDataBuff, "portdn") == 0)
+        {
+            char*    end;
+            uint32_t val = strtoul((char*)(httpDataBuff + 7), &end, 10);
+            if(end == (char*)(httpDataBuff + 7) || val < 1 || val > 65535)
+            {
+                SYS_CONSOLE_MESSAGE("\r\nExiting Via UDP portdn\r\n");
+                return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
+            }
+            port_dn   = (uint16_t)val;
+            gotPortDn = true;
+        }
+        else if(strcmp((char*)httpDataBuff, "uponly") == 0)
+        {
+            if(strlen((char*)(httpDataBuff + 7)) != 1)
+                continue;
+            uplink_only = (httpDataBuff[7] == '1');
+            gotUpOnly   = true;
+        }
+        else if(strcmp((char*)httpDataBuff, "udpen") == 0)
+        {
+            if(strlen((char*)(httpDataBuff + 7)) != 1)
+                continue;
+            enabled  = (httpDataBuff[7] == '1');
+            gotUdpEn = true;
+        }
+    }
+
+    SYS_PRINT("UDP POST: server=%d portup=%d portdn=%d uponly=%d en=%d\r\n",
+              gotServer, gotPortUp, gotPortDn, gotUpOnly, gotUdpEn);
+
+    if(enabled && (!gotServer || strlen(server) == 0))
+    {
+        SYS_CONSOLE_MESSAGE("\r\nExiting Via UDP: enabled but no server\r\n");
+        return Helper_APP_ConfigFailure(connHandle, httpDataBuff);
+    }
+
+    if(gotServer)
+    {
+        strncpy(g_udp_gw_conf.server_address, server, sizeof(g_udp_gw_conf.server_address) - 1);
+        g_udp_gw_conf.server_address[sizeof(g_udp_gw_conf.server_address) - 1] = '\0';
+    }
+    if(gotPortUp) g_udp_gw_conf.port_up    = port_up;
+    if(gotPortDn) g_udp_gw_conf.port_down  = port_dn;
+    if(gotUpOnly) g_udp_gw_conf.uplink_only = uplink_only;
+    if(gotUdpEn)  g_udp_gw_conf.enabled    = enabled;
+
+    g_udp_conf_changed = true;
+    APP_UDP_Reset();
+
+    strcpy((char*)httpDataBuff, "/udp.html");
+    TCPIP_HTTP_CurrentConnectionStatusSet(connHandle, HTTP_REDIRECT);
+    return HTTP_IO_DONE;
+}
 
 #endif // defined(TCPIP_HTTP_USE_POST)
 
@@ -1205,6 +1363,8 @@ void TCPIP_HTTP_Print_gwsettings(HTTP_CONN_HANDLE connHandle)
         json_object_push(obj, "gwkey", json_key);
         json_object_push(obj, "asrv", json_string_new(appGWActivationData.configuration.account_server_url));
         json_object_push(obj, "locked", json_boolean_new(appGWActivationData.locked));
+        json_object_push(obj, "fotaen", json_boolean_new(g_fota_override_conf.override_enabled));
+        json_object_push(obj, "fotaul", json_string_new(g_fota_override_conf.fota_url));
         settingsbuffer = malloc(json_measure(obj));
         json_serialize(settingsbuffer, obj);
 
@@ -1272,6 +1432,19 @@ void TCPIP_HTTP_Print_gwstatus(HTTP_CONN_HANDLE connHandle)
 
         json_object_push(obj, "activation_locked", json_boolean_new(appGWActivationData.locked));
         json_object_push(obj, "configured", json_boolean_new(APP_LORA_HAS_CORRECT_FREQ_PLAN()));
+        // Why "configured" is false: not configured yet, or running on the built-in plan
+        switch(APP_LORA_FREQ_PLAN_SOURCE())
+        {
+            case LORA_FREQ_PLAN_DOWNLOADED:
+                json_object_push(obj, "freqplan", json_string_new("downloaded"));
+                break;
+            case LORA_FREQ_PLAN_BUILTIN:
+                json_object_push(obj, "freqplan", json_string_new("builtin"));
+                break;
+            default:
+                json_object_push(obj, "freqplan", json_string_new("none"));
+                break;
+        }
         json_object_push(obj, "region", json_string_new(appGWActivationData.configuration.frequency_plan));
         if(APP_LORA_GW_CARD_VERSION() == LORA_BAND_868)
             json_object_push(obj, "gwcard", json_string_new("868Mhz"));
@@ -1280,11 +1453,16 @@ void TCPIP_HTTP_Print_gwstatus(HTTP_CONN_HANDLE connHandle)
         else
             json_object_push(obj, "gwcard", json_string_new("ND"));
 
-        json_object_push(obj, "connbroker", json_boolean_new(GatewayIsOperational()));
+        json_object_push(obj, "connbroker", json_boolean_new(GatewayIsBrokerConnected()));
+        json_object_push(obj, "connudp", json_boolean_new(APP_UDP_IsConnected()));
         uint32_t pup = 0, pdown = 0;
         getPacketCount(&pup, &pdown);
         json_object_push(obj, "pup", json_integer_new(pup));
         json_object_push(obj, "pdown", json_integer_new(pdown));
+        uint32_t udpup = 0, udpdown = 0;
+        APP_UDP_GetPacketCount(&udpup, &udpdown);
+        json_object_push(obj, "udpup", json_integer_new(udpup));
+        json_object_push(obj, "udpdown", json_integer_new(udpdown));
 
         json_object_push(obj, "estor", json_boolean_new(APP_SDCARD_IsMounted()));
 
@@ -1292,6 +1470,69 @@ void TCPIP_HTTP_Print_gwstatus(HTTP_CONN_HANDLE connHandle)
         ;
         json_serialize(settingsbuffer, obj);
 
+        callbackPos = (uint32_t)settingsbuffer;
+        json_builder_free(obj);
+    }
+    callbackPos =
+        (uint32_t)TCPIP_TCP_StringPut(TCPIP_HTTP_CurrentConnectionSocketGet(connHandle), (uint8_t*)callbackPos);
+    if(*(uint8_t*)callbackPos == '\0')
+    {
+        callbackPos = 0x00;
+        free(settingsbuffer);
+    }
+    TCPIP_HTTP_CurrentConnectionCallbackPosSet(connHandle, callbackPos);
+}
+
+#define FOOTER_STR_(x) #x
+#define FOOTER_STR(x) FOOTER_STR_(x)
+
+/*
+ * Page footer (dynamic variable ~gwfooter~): firmware version and a link to the source
+ * repository. The text exists once, here in program memory, and every page calls it, so the
+ * pages do not each carry a copy. The version comes from version.h at build time. No separator
+ * line and the small grey style of the pages (header.inc), so it reads as part of the page.
+ */
+void TCPIP_HTTP_Print_gwfooter(HTTP_CONN_HANDLE connHandle)
+{
+    static const char footer[] =
+        "<center style=\"margin-top:2em;font-size:.8em;color:#999\">Firmware "
+        FOOTER_STR(VERSION_MAJOR) "." FOOTER_STR(VERSION_MINOR) "." FOOTER_STR(VERSION_PATCH)
+        " &middot; <a href=\"https://github.com/pe1mew/gateway/\" target=\"_blank\" rel=\"noopener\">"
+        "github.com/pe1mew/gateway</a></center>";
+    uint32_t callbackPos = TCPIP_HTTP_CurrentConnectionCallbackPosGet(connHandle);
+
+    if(callbackPos == 0x00u)
+    {
+        callbackPos = (uint32_t)footer;
+    }
+    // StringPut returns where it stopped when the TCP buffer is full; the HTTP server calls
+    // again with that position until the terminator is reached
+    callbackPos =
+        (uint32_t)TCPIP_TCP_StringPut(TCPIP_HTTP_CurrentConnectionSocketGet(connHandle), (uint8_t*)callbackPos);
+    if(*(uint8_t*)callbackPos == '\0')
+    {
+        callbackPos = 0x00;
+    }
+    TCPIP_HTTP_CurrentConnectionCallbackPosSet(connHandle, callbackPos);
+}
+
+void TCPIP_HTTP_Print_gwudp(HTTP_CONN_HANDLE connHandle)
+{
+    uint32_t callbackPos;
+    callbackPos = TCPIP_HTTP_CurrentConnectionCallbackPosGet(connHandle);
+    if(callbackPos == 0x00u)
+    {
+        char eui_str[17];
+        APP_UDP_GetEUI64String(eui_str);
+        json_value* obj = json_object_new(0);
+        json_object_push(obj, "enabled", json_boolean_new(g_udp_gw_conf.enabled));
+        json_object_push(obj, "server", json_string_new(g_udp_gw_conf.server_address));
+        json_object_push(obj, "portup", json_integer_new(g_udp_gw_conf.port_up));
+        json_object_push(obj, "portdn", json_integer_new(g_udp_gw_conf.port_down));
+        json_object_push(obj, "uponly", json_boolean_new(g_udp_gw_conf.uplink_only));
+        json_object_push(obj, "gateway_eui", json_string_new(eui_str));
+        settingsbuffer = malloc(json_measure(obj));
+        json_serialize(settingsbuffer, obj);
         callbackPos = (uint32_t)settingsbuffer;
         json_builder_free(obj);
     }

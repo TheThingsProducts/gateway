@@ -12,11 +12,17 @@
 #include "app_ota.h"
 #include "helper_wdt.h"
 #include "app_mqtt.h"
+#include "app_udp.h"
 #include "ssm_button.h"
 #include "error_messages.h"
 
 #define FATAL_ERROR_REBOOT_TIMEOUT 10      // seconds till reboot after entering the error state
 #define FIRMWARE_CHECK_TIMEOUT (24 * 3600) // one day before recheck if new firmware is available
+/* Issue #2: consecutive MQTT failures tolerated with an MQTT-only reconnect before the
+   whole network stack is torn down and re-initialised (which used to happen on every
+   single publish timeout and forced a fresh TLS session on a fragmented heap). */
+#define MQTT_ERRORS_BEFORE_NETWORK_RESET 3
+static uint8_t mqttErrorCount = 0;
 #define BLINK_FREQ_FAST 10
 #define BLINK_FREQ_SLOW 2
 
@@ -30,6 +36,7 @@ typedef enum
     APP_STATE_OPERATIONAL,
     APP_STATE_WAIT_FOR_INTERNET_WHILE_OPERATIONAL,
     APP_STATE_STORE_USER_CONFIG,
+    APP_STATE_STORE_UDP_CONFIG,
     APP_STATE_ERASE_ACTI_CONFIG,
     APP_STATE_ERASE_WIFI_CONFIG,
     APP_STATE_REBOOT,
@@ -100,16 +107,23 @@ static ConnState_t rememberedNetworkState = {0};
 static uint32_t    ledBinkStartTick       = 0;
 static uint32_t    buttonReleaseStartTick = 0;
 
-APP_GW_ACTIVATION_DATA appGWActivationData = {0};
-APP_GW_WIFI_DATA       appWifiData         = {0};
+APP_GW_ACTIVATION_DATA appGWActivationData  = {0};
+APP_GW_WIFI_DATA       appWifiData          = {0};
+UDP_GW_CONF            g_udp_gw_conf        = {0};
+FOTA_OVERRIDE_CONF     g_fota_override_conf = {0};
 
 bool button_was_pressed = false;
 
 static SYS_TMR_HANDLE delayHandle;
 
 WF_CONFIG_DATA g_wifi_cfg;
-bool           g_config_changed  = false;
-bool           g_redirect_signal = false;
+bool           g_config_changed   = false;
+bool           g_udp_conf_changed = false;
+bool           g_redirect_signal  = false;
+
+// State to return to after APP_STATE_STORE_UDP_CONFIG, and whether a store request is waiting
+static STATE_t udpStoreReturnState = APP_STATE_OPERATIONAL;
+static bool    udpStoreDeferred    = false;
 
 void APP_Initialize(void)
 {
@@ -159,6 +173,7 @@ void APP_Initialize(void)
 
     APP_BLE_Initialize();
     APP_MQTT_Initialize();
+    APP_UDP_Initialize();
 
     /* Place the App state machine in its initial state. */
     _state = APP_STATE_MOUNT_FS;
@@ -265,6 +280,9 @@ static void _changeState(STATE_t newState)
             _statSet(LED_ACTIVITY, OFF);
             break;
 
+        case APP_STATE_STORE_UDP_CONFIG:
+            break;
+
         case APP_STATE_ERASE_ACTI_CONFIG:
             APP_SERIALFLASH_EraseActivationData();
             ledBinkStartTick = SYS_TMR_TickCountGet();
@@ -347,6 +365,30 @@ void APP_Tasks(void)
         {
             _changeState(APP_STATE_STORE_USER_CONFIG);
             g_config_changed = false;
+        }
+        if(g_udp_conf_changed)
+        {
+            // The UDP settings are stored from the operational state and from the two wait states
+            // only. In every other state the request stays pending until one of these is reached:
+            // leaving the online configuration or the firmware download half way would skip the
+            // rest of the boot sequence (LoRa module not started, no router address).
+            switch(_state)
+            {
+                case APP_STATE_WAIT_FOR_INTERNET:
+                case APP_STATE_OPERATIONAL:
+                case APP_STATE_WAIT_FOR_INTERNET_WHILE_OPERATIONAL:
+                    g_udp_conf_changed  = false;
+                    udpStoreReturnState = _state;
+                    _changeState(APP_STATE_STORE_UDP_CONFIG);
+                    break;
+                default:
+                    if(!udpStoreDeferred)
+                    {
+                        udpStoreDeferred = true;
+                        SYS_PRINT("\r\nMAIN: UDP config changed in state %d, storing it later\r\n", _state);
+                    }
+                    break;
+            }
         }
         if(SSMButton_IsPressed())
         {
@@ -580,13 +622,26 @@ void APP_Tasks(void)
             }
             else if(APP_MQTT_GET_STATE() == APP_TTNGWC_ERROR)
             {
-                SYS_PRINT("\r\nMAIN: MQTT error\r\n");
                 ErrorMessageWarning_Set(ERROR_MESSAGE_WARNING_MQTT_COMMUNICATION_FAILURE);
-                _changeState(APP_STATE_WAIT_FOR_INTERNET_WHILE_OPERATIONAL);
+                mqttErrorCount++;
+                if(mqttErrorCount < MQTT_ERRORS_BEFORE_NETWORK_RESET)
+                {
+                    SYS_PRINT("\r\nMAIN: MQTT error, reconnecting MQTT only (%u)\r\n", (unsigned)mqttErrorCount);
+                    appData.mqtt_connection_state = false;
+                    _statSet(LED_MQTT, OFF);
+                    APP_MQTT_Reset();
+                }
+                else
+                {
+                    SYS_PRINT("\r\nMAIN: MQTT error, re-initialising network\r\n");
+                    mqttErrorCount = 0;
+                    _changeState(APP_STATE_WAIT_FOR_INTERNET_WHILE_OPERATIONAL);
+                }
             }
             else if(!appData.mqtt_connection_state && APP_MQTT_GET_STATE() == APP_TTNGWC_IDLE)
             {
                 appData.mqtt_connection_state = true;
+                mqttErrorCount                = 0;
                 _statSet(LED_MQTT, ON);
                 SYS_PRINT("\r\n*************************");
                 SYS_PRINT("\r\nMAIN: Gateway bridging");
@@ -697,6 +752,7 @@ void APP_Tasks(void)
             APP_ETH_Tasks();
             APP_WIFI_Tasks();
             APP_MQTT_Tasks();
+            APP_UDP_Tasks();
             break;
         case APP_STATE_WAIT_FOR_INTERNET_WHILE_OPERATIONAL:
             APP_ETH_Tasks();
@@ -709,6 +765,42 @@ void APP_Tasks(void)
             SSMStoreUserConfig_Tasks();
             APP_SERIALFLASH_Tasks();
             break;
+        case APP_STATE_STORE_UDP_CONFIG:
+        {
+            static int udp_save_sub = 0;
+            APP_ETH_Tasks();
+            APP_WIFI_Tasks();
+            APP_SERIALFLASH_Tasks();
+            if(udp_save_sub == 0 && APP_SERIALFLASH_IsReady())
+            {
+                APP_SERIALFLASH_EraseUDPConfig();
+                udp_save_sub = 1;
+            }
+            else if(udp_save_sub == 1 && APP_SERIALFLASH_IsReady())
+            {
+                APP_SERIALFLASH_SaveUDPConfig(&g_udp_gw_conf);
+                udp_save_sub = 2;
+            }
+            else if(udp_save_sub == 2 && APP_SERIALFLASH_IsReady())
+            {
+                udp_save_sub     = 0;
+                udpStoreDeferred = false;
+                SYS_PRINT("\r\nMAIN: UDP config stored\r\n");
+                if(udpStoreReturnState == APP_STATE_OPERATIONAL)
+                {
+                    _changeState(APP_STATE_OPERATIONAL);
+                }
+                else
+                {
+                    // The wait states have no leave handler and their sub state machine was only
+                    // paused: continue where it was instead of entering the state again (that
+                    // would restart the network selection and drop an access point client).
+                    SYS_PRINT("MAIN: Resuming state %d\r\n", udpStoreReturnState);
+                    _state = udpStoreReturnState;
+                }
+            }
+            break;
+        }
         case APP_STATE_ERASE_ACTI_CONFIG:
         case APP_STATE_ERASE_WIFI_CONFIG:
             APP_SERIALFLASH_Tasks();
@@ -744,6 +836,14 @@ bool hasNetworkChanged(void)
 bool GatewayIsOperational(void)
 {
     return _state == APP_STATE_OPERATIONAL;
+}
+
+// True while the MQTT connection to the broker is established: the same flag that drives the
+// MQTT LED and the "Gateway bridging" console line. The operational state alone is not enough,
+// it is also held while the connection is being set up or reconnected.
+bool GatewayIsBrokerConnected(void)
+{
+    return _state == APP_STATE_OPERATIONAL && appData.mqtt_connection_state;
 }
 
 bool jumperPlaced()

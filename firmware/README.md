@@ -97,6 +97,26 @@ After building the project using the MPLabX GUI, the paths in the `configuration
 | APP_TASKS   | 2        | 4096 |
 | MQTTTASK    | 1        | 4096 |
 
+## Changelog
+
+### v1.2.23
+- Fixed PUSH_DATA bandwidth encoding: corrected `bw_khz()` mapping (`LORA_BW_500K`=500, `LORA_BW_250K`=250, `LORA_BW_125K`=125 kHz)
+- Fixed PUSH_DATA datarate encoding: convert gateway bitmask to SF number (0x02→SF7 … 0x20→SF11)
+- Fixed PUSH_DATA RSSI and SNR encoding: reinterpret `int32_t` field bits as IEEE 754 `float` via `memcpy`
+
+### v1.2.22
+- Fixed flash corruption when saving UDP server address: removed direct `APP_SERIALFLASH_SaveUDPConfig` call from HTTP handler; config is now saved exclusively via the `APP_STATE_STORE_UDP_CONFIG` state machine
+
+### v1.2.21
+- Fixed zero EUI in UDP PUSH_DATA and PULL_DATA: moved `build_eui64()` call to `APP_UDP_OPEN_SOCKET` state to ensure WiFi MAC is available
+
+### v1.2.20
+- Increased UDP TX buffer from 384 to 700 bytes to accommodate large LoRa payloads
+- Changed all UDP forwarder log messages from `SYS_ERROR_DEBUG` to `SYS_PRINT` so they appear in the serial console
+
+### v1.2.19
+- Fixed FOTA URL not persisting over reboot when submitted without changing WiFi settings
+
 ## SERIALFLASH LAYOUT
 
 | Sector | Address | Content                   | Length (Bytes)  |

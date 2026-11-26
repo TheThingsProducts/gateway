@@ -135,6 +135,7 @@ const HEAD_MAGIC_t _HEAD_MAGIC = {'h', 'e', 'a', 'p', 's', 't', 'r', 't'};
 const HEAD_MAGIC_t _VOID_MAGIC = {'h', 'e', 'a', 'p', 'v', 'o', 'i', 'd'};
 const TAIL_MAGIC_t _TAIL_MAGIC = {'h', 'e', 'a', 'p', 'f', 'i', 'n', 'i'};
 
+volatile size_t g_track_heap_last_request = 0; /* size of the most recent allocation request */
 static size_t _total = 0;
 static size_t _max   = 0;
 
@@ -162,6 +163,7 @@ void* malloc(size_t xWantedSize)
         // increase buffer size to hold the size value
         xWantedSize += _OVERHEAD_SIZE;
         // actual allocation
+        g_track_heap_last_request = xWantedSize;
         pvReturn = pvPortMalloc_orig(xWantedSize);
         if(pvReturn != NULL)
         {
@@ -195,6 +197,7 @@ void* calloc(size_t nmemb, size_t xSize)
         // increase buffer size to hold the size value
         size_t xWantedSize = _OVERHEAD_SIZE + nmemb * xSize;
         // actual allocation (used malloc in stead of calloc as it starts with size value)
+        g_track_heap_last_request = xWantedSize;
         pvReturn = pvPortMalloc_orig(xWantedSize);
         if(pvReturn != NULL)
         {
@@ -229,6 +232,7 @@ void* realloc(void* pv, size_t xWantedSize)
         // increase buffer size to hold the size value
         xWantedSize += _OVERHEAD_SIZE;
         // actual allocation
+        g_track_heap_last_request = xWantedSize;
         pvReturn = pvPortMalloc_orig(xWantedSize);
         if(pvReturn != NULL)
         {
@@ -370,6 +374,15 @@ static void* _verify_from_data_ptr(void* data_ptr)
         if(memcmp(head->magic, _VOID_MAGIC, sizeof(head->magic)) == 0 && head->size == 0)
         {
             // contains the void magic, means that it was already freed: warn and ignore
+            //
+            // KNOWN CALLER, DO NOT REMOVE THIS CHECK (issue #4): Custom_Api_Shutdown() in Microchip's
+            // closed MRF24WN library wdrvext_mz_ef.a (cust_api_init.o) frees its context twice,
+            // a_free(pCxt) followed by a_free(p_Global_Cxt), while WDRV_EXT_Deinitialize() passes
+            // p_Global_Cxt as pCxt. This happens on every WiFi driver deinit, so on every
+            // TCPIP_STACK_NetDown() of the WiFi interface (boot, network re-init, WiFi scan), and
+            // gives exactly one warning each time. It cannot be fixed in source. Ignoring the
+            // second free here is the mitigation: without it the block would be handed to
+            // heap_4's vPortFree() twice and corrupt the free list.
             WARN("Head magic match void: trying to free an already freed block, ignore\r\n");
         }
         else

@@ -12,13 +12,17 @@ typedef enum
     STATE_WAIT_FW_DATA,
     STATE_WAIT_WIFI_DATA,
     STATE_WAIT_GW_DATA,
+    STATE_WAIT_UDP_CONFIG,
+    STATE_WAIT_FOTA_OVR,
     STATE_FATAL_ERROR,
     STATE_DONE
 } STATE_t;
 
 static STATE_t                _state;
-extern APP_GW_WIFI_DATA       appWifiData;         // Used to write in SF stored WiFi data to
-extern APP_GW_ACTIVATION_DATA appGWActivationData; // Used to write in SF stored Actication and Firmware data to
+extern APP_GW_WIFI_DATA       appWifiData;
+extern APP_GW_ACTIVATION_DATA appGWActivationData;
+extern UDP_GW_CONF            g_udp_gw_conf;
+extern FOTA_OVERRIDE_CONF     g_fota_override_conf;
 
 bool SSMLoadConfig_IsBusy(void)
 {
@@ -62,12 +66,28 @@ void startNext(void)
                 appWifiData.valid = FALSE;
             }
             // intentional fall through
-        case STATE_WAIT_WIFI_DATA: // After WiFi data start with activation data data (if available)
+        case STATE_WAIT_WIFI_DATA: // After WiFi data start with activation data (if available)
             if(APP_SERIALFLASH_HasActivationData())
             {
                 // magic byte is present
                 APP_SERIALFLASH_LoadActivationData();
                 _state = STATE_WAIT_GW_DATA;
+                break;
+            }
+            // intentional fall through
+        case STATE_WAIT_GW_DATA: // After activation data load UDP config (if available)
+            if(APP_SERIALFLASH_HasUDPConfig())
+            {
+                APP_SERIALFLASH_LoadUDPConfig();
+                _state = STATE_WAIT_UDP_CONFIG;
+                break;
+            }
+            // intentional fall through
+        case STATE_WAIT_UDP_CONFIG: // After UDP config load FOTA override (if available)
+            if(APP_SERIALFLASH_HasFOTAOverride())
+            {
+                APP_SERIALFLASH_LoadFOTAOverride();
+                _state = STATE_WAIT_FOTA_OVR;
                 break;
             }
             // intentional fall through
@@ -154,10 +174,39 @@ void SSMLoadConfig_Tasks(void)
                 appGWActivationData.locked = APP_SERIALFLASH_IsLocked();
                 SYS_PRINT("CNFG: Locked:             %s\r\n", appGWActivationData.locked ? "true" : "false");
                 appGWActivationData.locked_for_first_time =
-                    appGWActivationData.locked ? FALSE : TRUE; // When it is already locked this is not the first time.
+                    appGWActivationData.locked ? FALSE : TRUE;
                 SYS_PRINT("CNFG: Locked first time:  %s\r\n",
                           appGWActivationData.locked_for_first_time ? "true" : "false");
 
+                startNext();
+            }
+            break;
+
+        case STATE_WAIT_UDP_CONFIG:
+            if(APP_SERIALFLASH_HasError())
+            {
+                _state = STATE_FATAL_ERROR;
+            }
+            else if(APP_SERIALFLASH_IsReady())
+            {
+                APP_SERIALFLASH_GetUDPConfig(&g_udp_gw_conf);
+                SYS_PRINT("CNFG: UDP server: %s up:%u dn:%u\r\n", g_udp_gw_conf.server_address,
+                          g_udp_gw_conf.port_up, g_udp_gw_conf.port_down);
+                startNext();
+            }
+            break;
+
+        case STATE_WAIT_FOTA_OVR:
+            if(APP_SERIALFLASH_HasError())
+            {
+                _state = STATE_FATAL_ERROR;
+            }
+            else if(APP_SERIALFLASH_IsReady())
+            {
+                APP_SERIALFLASH_GetFOTAOverride(&g_fota_override_conf);
+                SYS_PRINT("CNFG: FOTA override: %s url:%s\r\n",
+                          g_fota_override_conf.override_enabled ? "enabled" : "disabled",
+                          g_fota_override_conf.fota_url);
                 startNext();
             }
             break;

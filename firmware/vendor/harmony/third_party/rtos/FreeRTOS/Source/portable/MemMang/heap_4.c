@@ -148,7 +148,7 @@ static size_t xBlockAllocatedBit = 0;
 
 /*-----------------------------------------------------------*/
 
-void *pvPortMalloc( size_t xWantedSize )
+void *pvPortMalloc_orig( size_t xWantedSize )
 {
 BlockLink_t *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
 void *pvReturn = NULL;
@@ -298,7 +298,7 @@ void *pvReturn = NULL;
 }
 /*-----------------------------------------------------------*/
 
-void vPortFree( void *pv )
+void vPortFree_orig( void *pv )
 {
 uint8_t *puc = ( uint8_t * ) pv;
 BlockLink_t *pxLink;
@@ -355,6 +355,39 @@ size_t xPortGetFreeHeapSize( void )
 size_t xPortGetMinimumEverFreeHeapSize( void )
 {
 	return xMinimumEverFreeBytesRemaining;
+}
+/*-----------------------------------------------------------*/
+
+/* Diagnostics (issue #2): largest free block and number of free blocks. The
+free list is ordered by address and terminated by pxEnd. */
+size_t xPortGetLargestFreeBlock( size_t *pxFreeBlocks )
+{
+BlockLink_t *pxIterator;
+size_t xLargest = 0, xCount = 0;
+
+	vTaskSuspendAll();
+	{
+		if( pxEnd != NULL )
+		{
+			for( pxIterator = xStart.pxNextFreeBlock;
+				 pxIterator != NULL && pxIterator != pxEnd;
+				 pxIterator = pxIterator->pxNextFreeBlock )
+			{
+				xCount++;
+				if( pxIterator->xBlockSize > xLargest )
+				{
+					xLargest = pxIterator->xBlockSize;
+				}
+			}
+		}
+	}
+	( void ) xTaskResumeAll();
+
+	if( pxFreeBlocks != NULL )
+	{
+		*pxFreeBlocks = xCount;
+	}
+	return xLargest;
 }
 /*-----------------------------------------------------------*/
 

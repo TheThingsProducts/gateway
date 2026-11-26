@@ -1,4 +1,4 @@
-// Copyright © 2002-2016 Microchip Technology Inc.  All rights reserved.
+// Copyright ï¿½ 2002-2016 Microchip Technology Inc.  All rights reserved.
 // See Microchip TCP/IP Stack documentation for license information.
 
 // Determines when a request is considered "timed out".
@@ -35,6 +35,10 @@ function bootWebsite()
     else if (pageName.startsWith('info'))
     {
         newAJAXCommand(baseURL+"status.cgi", getStatus, false);
+    }
+    else if (pageName.startsWith('udp'))
+    {
+        newAJAXCommand(baseURL+"udp.cgi", getUDPSettings, false);
     }
 }
 
@@ -670,6 +674,11 @@ function validateActivationForm()
             wifiSelect.disabled = true;
         }
 
+    var fotaenCb  = document.getElementById('fotaen_cb');
+    if(fotaenCb) {
+        var fotaenVal = document.getElementById('fotaen_val');
+        fotaenVal.value = fotaenCb.checked ? '1' : '0';
+    }
     return true;
 }
 
@@ -746,6 +755,14 @@ function getSettings(xmlData)
     document.getElementById('gwid').disabled = locked;
     document.getElementById('gwky').disabled = locked;
     document.getElementById('asrv').disabled = locked;
+
+    var fotaenCb = document.getElementById('fotaen_cb');
+    if(fotaenCb && data.fotaen !== undefined) {
+        fotaenCb.checked = data.fotaen;
+        document.getElementById('fotaen_val').value = data.fotaen ? '1' : '0';
+        document.getElementById('fotaul').value = data.fotaul || '';
+        document.getElementById('fotaul_label').style.display = data.fotaen ? 'block' : 'none';
+    }
 }
 
 function selectFoundNetwork(id)
@@ -755,25 +772,72 @@ function selectFoundNetwork(id)
     document.getElementById("wlan").value = networks[id].type;
 }
 
+// Seconds since boot as hh:mm:ss, with the days in front when there are any ("1 d 00:00:05").
+function formatUptime(seconds)
+{
+    var s = Math.floor(Number(seconds));
+    if(isNaN(s) || s < 0) return seconds;
+    function two(n) { return (n < 10 ? '0' : '') + n; }
+    var days = Math.floor(s / 86400);
+    var text = two(Math.floor(s % 86400 / 3600)) + ':' + two(Math.floor(s % 3600 / 60)) + ':' + two(s % 60);
+    return days > 0 ? days + ' d ' + text : text;
+}
+
 function getStatus(xmlData)
 {
     var data = JSON.parse(xmlData.trim());
     document.getElementById('hwversion').innerHTML = data.hwversion;
     document.getElementById('blversion').innerHTML = data.blversion;
     document.getElementById('fwversion').innerHTML = data.fwversion;    
-    document.getElementById('uptime').innerHTML = data.uptime;
+    document.getElementById('uptime').innerHTML = formatUptime(data.uptime);
     document.getElementById('connected').innerHTML = data.connected;
     document.getElementById('interface').innerHTML = data.interface;
     document.getElementById('ssid').innerHTML = data.ssid;
     document.getElementById('activation_locked').innerHTML = data.activation_locked;
     document.getElementById('configured').innerHTML = data.configured;
+    var freqplanText = {
+        'none': 'LoRa module not configured yet',
+        'downloaded': 'Downloaded',
+        'builtin': 'Built-in (no plan downloaded, or it does not fit the gateway card)'
+    };
+    document.getElementById('freqplan').innerHTML = freqplanText[data.freqplan] || data.freqplan;
     document.getElementById('region').innerHTML = data.region;
     document.getElementById('connbroker').innerHTML = data.connbroker;
+    document.getElementById('connudp').innerHTML = data.connudp;
     document.getElementById('gwcard').innerHTML = data.gwcard;
     document.getElementById('pup').innerHTML = data.pup;
     document.getElementById('pdown').innerHTML = data.pdown;
+    document.getElementById('udpup').innerHTML = data.udpup;
+    document.getElementById('udpdown').innerHTML = data.udpdown;
     document.getElementById('estor').innerHTML = data.estor;
     setTimeout("newAJAXCommand(baseURL+'status.cgi', getStatus, false)",2000);
+}
+
+function getUDPSettings(xmlData)
+{
+    var data = JSON.parse(xmlData.trim());
+    document.getElementById('server').value      = data.server;
+    document.getElementById('portup').value      = data.portup;
+    document.getElementById('portdn').value      = data.portdn;
+    document.getElementById('udpen_cb').checked  = data.enabled;
+    document.getElementById('uponly_cb').checked = data.uponly;
+    if(data.gateway_eui) {
+        var el = document.getElementById('gateway_eui');
+        if(el) el.textContent = data.gateway_eui;
+    }
+}
+
+function prepareUDPForm()
+{
+    document.getElementById('udpen_val').value  = document.getElementById('udpen_cb').checked  ? '1' : '0';
+    document.getElementById('uponly_val').value = document.getElementById('uponly_cb').checked ? '1' : '0';
+    return true;
+}
+
+function toggleFotaUrl()
+{
+    var cb = document.getElementById('fotaen_cb');
+    document.getElementById('fotaul_label').style.display = cb.checked ? 'block' : 'none';
 }
 
 // Kick off the AJAX Updater

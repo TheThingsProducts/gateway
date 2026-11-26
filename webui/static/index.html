@@ -35,8 +35,18 @@
 		      <div class="label">Gateway Key</div>
 		      <input type="text" name="gwky" id="gwky">
 		    </label>
-		  </div>  
+		    <label>
+		      <input type="checkbox" id="fotaen_cb" onchange="toggleFotaUrl()">
+		      <span class="inl">Override FOTA URL</span>
+		      <input type="hidden" id="fotaen_val" name="fotaen" value="0">
+		    </label>
+		    <label for="fotaul" id="fotaul_label" style="display:none;">
+		      <div class="label">FOTA Server URL</div>
+		      <input type="text" name="fotaul" id="fotaul" maxlength="93" placeholder="https://...">
+		    </label>
+		  </div>
 		  <div class="buttons"><button type="submit" class="save">Save</button></div>
+~gwfooter~
 		</form>
 	</body>
 </html>

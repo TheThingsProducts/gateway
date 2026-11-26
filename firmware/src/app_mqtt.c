@@ -161,6 +161,7 @@ void APP_MQTT_Tasks(void)
                     else
                     {
                         SYS_DEBUG(SYS_ERROR_INFO, "MQTT: Wait for SSL Connect\r\n");
+                        retryTick     = SYS_TMR_TickCountGet();
                         appData.state = APP_TTNGWC_SOCKET_WAIT_TLS;
                     }
                 }
@@ -196,6 +197,14 @@ void APP_MQTT_Tasks(void)
         case APP_TTNGWC_SOCKET_WAIT_TLS:
             if(NetworkTLS_IsStarting(network) == 1)
             {
+                // The handshake is non-blocking now (net_pres_enc_glue.c): do not wait forever
+                if(SYS_TMR_TickCountGet() - retryTick >= SYS_TMR_TickCounterFrequencyGet() * 10)
+                {
+                    retryTick = SYS_TMR_TickCountGet();
+                    SYS_DEBUG(SYS_ERROR_INFO, "MQTT: TLS Connect timed out - Aborting\r\n");
+                    NetworkDisconnect(network);
+                    appData.state = APP_TTNGWC_ERROR;
+                }
                 break;
             }
             if(NetworkTLS_IsSecure(network) != 0)
@@ -533,7 +542,11 @@ int sendUplink()
         enqueueLoRaRX(&recv_packet);
         return err;
     }
-    rx_pkt_cnt++;
+    // Count delivered uplinks only, not the ones given up after the retries
+    if(err == 0)
+    {
+        rx_pkt_cnt++;
+    }
     return err;
 }
 

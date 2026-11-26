@@ -262,6 +262,13 @@ extern "C"
         APP_SERIALFLASH_WAIT_FOR_MAGIC_BYTES_FOTA,
         APP_SERIALFLASH_VERIFY_MAGIC_BYTES_FOTA,
 
+        APP_SERIALFLASH_READ_MAGIC_BYTES_UDP_CONFIG,
+        APP_SERIALFLASH_WAIT_FOR_MAGIC_BYTES_UDP_CONFIG,
+        APP_SERIALFLASH_VERIFY_MAGIC_BYTES_UDP_CONFIG,
+        APP_SERIALFLASH_READ_MAGIC_BYTES_FOTA_OVR,
+        APP_SERIALFLASH_WAIT_FOR_MAGIC_BYTES_FOTA_OVR,
+        APP_SERIALFLASH_VERIFY_MAGIC_BYTES_FOTA_OVR,
+
         APP_SERIALFLASH_READ_DATA,
         APP_SERIALFLASH_WAIT_FOR_READING_DATA,
         APP_SERIALFLASH_STORE_DATA,
@@ -359,6 +366,8 @@ extern "C"
         bool                   has_wifi_data;
         bool                   has_activation_data;
         bool                   has_fota_data;
+        bool                   has_udp_config;
+        bool                   has_fota_override;
         uint8_t                status_register;
         // uint8_t                                 configuration_register;
         uint8_t                              eventMap;
@@ -390,7 +399,8 @@ extern "C"
     typedef struct
     {
         APP_STATES_LORA state;
-        DRV_HANDLE      USARTHandle;
+        DRV_HANDLE      USARTHandle;      // read handle, used by the LORARX dispatch thread only
+        DRV_HANDLE      USARTWriteHandle; // write handle, serialised by g_gateway_module_interface_lock
         // SX1301_CONF     LORAconf;
 
         uint8_t rx_uart_buffer[UART_BUFF_LENGTH]; // data received
@@ -598,9 +608,11 @@ extern "C"
     void APP_SELFTEST_Tasks(void);
 
     bool    GatewayIsOperational(void);
+    bool    GatewayIsBrokerConnected(void);
     uint8_t APP_MQTT_GET_STATE();
     bool    APP_WIFI_Has_LinkAP(void);
     bool    APP_WIFI_Has_LinkINFRA(void);
+    void    APP_WIFI_DISABLE(void);
     bool    APP_ETH_Has_Link(void);
 
     bool selftest_isEnabled(void);

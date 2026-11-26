@@ -18,6 +18,8 @@ typedef enum
     STATE_WRITING_ACTIVATION,
     STATE_ERASING_WIFI,
     STATE_WRITING_WIFI,
+    STATE_ERASING_FOTA_OVR,
+    STATE_WRITING_FOTA_OVR,
     STATE_WAITING_FOR_REDIRECT,
     STATE_READY_FOR_REBOOT,
     STATE_FATAL_ERROR,
@@ -32,7 +34,8 @@ static uint32_t freqDelayStartTick      = 0;
 // REVIEW: Try not to use external variables but interface via functions
 extern bool                   g_redirect_signal;
 extern APP_GW_ACTIVATION_DATA appGWActivationData;
-extern WF_CONFIG_DATA g_wifi_cfg; // Store WiFi data directly from struct used communicating with the WiFi driver (note
+extern WF_CONFIG_DATA         g_wifi_cfg;
+extern FOTA_OVERRIDE_CONF     g_fota_override_conf; // Store WiFi data directly from struct used communicating with the WiFi driver (note
                                   // that it is used for scanning etc as well)
 
 bool SSMStoreUserConfig_IsReadyForReboot()
@@ -126,6 +129,32 @@ void SSMStoreUserConfig_Tasks(void)
             if(APP_SERIALFLASH_HasError())
             {
                 SYS_PRINT("\r\nFLASH: Error writing wifi data\r\n");
+                _changeState(STATE_FATAL_ERROR);
+            }
+            if(APP_SERIALFLASH_IsReady())
+            {
+                APP_SERIALFLASH_EraseFOTAOverride();
+                _changeState(STATE_ERASING_FOTA_OVR);
+            }
+            break;
+
+        case STATE_ERASING_FOTA_OVR:
+            if(APP_SERIALFLASH_HasError())
+            {
+                SYS_PRINT("\r\nFLASH: Error erasing FOTA override\r\n");
+                _changeState(STATE_FATAL_ERROR);
+            }
+            if(APP_SERIALFLASH_IsReady())
+            {
+                APP_SERIALFLASH_SaveFOTAOverride(&g_fota_override_conf);
+                _changeState(STATE_WRITING_FOTA_OVR);
+            }
+            break;
+
+        case STATE_WRITING_FOTA_OVR:
+            if(APP_SERIALFLASH_HasError())
+            {
+                SYS_PRINT("\r\nFLASH: Error writing FOTA override\r\n");
                 _changeState(STATE_FATAL_ERROR);
             }
             if(APP_SERIALFLASH_IsReady())

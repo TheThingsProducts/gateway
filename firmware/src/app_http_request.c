@@ -5,12 +5,15 @@
 #include "app.h"
 #include "app_http_request.h"
 #include "subsystem_controller.h"
+#include "system_config/TTN_Gateway_v1/framework/net/pres/net_pres_enc_glue.h"
 
 static int8_t _pumpDNS(const char* hostname, IPV4_ADDR* ipv4Addr);
 
 APP_HTTP_REQUEST_DATA appHTTPRequestData;
 
 http_request request = {0};
+
+#define TLS_CONNECT_TIMEOUT_S 10 // a normal handshake takes 0.6 - 1.7 s
 
 uint32_t tcpTimeout   = 0;
 bool     timeout      = false;
@@ -191,6 +194,7 @@ void APP_HTTP_Request_Tasks(void)
                        "setting TX buffer to 16k");
 
                 SYS_DEBUG(SYS_ERROR_INFO, "HTTPS: Connection Opened: Starting TLS Negotiation\r\n");
+                NET_PRES_EncGlue_SetSNIHostname(request.host);
                 if(!NET_PRES_SocketEncryptSocket(appHTTPRequestData.socket))
                 {
                     SYS_DEBUG(SYS_ERROR_INFO, "HTTP: TLS Create Connection Failed - Aborting\r\n");
@@ -200,6 +204,7 @@ void APP_HTTP_Request_Tasks(void)
                 else
                 {
                     SYS_DEBUG(SYS_ERROR_INFO, "HTTP: Wait for TLS Connect\r\n");
+                    tcpTimeout               = SYS_TMR_TickCountGet();
                     appHTTPRequestData.state = APP_HTTP_REQUEST_WAIT_FOR_TLS_CONNECT;
                 }
             }
@@ -215,6 +220,14 @@ void APP_HTTP_Request_Tasks(void)
         {
             if(NET_PRES_SocketIsNegotiatingEncryption(appHTTPRequestData.socket))
             {
+                if(SYS_TMR_TickCountGet() - tcpTimeout >= SYS_TMR_TickCounterFrequencyGet() * TLS_CONNECT_TIMEOUT_S)
+                {
+                    SYS_DEBUG(SYS_ERROR_INFO, "HTTP: TLS Connect timed out - Aborting\r\n");
+                    tcpTimeout = SYS_TMR_TickCountGet();
+                    timeout    = true;
+                    APP_HTTP_Request_CloseIfNeeded();
+                    appHTTPRequestData.state = APP_HTTP_REQUEST_ERROR;
+                }
                 break;
             }
             if(!NET_PRES_SocketIsSecure(appHTTPRequestData.socket))
@@ -377,7 +390,7 @@ int32_t APP_HTTP_ParseUrl(char* uri, char** host, char** path, uint16_t* port, b
         pos = strchr(*host, '/');
         if(!pos)
         {
-            *path = NULL;
+            *path = *host + strlen(*host); /* empty string at end of buffer */
         }
         else
         {
@@ -393,7 +406,7 @@ int32_t APP_HTTP_ParseUrl(char* uri, char** host, char** path, uint16_t* port, b
         pos = strchr(portc, '/');
         if(!pos)
         {
-            *path = NULL;
+            *path = portc + strlen(portc); /* empty string at end of buffer */
         }
         else
         {

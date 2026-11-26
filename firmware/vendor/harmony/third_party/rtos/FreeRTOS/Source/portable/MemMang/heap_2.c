@@ -271,6 +271,40 @@ size_t xPortGetFreeHeapSize( void )
 }
 /*-----------------------------------------------------------*/
 
+/* Diagnostics (issue #2): heap_2 does not coalesce free blocks, so the largest
+free block and the number of free blocks show fragmentation. The free list is
+ordered by size and terminated by xEnd. */
+size_t xPortGetLargestFreeBlock( size_t *pxFreeBlocks )
+{
+BlockLink_t *pxIterator;
+size_t xLargest = 0, xCount = 0;
+
+	vTaskSuspendAll();
+	{
+		if( xStart.pxNextFreeBlock != NULL )
+		{
+			for( pxIterator = xStart.pxNextFreeBlock;
+				 pxIterator != NULL && pxIterator != &xEnd;
+				 pxIterator = pxIterator->pxNextFreeBlock )
+			{
+				xCount++;
+				if( pxIterator->xBlockSize > xLargest )
+				{
+					xLargest = pxIterator->xBlockSize;
+				}
+			}
+		}
+	}
+	( void ) xTaskResumeAll();
+
+	if( pxFreeBlocks != NULL )
+	{
+		*pxFreeBlocks = xCount;
+	}
+	return xLargest;
+}
+/*-----------------------------------------------------------*/
+
 void vPortInitialiseBlocks( void )
 {
 	/* This just exists to keep the linker quiet. */

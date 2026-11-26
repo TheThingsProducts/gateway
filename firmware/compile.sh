@@ -34,6 +34,8 @@ else
   exit 1
 fi
 
+bash generate_version_header.sh
+
 if [ $GENERATE_PROJECT_MAKEFILES = true ]; then
   echo "Generation of project make files"
   $prjMakefilesGenerator -v TTN_Gateway.X@TTN_Gateway_v1

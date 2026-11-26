@@ -90,7 +90,7 @@
 #define configMAX_PRIORITIES                    ( 10UL )
 #define configMINIMAL_STACK_SIZE                ( 4096 )
 #define configISR_STACK_SIZE                    ( 256 )
-#define configTOTAL_HEAP_SIZE                   ( ( size_t ) 350000 )
+#define configTOTAL_HEAP_SIZE                   ( ( size_t ) 346000 ) /* was 350000: 4000 B given to the startup stack, see app_mz.ld _min_stack_size */
 #define configMAX_TASK_NAME_LEN                 ( 16 )
 #define configUSE_16_BIT_TICKS                  0
 #define configIDLE_SHOULD_YIELD                 1
@@ -107,7 +107,7 @@
 
 /* Hook function related definitions. */
 #define configUSE_IDLE_HOOK                     0
-#define configUSE_TICK_HOOK                     0
+#define configUSE_TICK_HOOK                     1
 #define configCHECK_FOR_STACK_OVERFLOW          2
 #define configUSE_MALLOC_FAILED_HOOK            1
 
@@ -152,7 +152,7 @@ Only API functions that end in ...FromISR() can be used within interrupts. */
 #define INCLUDE_uxTaskGetStackHighWaterMark     1
 #define INCLUDE_xTaskGetIdleTaskHandle          0
 #define INCLUDE_xTimerGetTimerDaemonTaskHandle  0
-#define INCLUDE_pcTaskGetTaskName               0
+#define INCLUDE_pcTaskGetTaskName               1
 #define INCLUDE_eTaskGetState                   0
 #define INCLUDE_xEventGroupSetBitFromISR        0
 #define INCLUDE_xTimerPendFunctionCall          0

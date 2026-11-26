@@ -13,6 +13,7 @@
 
 APP_OTA_DATA                  appOTAData;
 extern APP_GW_ACTIVATION_DATA appGWActivationData;
+extern FOTA_OVERRIDE_CONF     g_fota_override_conf;
 extern http_request           request;
 
 char APP_URL_Buffer[255];
@@ -96,8 +97,17 @@ void APP_OTA_Tasks(void)
 
         case APP_OTA_CONNECTING:
         {
-            strcpy(APP_URL_Buffer, appGWActivationData.configuration.firmware_url);
-            SYS_DEBUG(SYS_ERROR_DEBUG, "FIRM: APP_URL_Buffer: %s\r\n", APP_URL_Buffer);
+            if(g_fota_override_conf.override_enabled && g_fota_override_conf.fota_url[0] != '\0')
+            {
+                strncpy(APP_URL_Buffer, g_fota_override_conf.fota_url, sizeof(APP_URL_Buffer) - 1);
+            }
+            else
+            {
+                strncpy(APP_URL_Buffer, appGWActivationData.configuration.firmware_url,
+                        sizeof(APP_URL_Buffer) - 1);
+            }
+            APP_URL_Buffer[sizeof(APP_URL_Buffer) - 1] = '\0';
+            SYS_PRINT("FIRM: firmware_url: %s\r\n", APP_URL_Buffer);
 
             if(APP_URL_Buffer[0] != '\0')
             {
@@ -111,6 +121,7 @@ void APP_OTA_Tasks(void)
                 }
                 else
                 {
+                    SYS_PRINT("FIRM: host: %s port: %u tls: %d\r\n", request.host, request.port, request.tls);
                     if(appOTAData.file_type == KEY)
                     {
                         appOTAData.state = APP_OTA_REQUEST_KEY;
@@ -135,11 +146,13 @@ void APP_OTA_Tasks(void)
             appOTAData.file_type = KEY;
 
             sprintf(request.urlheaders,
-                    "GET /%s/%s HTTP/1.1\r\n"
+                    "GET /%s%s%s HTTP/1.1\r\n"
                     "User-Agent: TTNGateway\r\n"
                     "Host: %s:%u\r\n"
                     "Connection: close\r\n\r\n",
-                    request.path, checksums_addr, request.host, request.port);
+                    request.path,
+                    (request.path[0] != '\0') ? "/" : "",
+                    checksums_addr, request.host, request.port);
 
             APP_HTTP_Request_Initialize();
 
@@ -155,11 +168,13 @@ void APP_OTA_Tasks(void)
             reset_http_request(&request);
 
             sprintf(request.urlheaders,
-                    "GET /%s/%s HTTP/1.1\r\n"
+                    "GET /%s%s%s HTTP/1.1\r\n"
                     "User-Agent: TTNGateway\r\n"
                     "Host: %s:%u\r\n"
                     "Connection: close\r\n\r\n",
-                    request.path, firmware_addr, request.host, request.port);
+                    request.path,
+                    (request.path[0] != '\0') ? "/" : "",
+                    firmware_addr, request.host, request.port);
             request.bulk_request = 1;
 
             APP_HTTP_Request_Initialize();
@@ -270,10 +285,11 @@ void APP_OTA_Tasks(void)
 
                 if(request.new_data_flag == 1)
                 {
-                    SYS_DEBUG(SYS_ERROR_DEBUG, "FIRM: Writing %u bytes\r\n", request.available_bytes);
-
-                    APP_SERIALFLASH_SaveFOTAImage(request.content_pointer, request.available_bytes);
-
+                    if(request.available_bytes > 0)
+                    {
+                        SYS_DEBUG(SYS_ERROR_DEBUG, "FIRM: Writing %u bytes\r\n", request.available_bytes);
+                        APP_SERIALFLASH_SaveFOTAImage(request.content_pointer, request.available_bytes);
+                    }
                     // After the first write, the content pointer can point to
                     // the begin of the response buffer again.
                     request.content_pointer = request.response_buffer;
@@ -427,7 +443,9 @@ bool http_response_split(char** response_p, size_t* header_length, uint16_t* sta
     *content_length = 0;
     while(ptoken != NULL)
     {
-        ptoken   = strtok(NULL, "\r\n");
+        ptoken = strtok(NULL, "\r\n");
+        if(ptoken == NULL)
+            break;
         cont_len = strstr(ptoken, delimiter_len);
         if(cont_len != NULL)
         {

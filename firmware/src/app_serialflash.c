@@ -870,6 +870,98 @@ void APP_SERIALFLASH_Tasks(void)
                 SYS_DEBUG(SYS_ERROR_INFO, "FLASH: Magic bytes not found: no stored FOTA data present\r\n");
                 serialflashData.has_fota_data = false;
             }
+            serialflashData.state = APP_SERIALFLASH_READ_MAGIC_BYTES_UDP_CONFIG;
+            break;
+        }
+
+        case APP_SERIALFLASH_READ_MAGIC_BYTES_UDP_CONFIG:
+        {
+            if(APP_SerialFlash_IsBusy())
+            {
+                break;
+            }
+            serialflashData.commandHandle[0] = 0;
+            serialflashData.commandHandle[1] = 0;
+            serialflashData.commandHandle[2] = 0;
+            serialflashData.eventMap         = 0;
+            DRV_SST25VF064C_BlockRead(serialflashData.driverHandle, &serialflashData.commandHandle[2],
+                                      &serialflashData.targetBuffer[0], FLASH_ADDRESS_UDP_GW_DATA_MAGIC,
+                                      FLASH_LENGTH_UDP_GW_DATA_MAGIC);
+            if(serialflashData.commandHandle[2] == DRV_SST25VF064C_BLOCK_COMMAND_HANDLE_INVALID)
+            {
+                SYS_DEBUG(SYS_ERROR_ERROR, "FLASH: Failed to queue the read operation\r\n");
+                serialflashData.state = APP_SERIALFLASH_ERROR;
+                break;
+            }
+            serialflashData.state = APP_SERIALFLASH_WAIT_FOR_MAGIC_BYTES_UDP_CONFIG;
+            break;
+        }
+        case APP_SERIALFLASH_WAIT_FOR_MAGIC_BYTES_UDP_CONFIG:
+        {
+            if(serialflashData.eventMap == SERIALFLASH_BLOCK_OPERATION_COMPLETE)
+            {
+                serialflashData.state = APP_SERIALFLASH_VERIFY_MAGIC_BYTES_UDP_CONFIG;
+            }
+            if(serialflashData.eventMap & SERIALFLASH_BLOCK_OPERATION_ERROR)
+            {
+                SYS_DEBUG(SYS_ERROR_ERROR, "FLASH: There was an error while processing a read operation\r\n");
+                serialflashData.state = APP_SERIALFLASH_ERROR;
+            }
+            break;
+        }
+        case APP_SERIALFLASH_VERIFY_MAGIC_BYTES_UDP_CONFIG:
+        {
+            serialflashData.has_udp_config =
+                (serialflashData.targetBuffer[0] == 'U') && (serialflashData.targetBuffer[1] == 'D') &&
+                (serialflashData.targetBuffer[2] == 'P') && (serialflashData.targetBuffer[3] == 'G');
+            SYS_DEBUG(SYS_ERROR_INFO, "FLASH: UDP config: %s\r\n",
+                      serialflashData.has_udp_config ? "present" : "not present");
+            serialflashData.state = APP_SERIALFLASH_READ_MAGIC_BYTES_FOTA_OVR;
+            break;
+        }
+
+        case APP_SERIALFLASH_READ_MAGIC_BYTES_FOTA_OVR:
+        {
+            if(APP_SerialFlash_IsBusy())
+            {
+                break;
+            }
+            serialflashData.commandHandle[0] = 0;
+            serialflashData.commandHandle[1] = 0;
+            serialflashData.commandHandle[2] = 0;
+            serialflashData.eventMap         = 0;
+            DRV_SST25VF064C_BlockRead(serialflashData.driverHandle, &serialflashData.commandHandle[2],
+                                      &serialflashData.targetBuffer[0], FLASH_ADDRESS_FOTA_OVR_DATA_MAGIC,
+                                      FLASH_LENGTH_FOTA_OVR_DATA_MAGIC);
+            if(serialflashData.commandHandle[2] == DRV_SST25VF064C_BLOCK_COMMAND_HANDLE_INVALID)
+            {
+                SYS_DEBUG(SYS_ERROR_ERROR, "FLASH: Failed to queue the read operation\r\n");
+                serialflashData.state = APP_SERIALFLASH_ERROR;
+                break;
+            }
+            serialflashData.state = APP_SERIALFLASH_WAIT_FOR_MAGIC_BYTES_FOTA_OVR;
+            break;
+        }
+        case APP_SERIALFLASH_WAIT_FOR_MAGIC_BYTES_FOTA_OVR:
+        {
+            if(serialflashData.eventMap == SERIALFLASH_BLOCK_OPERATION_COMPLETE)
+            {
+                serialflashData.state = APP_SERIALFLASH_VERIFY_MAGIC_BYTES_FOTA_OVR;
+            }
+            if(serialflashData.eventMap & SERIALFLASH_BLOCK_OPERATION_ERROR)
+            {
+                SYS_DEBUG(SYS_ERROR_ERROR, "FLASH: There was an error while processing a read operation\r\n");
+                serialflashData.state = APP_SERIALFLASH_ERROR;
+            }
+            break;
+        }
+        case APP_SERIALFLASH_VERIFY_MAGIC_BYTES_FOTA_OVR:
+        {
+            serialflashData.has_fota_override =
+                (serialflashData.targetBuffer[0] == 'F') && (serialflashData.targetBuffer[1] == 'O') &&
+                (serialflashData.targetBuffer[2] == 'V') && (serialflashData.targetBuffer[3] == 'R');
+            SYS_DEBUG(SYS_ERROR_INFO, "FLASH: FOTA override: %s\r\n",
+                      serialflashData.has_fota_override ? "present" : "not present");
             serialflashData.state = APP_SERIALFLASH_IDLE;
             break;
         }
@@ -1569,7 +1661,7 @@ void APP_SERIALFLASH_GetFOTAChecksum(uint8_t* data)
 void APP_SERIALFLASH_InitFOTA(uint32_t image_length)
 {
     // Check if there is enough room in the serialflash to store this amount of data
-    if((FLASH_ADDRESS_FOTA_IMAGE + image_length) >= FLASH_MEMORY_SIZE)
+    if((FLASH_ADDRESS_FOTA_IMAGE + image_length) >= FLASH_ADDRESS_USER_CONFIG_BASE)
     {
         SYS_DEBUG(SYS_ERROR_ERROR, "FLASH: Insufficient storage available\r\n");
         // serialflashData.state = APP_SERIALFLASH_ERROR;
@@ -1642,7 +1734,7 @@ void APP_SERIALFLASH_SaveFOTAImage(uint8_t* data, uint16_t length)
     serialflashData.length  = length + nRemaining;
 
     // Check if there is enough room available to store the data
-    if((serialflashData.address + serialflashData.length) >= FLASH_MEMORY_SIZE)
+    if((serialflashData.address + serialflashData.length) >= FLASH_ADDRESS_USER_CONFIG_BASE)
     {
         SYS_DEBUG(SYS_ERROR_ERROR, "FLASH: Out of storage\r\n");
         APP_SERIALFLASH_FinalizeFOTA();
@@ -1733,9 +1825,91 @@ void APP_SERIALFLASH_EraseFOTA(void)
     SYS_DEBUG(SYS_ERROR_INFO, "FLASH: Erasing FOTA Data and Image\r\n");
 
     serialflashData.address = FLASH_ADDRESS_FOTA_DATA;
-    serialflashData.length  = ((FLASH_MEMORY_SIZE - FLASH_ADDRESS_FOTA_DATA) / FLASH_SECTOR_SIZE);
+    serialflashData.length  = ((FLASH_ADDRESS_USER_CONFIG_BASE - FLASH_ADDRESS_FOTA_DATA) / FLASH_SECTOR_SIZE);
 
     serialflashData.state = APP_SERIALFLASH_BLOCK_ERASE;
+}
+
+bool APP_SERIALFLASH_HasUDPConfig(void)
+{
+    return serialflashData.has_udp_config;
+}
+
+void APP_SERIALFLASH_LoadUDPConfig(void)
+{
+    SYS_DEBUG(SYS_ERROR_INFO, "FLASH: Loading UDP config\r\n");
+    serialflashData.address = FLASH_ADDRESS_UDP_GW_DATA_MAGIC;
+    serialflashData.length  = FLASH_LENGTH_UDP_GW_DATA_MAGIC + sizeof(UDP_GW_CONF);
+    APP_SerialFlash_PreFillData();
+    serialflashData.state = APP_SERIALFLASH_READ_DATA;
+}
+
+void APP_SERIALFLASH_EraseUDPConfig(void)
+{
+    SYS_DEBUG(SYS_ERROR_INFO, "FLASH: Erasing UDP config\r\n");
+    serialflashData.address = FLASH_ADDRESS_UDP_GW_DATA;
+    serialflashData.length  = 1;
+    serialflashData.state   = APP_SERIALFLASH_BLOCK_ERASE;
+}
+
+void APP_SERIALFLASH_SaveUDPConfig(UDP_GW_CONF* conf)
+{
+    SYS_DEBUG(SYS_ERROR_INFO, "FLASH: Storing UDP config\r\n");
+    serialflashData.address = FLASH_ADDRESS_UDP_GW_DATA_MAGIC;
+    serialflashData.length  = FLASH_LENGTH_UDP_GW_DATA_MAGIC + sizeof(UDP_GW_CONF);
+    APP_SerialFlash_PreFillData();
+    serialflashData.sourceBuffer[0] = 'U';
+    serialflashData.sourceBuffer[1] = 'D';
+    serialflashData.sourceBuffer[2] = 'P';
+    serialflashData.sourceBuffer[3] = 'G';
+    memcpy(&serialflashData.sourceBuffer[FLASH_LENGTH_UDP_GW_DATA_MAGIC], conf, sizeof(UDP_GW_CONF));
+    serialflashData.state = APP_SERIALFLASH_STORE_DATA;
+}
+
+void APP_SERIALFLASH_GetUDPConfig(UDP_GW_CONF* conf)
+{
+    memcpy(conf, &serialflashData.targetBuffer[FLASH_LENGTH_UDP_GW_DATA_MAGIC], sizeof(UDP_GW_CONF));
+}
+
+bool APP_SERIALFLASH_HasFOTAOverride(void)
+{
+    return serialflashData.has_fota_override;
+}
+
+void APP_SERIALFLASH_LoadFOTAOverride(void)
+{
+    SYS_DEBUG(SYS_ERROR_INFO, "FLASH: Loading FOTA override\r\n");
+    serialflashData.address = FLASH_ADDRESS_FOTA_OVR_DATA_MAGIC;
+    serialflashData.length  = FLASH_LENGTH_FOTA_OVR_DATA_MAGIC + sizeof(FOTA_OVERRIDE_CONF);
+    APP_SerialFlash_PreFillData();
+    serialflashData.state = APP_SERIALFLASH_READ_DATA;
+}
+
+void APP_SERIALFLASH_EraseFOTAOverride(void)
+{
+    SYS_DEBUG(SYS_ERROR_INFO, "FLASH: Erasing FOTA override\r\n");
+    serialflashData.address = FLASH_ADDRESS_FOTA_OVR_DATA;
+    serialflashData.length  = 1;
+    serialflashData.state   = APP_SERIALFLASH_BLOCK_ERASE;
+}
+
+void APP_SERIALFLASH_SaveFOTAOverride(FOTA_OVERRIDE_CONF* conf)
+{
+    SYS_DEBUG(SYS_ERROR_INFO, "FLASH: Storing FOTA override\r\n");
+    serialflashData.address = FLASH_ADDRESS_FOTA_OVR_DATA_MAGIC;
+    serialflashData.length  = FLASH_LENGTH_FOTA_OVR_DATA_MAGIC + sizeof(FOTA_OVERRIDE_CONF);
+    APP_SerialFlash_PreFillData();
+    serialflashData.sourceBuffer[0] = 'F';
+    serialflashData.sourceBuffer[1] = 'O';
+    serialflashData.sourceBuffer[2] = 'V';
+    serialflashData.sourceBuffer[3] = 'R';
+    memcpy(&serialflashData.sourceBuffer[FLASH_LENGTH_FOTA_OVR_DATA_MAGIC], conf, sizeof(FOTA_OVERRIDE_CONF));
+    serialflashData.state = APP_SERIALFLASH_STORE_DATA;
+}
+
+void APP_SERIALFLASH_GetFOTAOverride(FOTA_OVERRIDE_CONF* conf)
+{
+    memcpy(conf, &serialflashData.targetBuffer[FLASH_LENGTH_FOTA_OVR_DATA_MAGIC], sizeof(FOTA_OVERRIDE_CONF));
 }
 
 /*

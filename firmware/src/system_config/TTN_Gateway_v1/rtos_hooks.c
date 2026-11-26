@@ -40,6 +40,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "task.h"
 #include "system_definitions.h"
 #include "utilities.h"
+#include "track_heap.h"
 
 /*
 *********************************************************************************************************
@@ -109,7 +110,18 @@ void vApplicationMallocFailedHook( void )
       to query the size of free heap space that remains (although it does not
       provide information on how the remaining heap might be fragmented). */
     
-    FATAL("vApplicationMallocFailedHook");
+    size_t blocks  = 0;
+    size_t largest = xPortGetLargestFreeBlock(&blocks);
+    FATAL("vApplicationMallocFailedHook request=%u free=%u largest=%u blocks=%u",
+          (unsigned)g_track_heap_last_request, (unsigned)xPortGetFreeHeapSize(),
+          (unsigned)largest, (unsigned)blocks);
+}
+
+/* Called from the tick interrupt (configUSE_TICK_HOOK): watchdog diagnostics, see helper_wdt.c */
+extern void wdt_tick_check(void);
+void vApplicationTickHook( void )
+{
+    wdt_tick_check();
 }
 
 

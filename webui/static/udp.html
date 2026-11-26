@@ -1,0 +1,55 @@
+~inc:header.inc~
+<h1>UDP Forwarder</h1>
+  <label style="display:flex;align-items:center;gap:.5em">
+    <span class="label" style="margin:0">Gateway EUI</span>
+    <span id="gateway_eui" style="font-family:monospace;">—</span>
+  </label>
+  <label>
+    <input type="checkbox" id="udpen_cb">
+    <span class="inl">Enable UDP forwarder</span>
+  </label>
+  <label>
+    <div class="label">Server address</div>
+    <input type="text" id="server" maxlength="93" placeholder="e.g. router.eu.thethings.network">
+  </label>
+  <label>
+    <div class="label">Uplink port</div>
+    <input type="number" id="portup" min="1" max="65535" value="1700">
+  </label>
+  <label>
+    <div class="label">Downlink port</div>
+    <input type="number" id="portdn" min="1" max="65535" value="1700">
+  </label>
+  <label>
+    <input type="checkbox" id="uponly_cb">
+    <span class="inl">Uplink only (ignore downlinks)</span>
+  </label>
+  <div class="buttons">
+    <button type="button" class="save" onclick="submitUDPForm()">Save</button>
+  </div>
+<script>
+function submitUDPForm() {
+  var body = 'udpen='   + (document.getElementById('udpen_cb').checked  ? '1' : '0')
+           + '&server=' + encodeURIComponent(document.getElementById('server').value)
+           + '&portup=' + encodeURIComponent(document.getElementById('portup').value)
+           + '&portdn=' + encodeURIComponent(document.getElementById('portdn').value)
+           + '&uponly=' + (document.getElementById('uponly_cb').checked ? '1' : '0');
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'udp.cgi', true);
+  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  xhr.onload = function() {
+    if (xhr.responseURL && xhr.responseURL.indexOf('error') !== -1) {
+      var m = xhr.responseText.match(/<p>([^<]*)<\/p>/);
+      alert('Save failed: ' + (m ? m[1] : 'unexpected server error'));
+      return;
+    }
+    window.location.href = 'udp.html';
+  };
+  xhr.onerror = function() { alert('Save failed'); };
+  xhr.send(body);
+}
+</script>
+~gwfooter~
+</form>
+</body>
+</html>

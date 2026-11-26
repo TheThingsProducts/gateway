@@ -314,7 +314,7 @@ extern "C" {
 
 #define DRV_USART_BUFFER_QUEUE_SUPPORT              true
 
-#define DRV_USART_CLIENTS_NUMBER                    3
+#define DRV_USART_CLIENTS_NUMBER                    4 /* console, LoRa read, LoRa write, BLE */
 #define DRV_USART_SUPPORT_TRANSMIT_DMA              false
 #define DRV_USART_SUPPORT_RECEIVE_DMA               false
 #define DRV_USART_INSTANCES_NUMBER                  3

@@ -56,9 +56,10 @@ static TaskHandle_t   loraRxThreadHandle = NULL;
 static uint32_t last_rx_timestamp          = 0;
 static uint32_t lora_config_failed_counter = 0;
 static bool     freqplan_correct           = 0;
+static uint8_t  freqplan_source            = LORA_FREQ_PLAN_NONE;
 static version_t module_version_info       = {0};
 
-QueueHandle_t xRXQueue, xTXQueue;
+QueueHandle_t xRXQueue, xTXQueue, xUDPRXQueue;
 
 /* ************************************************************************** */
 /* ************************************************************************** */
@@ -121,8 +122,14 @@ static bool initLora(void)
     // RESET HIGH
     PLIB_PORTS_PinSet(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_6);
 
-    /* Open USART Driver instance 1 (USART1 in this case) and obtain a handle to it. */
-    appData.USARTHandle = DRV_USART_Open(DRV_USART_INDEX_1, DRV_IO_INTENT_READWRITE | DRV_IO_INTENT_BLOCKING);
+    /* Open USART Driver instance 1 (USART1 in this case) twice: one client for reading and one for
+     * writing. A Harmony USART client has a single buffer object that blocking DRV_USART_Read and
+     * DRV_USART_Write both use. With one shared handle the write of the LoRa task overwrote the
+     * buffer object the dispatch thread was pending on, and the writer could spin forever in
+     * `while(bufferObj->inUse)` once the dispatch thread had re-armed its read (watchdog reset
+     * during module configuration, issue #3). */
+    appData.USARTHandle      = DRV_USART_Open(DRV_USART_INDEX_1, DRV_IO_INTENT_READ | DRV_IO_INTENT_BLOCKING);
+    appData.USARTWriteHandle = DRV_USART_Open(DRV_USART_INDEX_1, DRV_IO_INTENT_WRITE | DRV_IO_INTENT_BLOCKING);
 
     uint16_t    usTaskStackSize = configMINIMAL_STACK_SIZE;
     UBaseType_t uxTaskPriority  = TASK_PRIORITY_LORA_READ;
@@ -136,7 +143,7 @@ static bool initLora(void)
     // RESET HIGH
     PLIB_PORTS_PinSet(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_6);
 
-    if(appData.USARTHandle != DRV_HANDLE_INVALID)
+    if(appData.USARTHandle != DRV_HANDLE_INVALID && appData.USARTWriteHandle != DRV_HANDLE_INVALID)
     {
         init_complete = true;
     }
@@ -172,6 +179,7 @@ static bool configLora(void)
     }
     else
         freqplan_correct = 1;
+    freqplan_source = freqplan_correct ? LORA_FREQ_PLAN_DOWNLOADED : LORA_FREQ_PLAN_BUILTIN;
 
     if(freqplan_correct == 0)
     {
@@ -267,8 +275,13 @@ static bool configLora(void)
                                     appGWActivationData.configuration_sx1301.ifchain[9].datarate);
     }
 
+    // The built-in plans are public LoRaWAN plans. The sync word of the downloaded plan is only valid
+    // together with that plan: without a plan the field is false (private sync word, most public
+    // LoRaWAN traffic is not received) and a plan for the wrong band may carry either value.
+    bool sync_public = (freqplan_correct == 0) ? true : appGWActivationData.configuration_sx1301.lorawan_public;
+    SYS_PRINT("LORA: sync word: %s\r\n", sync_public ? "public (0x34)" : "private (0x12)");
     vTaskDelay(100 / portTICK_PERIOD_MS);
-    status = status && setSync(appGWActivationData.configuration_sx1301.lorawan_public);
+    status = status && setSync(sync_public);
 
     // RF ENABLE HIGH
     PLIB_PORTS_PinSet(PORTS_ID_0, PORT_CHANNEL_J, PORTS_BIT_POS_5);
@@ -631,6 +644,16 @@ void enqueueLoRaRX(loraRXPacket* pkt)
     xQueueSend(xRXQueue, pkt, 0U);
 }
 
+bool dequeueUDPRX(loraRXPacket* pkt)
+{
+    return xQueueReceive(xUDPRXQueue, pkt, 0) == pdTRUE ? true : false;
+}
+
+uint8_t hasUDPRXPacketInQueue(void)
+{
+    return uxQueueMessagesWaiting(xUDPRXQueue);
+}
+
 bool dequeueLoRaTX(loraTXPacket* pkt)
 {
     return xQueueReceive(xTXQueue, pkt, 0) == pdTRUE ? true : false;
@@ -651,8 +674,9 @@ void APP_LORA_Initialize(void)
     /* Place the App state machine in its initial state. */
     _setState(APP_LORA_INIT);
 
-    xRXQueue = xQueueCreate(5, sizeof(loraRXPacket));
-    xTXQueue = xQueueCreate(5, sizeof(loraTXPacket));
+    xRXQueue    = xQueueCreate(5, sizeof(loraRXPacket));
+    xTXQueue    = xQueueCreate(5, sizeof(loraTXPacket));
+    xUDPRXQueue = xQueueCreate(5, sizeof(loraRXPacket));
 }
 
 void APP_LORA_SetStartEvent(void)
@@ -686,6 +710,7 @@ static void restart_lora_configuration(void)
 {
     SYS_DEBUG(SYS_ERROR_FATAL, "LORA: RESET MODULE\r\n");
     DRV_USART_Close(appData.USARTHandle);
+    DRV_USART_Close(appData.USARTWriteHandle);
     // TODO Verify untested fix. Here we power cycle the module as resetting (done in loraInit) the module was not
     // enough.
     loraSet(false);
@@ -829,6 +854,11 @@ bool APP_LORA_HAS_CORRECT_FREQ_PLAN(void)
     return (freqplan_correct == 1);
 }
 
+uint8_t APP_LORA_FREQ_PLAN_SOURCE(void)
+{
+    return freqplan_source;
+}
+
 uint8_t APP_LORA_GW_CARD_VERSION(void)
 {
     return module_version_info.band;
@@ -852,7 +882,7 @@ static bool write_uart(uint8_t *data, size_t size)
 {
     if (size > 0)
     {
-        size_t w = DRV_USART_Write(appData.USARTHandle, data, size);
+        size_t w = DRV_USART_Write(appData.USARTWriteHandle, data, size);
         ASSERT(w == size, "LORA Uart write should be blocking");
         if (w != size)
         {
@@ -881,7 +911,8 @@ static void receive_callback(uint8_t *data, size_t size)
     {
         if(rxpkt.pkt_status == 0x10 || rxpkt.pkt_status == 0x01)
         {
-            enqueueLoRaRX(&rxpkt); // package is copied in the queue
+            enqueueLoRaRX(&rxpkt);
+            xQueueSend(xUDPRXQueue, &rxpkt, 0U);
             sendRXReply(true);
             GATEWAY_MODULE_INTERFACE_LOG("LORA: Accepted packet\r\n");
             // printRXPacket(&rxpkt);
